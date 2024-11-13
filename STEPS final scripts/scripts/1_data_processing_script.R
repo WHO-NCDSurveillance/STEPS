@@ -423,8 +423,8 @@ indicator_matrix = indicator_matrix %>% rowwise %>%
          }else{eval(parse(text = paste0(strsplit(indicator_var, "[;]"),'[-c(',pos_true,')]')))})),
          len_ind_var = ifelse(((n_semicolons==1|rev_n_semicolons==1) &  pos_true!='999') |((n_semicolons==1||rev_n_semicolons==1) &  pos_true=='999'),1,length(eval(parse(text = indicator_var)))),
          #var_missing = as.character(unlist(var_missing)),
-         len_ind_var = ifelse(n_semicolons==1 & rev_n_semicolons==1 & pos_true!=999,0,len_ind_var),
-         pos_true = as.numeric(pos_true))%>%dplyr::filter(len_ind_var>0)
+         len_ind_var = ifelse(n_semicolons==1 & rev_n_semicolons==1 & pos_true!=999,0,len_ind_var)#,pos_true = as.numeric(pos_true)
+  )%>%dplyr::filter(len_ind_var>0)
 
 #########
 indicator_matrix = indicator_matrix %>% rowwise %>% mutate(
