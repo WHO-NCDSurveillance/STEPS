@@ -7,7 +7,7 @@ collevel = paste0('collevel',paste0(extracted_integers, collapse = '_'))
 # Check if 'sex' is part of the column stratification variables and extract the levels accordingly.
 if('sex' %in% col_strat_variable){col_strat_var_levels = names(table(data[,'demog_c1']))}
 ##
-full_tab = ifelse(length(grep('full',column_strat, v=T))==1,TRUE, FALSE))
+full_tab = ifelse(length(grep('full',column_strat, v=T))==1,TRUE, FALSE)
 # Replace specific level names in the column stratification variables with 'Men' and 'Women'
 # based on the language settings.
 col_strat_var_levels[col_strat_var_levels==other_language[1,2]]='Men'
