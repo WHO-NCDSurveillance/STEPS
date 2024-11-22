@@ -40,16 +40,16 @@ library(geosphere)
 country <- "Country Name"
 iso <- "ISO"
 
-onausername <- rstudioapi::showPrompt("Username", "Please enter your username:")
-onapassword <- rstudioapi::askForPassword("Please enter your password:")
+#onausername <- rstudioapi::showPrompt("Username", "Please enter your username:")
+#onapassword <- rstudioapi::askForPassword("Please enter your password:")
 # # or
-# onausername <- "username"
-# onapassword <- "password"
+onausername <- "ctradmin" 		#ona username
+onapassword <- "31S62L"   		#ona user password
 
-step1_form_id <- "123456"	#numeric STEP1-2 form ID from form url
-step3_form_id <- "123456"	#numeric STEP3 form ID from form url
-sample_size <- 5000		#survey sample size
-hh_per_cluster <- xx	#number of households selected per cluster
+step1_form_id <- "713225"		#numeric STEP1-2 form ID from form url
+step3_form_id <- "713235"		#numeric STEP3 form ID from form url
+sample_size <- 3000				#survey sample size
+hh_per_cluster <- 11			#number of households selected per cluster
 country_average_hhsize <-2.6	#expected average eligible household members
 
 ```
@@ -322,8 +322,8 @@ data1 <- read.csv("data1.csv")
 data3 <- read.csv("data3.csv")
 
 
-# Group by 'i1' and 'i2b' and summarize
-by_cluster <- group_by(data1, i1, i2b)
+# Group by 'i1' and 'i2' and summarize
+by_cluster <- group_by(data1, i1, i2)
 
 a <- dplyr::summarize(by_cluster,
                       NrParticipants = n(),
