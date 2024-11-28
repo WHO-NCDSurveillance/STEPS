@@ -4,7 +4,7 @@ k=NULL
 for (i in unique(indicator_matrix$section))
 {
   data = analysis_data
-  section_matrix = indicator_matrix %>% dplyr::filter(section == i & add_factsheet=='No')
+  section_matrix = indicator_matrix %>% dplyr::filter(section == i)
   
   wt_step = unique(section_matrix$weight_step)
   data[,wt_step] = as.numeric(as.character(data[,wt_step]))
@@ -15,7 +15,7 @@ for (i in unique(indicator_matrix$section))
   
   for(j in unique(section_matrix$indicator_short_desc))
   {
-    pre_sub_matrix = indicator_matrix %>% dplyr::filter(indicator_short_desc == j & add_factsheet=='No')
+    pre_sub_matrix = indicator_matrix %>% dplyr::filter(indicator_short_desc == j)
       sub_row = NULL
       for(sub_row in 1:nrow(pre_sub_matrix))
       {
@@ -23,7 +23,8 @@ for (i in unique(indicator_matrix$section))
       subset_indicators = do.call('c',strsplit(sub_matrix$indicator_var, "[;]"))
       type_indicators = do.call('c',strsplit(sub_matrix$type, "[;]"))
       denom_logic = do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))
-      median_compute = sub_matrix$median_computation =='yes' & !is.na(sub_matrix$median_computation)
+      #median_compute = sub_matrix$median_computation =='yes' & !is.na(sub_matrix$median_computation)
+      median_compute = unique(type_indicators)=='median'
       
       ###population level indicators
       if(is.na(sub_matrix$pop_level_num_denom))
@@ -44,7 +45,7 @@ for (i in unique(indicator_matrix$section))
       for(k in subset_indicators)
       {
         
-        if(type_indicators[which(subset_indicators %in%k)] == 'numeric') 
+        if(type_indicators[which(subset_indicators %in%k)] == 'median'|type_indicators[which(subset_indicators %in%k)] == 'mean') 
         {
           data[,k] = as.numeric(data[,k])
           if(i =="Demographic")
@@ -246,7 +247,7 @@ for (i in unique(indicator_matrix$section))
     matching_indicator = gsub("\\d{1}$", "", do.call('c',strsplit(g, "[__]"))[[3]])
     }else{matching_indicator = gsub("\\d{1,2}$", "", do.call('c',strsplit(g, "[__]"))[[3]])}
     
-    sub_formatrix = indicator_matrix[grep(paste0('\\b',matching_indicator,'\\b'), tolower(indicator_matrix$indicator)),] %>% dplyr::filter(add_factsheet=='No')
+    sub_formatrix = indicator_matrix[grep(paste0('\\b',matching_indicator,'\\b'), tolower(indicator_matrix$indicator)),] #%>% dplyr::filter(add_factsheet=='No')
     #
     indicator = sub_formatrix$indicator
     indicator_short_desc = unique(sub_formatrix$indicator_short_desc)

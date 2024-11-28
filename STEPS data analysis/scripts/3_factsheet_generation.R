@@ -69,7 +69,7 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
       #####
       degrees_freedom = degf(svy_datum)-1
       
-      if(type_indicators[grep(ind_level,subset_indicators)] == 'numeric')
+      if(type_indicators[grep(ind_level,subset_indicators)] == 'mean'|type_indicators[grep(ind_level,subset_indicators)] == 'median')
       {
         data[,ind_level] = as.numeric(data[,ind_level])
         #

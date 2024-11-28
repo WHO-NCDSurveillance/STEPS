@@ -386,6 +386,13 @@ other_language = other_language[,c('item',language)]
 other_language[1,2] = levels(data$demog_c1)[1]
 other_language[2,2] = levels(data$demog_c1)[2]
 ####################################Editing the indicator matrix to drop indicators with NA##########################################
+indicator_matrix$excl_missing_ind = 'no'
+###
+indicator_matrix = indicator_matrix %>% mutate(ind_reduce = search_vars(logic_denom = concat_var, nonexist_vars = none_exist_var),
+                                               excl_missing_ind = ifelse(ind_reduce == TRUE,'yes',excl_missing_ind),
+                                               type = paste0(rep(type,n_semicolons),collapse = ';'))
+
+###
 indicator_matrix = indicator_matrix %>% rowwise %>%
   mutate(
     # Create a column 'var_missing' where each row contains a list of logical values indicating if each variable in 'indicator_var' is missing in 'data'
