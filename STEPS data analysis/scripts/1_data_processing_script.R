@@ -36,7 +36,7 @@ source('scripts/functions/analysis_functions.R')
 # Sources the R script 'analysis_functions.R' from the 'scripts/functions' directory, making any functions defined in that script available for use.
 
 ###Reading xml file for cleaning of out of range values together with checking of skip logic
-xml_file = read_excel(paste0('data_input/',country_ISO,'_xml_file.xlsx'),'survey') %>% 
+xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'survey') %>% 
            dplyr::filter(!(is.na(constraint) & is.na(relevant))) 
 # Reads the 'survey' sheet from the 'xml_file.xlsx' Excel file into 'xml_file', and filters out rows where both 'constraint' and 'relevant' columns are NA.
 
@@ -101,7 +101,7 @@ eval(parse(text = paste0('data$',outofrange_logic$name,'[',outofrange_logic$cons
 #####NOTE --Need to set 66,666,77,777,88,888,99,999 to NAs 
 
 ##vars_with_77_or_88_not part of constraints
-level_xml_file_77_88 = read_excel(paste0('data_input/',country_ISO,'_xml_file.xlsx'),'choices') %>% dplyr::filter(!is.na(`list name`) & (name==77 | name==88))
+level_xml_file_77_88 = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'choices') %>% dplyr::filter(!is.na(`list name`) & (name==77 | name==88))
 # Reads the 'choices' sheet from 'xml_file.xlsx' into 'level_xml_file_77_88', and filters rows where 'list name' is not NA and 'name' is either 77 or 88.
 #
 colnames(level_xml_file_77_88)=tolower(colnames(level_xml_file_77_88))
@@ -111,7 +111,7 @@ level_xml_file_77_88 = level_xml_file_77_88 %>% dplyr::select(all_of(c("list nam
 extracted_variables_77_88 = unique(level_xml_file_77_88$`list name`)
 # Extracts unique values from the 'list name' column of 'level_xml_file_77_88' into 'extracted_variables_77_88'.
 
-original_xml_file = read_excel(paste0('data_input/',country_ISO,'_xml_file.xlsx'),'survey') %>% dplyr::filter(!is.na(name)) %>% mutate(name = tolower(name))
+original_xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'survey') %>% dplyr::filter(!is.na(name)) %>% mutate(name = tolower(name))
 # Reads the 'survey' sheet from 'xml_file.xlsx' into 'original_xml_file', filters out rows where 'name' is NA, and converts 'name' column to lowercase.
 
 i = NULL
@@ -290,7 +290,7 @@ eval(parse(text=paste0('data$',indicators_with_logexp,'[all(data$',indicators_wi
 }
 ################################################
 # Reading an XML file for level information and filtering out unnecessary rows
-level_xml_file = read_excel(paste0('data_input/',country_ISO,'_xml_file.xlsx'),'choices') %>% 
+level_xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'choices') %>% 
                   dplyr::filter(!is.na(`list name`) & `list name`!='yn' & 
                                   `list name`!='yndk' & `list name`!='yndkr' & 
                                   `list name`!='ynr' & `list name`!='yndrr' & 
@@ -307,7 +307,7 @@ level_xml_file = level_xml_file %>% dplyr::select(all_of(c("list name",'name',pa
 # Extracting unique variable names from the level XML file
 extracted_variables = unique(level_xml_file$`list name`)
 # Reading another sheet from the XML file for survey details
-original_xml_file = read_excel(paste0('data_input/',country_ISO,'_xml_file.xlsx'),'survey') %>% dplyr::filter(!is.na(name)) %>% mutate(name = tolower(name))
+original_xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'survey') %>% dplyr::filter(!is.na(name)) %>% mutate(name = tolower(name))
 i = NULL
 matched_variables = data.frame()
 # Loop through extracted variables to find matching survey variables
