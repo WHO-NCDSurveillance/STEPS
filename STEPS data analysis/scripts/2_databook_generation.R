@@ -52,9 +52,9 @@ for (i in unique(indicator_matrix$section))
           {
             if(denom_logic[which(subset_indicators %in%k)] =='all')
             {
-              datum = data%>%dplyr::filter(!is.na(agerange) & !is.na(eval(parse(text = k))))
+              datum = data%>%dplyr::filter(!is.na(eval(parse(text = k)))) ###Possible to drop !is.na(agerange) &
             }else{
-              datum = data%>%dplyr::filter(!is.na(agerange) & eval(parse(text=paste0('(',denom_logic[which(subset_indicators %in%k)],')'))))
+              datum = data%>%dplyr::filter(eval(parse(text=paste0('(',denom_logic[which(subset_indicators %in%k)],')'))))
             }
             
             ###Calling analyses functions
@@ -108,9 +108,9 @@ for (i in unique(indicator_matrix$section))
           { 
             if(denom_logic[which(subset_indicators %in%k)] =='all')
             {
-              datum = data%>%dplyr::filter(!is.na(agerange))
+              datum = data #%>%dplyr::filter(!is.na(agerange))
             }else{
-              datum = data%>%dplyr::filter(!is.na(agerange)&eval(parse(text=paste0('(',denom_logic[which(subset_indicators %in%k)],')'))))
+              datum = data%>%dplyr::filter(eval(parse(text=paste0('(',denom_logic[which(subset_indicators %in%k)],')'))))
             }
              #####Calling summary table here
             #Adding computations across the age categories to the table above

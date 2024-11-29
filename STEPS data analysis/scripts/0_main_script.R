@@ -1,5 +1,5 @@
 ###############################
-# Get the source directory of the current executing script
+## Get the source directory of the current executing script
 srcdir <- getSrcDirectory(function(){})[1]
 
 # Check if srcdir is empty, then use the current active document's directory

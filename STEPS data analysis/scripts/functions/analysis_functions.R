@@ -51,7 +51,7 @@ demog_numeric = function(strat_variable = 'agerange')
     # Exclude rows with NA in the stratification variable column
     summary_table = summary_table %>% dplyr::filter(!is.na(`eval(parse(text = strat_variable))`)) ###Excluding the totals row
     # Add a title row for the stratification variable
-    summary_table = rbind(c(row_strat_variable_titles[strat_position], rep('',ncol(summary_table)-1)),summary_table %>% as.matrix())%>%as.data.frame()
+    summary_table = rbind(c(row_strat_variable_titles[strat_position], rep('',ncol(summary_table)-1)),summary_table %>% as.matrix())%>%as.data.frame()###realign labels with subtitles for appended tables
   } else{}
   
   return(summary_table)
@@ -61,7 +61,7 @@ demog_numeric = function(strat_variable = 'agerange')
 demog_cat = function (strat_variable = 'agerange')
 {
   # Create a count table by filtering and grouping data
-  count_table = datum %>% dplyr::filter(!is.na(eval(parse(text = k))) & !is.na(agerange))%>%# Filter out rows with NA values in the specified variable and 'agerange'
+  count_table = datum %>% dplyr::filter(!is.na(eval(parse(text = k))))%>%# Filter out rows with NA values in the specified variable and 'agerange'
     group_by(eval(parse(text=strat_variable)), eval(parse(text=k)), sex, .drop = FALSE) %>%# Group data by stratification variable, the categorical variable (k), and sex
     summarise(n = n()) %>%# Summarize data to get counts
     rename(variable = `eval(parse(text = k))`) %>%# Rename the column for the categorical variable to 'variable'

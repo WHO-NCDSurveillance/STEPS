@@ -1,5 +1,7 @@
 ##Reading in data
-data = read.xlsx('data_input/data.xlsx')# Reads data from an Excel file located at 'data_input/data.xlsx' into a data frame called 'data'.
+##files in data_input folder
+#input_files = list.files('data_input')
+data = read.xlsx(paste0('data_input/',country_ISO,'_data.xlsx'))# Reads data from an Excel file located at 'data_input/data.xlsx' into a data frame called 'data'.
 colnames(data) =tolower(colnames(data))# Converts all column names in the 'data' data frame to lowercase to ensure uniformity in column name handling.
 #######Generating minimum and maximum age
 data = data %>% dplyr::filter(valid ==1) %>% mutate(minage = min(age, na.rm = T),maxage = max(age, na.rm = T))
@@ -34,7 +36,7 @@ source('scripts/functions/analysis_functions.R')
 # Sources the R script 'analysis_functions.R' from the 'scripts/functions' directory, making any functions defined in that script available for use.
 
 ###Reading xml file for cleaning of out of range values together with checking of skip logic
-xml_file = read_excel('data_input/xml_file.xlsx','survey') %>% 
+xml_file = read_excel(paste0('data_input/',country_ISO,'_xml_file.xlsx'),'survey') %>% 
            dplyr::filter(!(is.na(constraint) & is.na(relevant))) 
 # Reads the 'survey' sheet from the 'xml_file.xlsx' Excel file into 'xml_file', and filters out rows where both 'constraint' and 'relevant' columns are NA.
 
@@ -99,7 +101,7 @@ eval(parse(text = paste0('data$',outofrange_logic$name,'[',outofrange_logic$cons
 #####NOTE --Need to set 66,666,77,777,88,888,99,999 to NAs 
 
 ##vars_with_77_or_88_not part of constraints
-level_xml_file_77_88 = read_excel('data_input/xml_file.xlsx','choices') %>% dplyr::filter(!is.na(`list name`) & (name==77 | name==88))
+level_xml_file_77_88 = read_excel(paste0('data_input/',country_ISO,'_xml_file.xlsx'),'choices') %>% dplyr::filter(!is.na(`list name`) & (name==77 | name==88))
 # Reads the 'choices' sheet from 'xml_file.xlsx' into 'level_xml_file_77_88', and filters rows where 'list name' is not NA and 'name' is either 77 or 88.
 #
 colnames(level_xml_file_77_88)=tolower(colnames(level_xml_file_77_88))
@@ -109,7 +111,7 @@ level_xml_file_77_88 = level_xml_file_77_88 %>% dplyr::select(all_of(c("list nam
 extracted_variables_77_88 = unique(level_xml_file_77_88$`list name`)
 # Extracts unique values from the 'list name' column of 'level_xml_file_77_88' into 'extracted_variables_77_88'.
 
-original_xml_file = read_excel('data_input/xml_file.xlsx','survey') %>% dplyr::filter(!is.na(name)) %>% mutate(name = tolower(name))
+original_xml_file = read_excel(paste0('data_input/',country_ISO,'_xml_file.xlsx'),'survey') %>% dplyr::filter(!is.na(name)) %>% mutate(name = tolower(name))
 # Reads the 'survey' sheet from 'xml_file.xlsx' into 'original_xml_file', filters out rows where 'name' is NA, and converts 'name' column to lowercase.
 
 i = NULL
@@ -185,7 +187,7 @@ for(i in paste0('restric_',unique_NA_numbers,'_vars'))
 #########Generating indicators
 ####Reading indicator and secondary variable matrix
 #from an Excel file located at 'data_input/input_matrix.xls' from the sheet named 'indicators'
-indicator_matrix = read_excel('data_input/input_matrix.xls','indicators')%>%dplyr::filter(include_in_analysis=='Yes')
+indicator_matrix = read_excel(paste0('data_input/',country_ISO,'_input_matrix.xls'),'indicators')%>%dplyr::filter(include_in_analysis=='Yes')
 # Converting all column names of indicator_matrix to lowercase to ensure consistent naming
 colnames(indicator_matrix) = tolower(colnames(indicator_matrix))
 # Converting all values in indicator_matrix columns to character type
@@ -199,7 +201,7 @@ indicator_matrix = indicator_matrix %>% rowwise %>%# Ensuring operations are app
 
 ###
 # Reading another data matrix from the same Excel file, but from the 'derivedvars' sheet
-dervar_matrix = read_excel('data_input/input_matrix.xls',sheet = 'derivedvars')
+dervar_matrix = read_excel(paste0('data_input/',country_ISO,'_input_matrix.xls'),sheet = 'derivedvars')
 # Converting all column names of dervar_matrix to lowercase for consistency
 colnames(dervar_matrix) = tolower(colnames(dervar_matrix))
 # Checking if derived variables specified in the matrix exist in the dataset
@@ -288,7 +290,7 @@ eval(parse(text=paste0('data$',indicators_with_logexp,'[all(data$',indicators_wi
 }
 ################################################
 # Reading an XML file for level information and filtering out unnecessary rows
-level_xml_file = read_excel('data_input/xml_file.xlsx','choices') %>% 
+level_xml_file = read_excel(paste0('data_input/',country_ISO,'_xml_file.xlsx'),'choices') %>% 
                   dplyr::filter(!is.na(`list name`) & `list name`!='yn' & 
                                   `list name`!='yndk' & `list name`!='yndkr' & 
                                   `list name`!='ynr' & `list name`!='yndrr' & 
@@ -305,7 +307,7 @@ level_xml_file = level_xml_file %>% dplyr::select(all_of(c("list name",'name',pa
 # Extracting unique variable names from the level XML file
 extracted_variables = unique(level_xml_file$`list name`)
 # Reading another sheet from the XML file for survey details
-original_xml_file = read_excel('data_input/xml_file.xlsx','survey') %>% dplyr::filter(!is.na(name)) %>% mutate(name = tolower(name))
+original_xml_file = read_excel(paste0('data_input/',country_ISO,'_xml_file.xlsx'),'survey') %>% dplyr::filter(!is.na(name)) %>% mutate(name = tolower(name))
 i = NULL
 matched_variables = data.frame()
 # Loop through extracted variables to find matching survey variables
@@ -378,7 +380,7 @@ col_strat_variable = adj_col_strat_variable
 row_strat_variables = adj_row_strat_variable
 
 # Reading and processing another sheet from the Excel file for language translations
-other_language = read_excel('data_input/input_matrix.xls',sheet = 'other')%>%as.data.frame()
+other_language = read_excel(paste0('data_input/',country_ISO,'_input_matrix.xls'),sheet = 'other')%>%as.data.frame()
 colnames(other_language)=tolower(colnames(other_language))
 other_language = other_language[,c('item',language)]
 
@@ -388,9 +390,10 @@ other_language[2,2] = levels(data$demog_c1)[2]
 ####################################Editing the indicator matrix to drop indicators with NA##########################################
 indicator_matrix$excl_missing_ind = 'no'
 ###
-indicator_matrix = indicator_matrix %>% mutate(ind_reduce = search_vars(logic_denom = concat_var, nonexist_vars = none_exist_var),
+indicator_matrix = indicator_matrix %>% rowwise %>% mutate(ind_reduce = search_vars(logic_denom = concat_var, nonexist_vars = none_exist_var),
                                                excl_missing_ind = ifelse(ind_reduce == TRUE,'yes',excl_missing_ind),
-                                               type = paste0(rep(type,n_semicolons),collapse = ';'))
+                                               type_length = length(do.call('c',strsplit(type, "[;]"))),
+                                               type = ifelse(type_length==1,paste0(rep(type,n_semicolons),collapse = ';'),type))
 
 ###
 indicator_matrix = indicator_matrix %>% rowwise %>%

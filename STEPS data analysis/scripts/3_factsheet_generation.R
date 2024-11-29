@@ -85,7 +85,7 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
         conf_interval[conf_interval<0] = 0
         ###
         ####Computation of median and IQR
-        median_compute = sub_matrix$median_computation =='yes' & !is.na(sub_matrix$median_computation)
+        median_compute = unique(type_indicators)=='median'
         if(median_compute==TRUE)
         {
           men_women_est_ciprop = svyby(formula, by = ~sex, design = svy_datum, FUN = svyquantile, quantiles = c(.5,.25,.75), method = "lo", df = degrees_freedom)[,1:4]
