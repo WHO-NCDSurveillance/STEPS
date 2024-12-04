@@ -119,7 +119,9 @@ matched_variables_77_88 = data.frame()
 for (i in extracted_variables_77_88)
 {
   # Iterates over each variable in 'extracted_variables_77_88'.
-  guide_var_77_88 = unique(grep(paste0('^select_one\\s',i,'$'), original_xml_file$type, v=T))
+  #guide_var_77_88 = unique(grep(paste0('^select_one\\s',i,'$'), original_xml_file$type, v=T))
+  guide_var_77_88 = unique(grep(paste0('^select_one\\s',i,'$|^select_multiple\\s',i,'$'), original_xml_file$type, v=T))
+
   # Searches for 'select_one' variables in 'original_xml_file$type' that match the current variable pattern.
   if (length(guide_var_77_88)>0)
   {
@@ -314,7 +316,9 @@ matched_variables = data.frame()
 for (i in extracted_variables)
 {
   #unique_var = i
-  guide_var = unique(grep(paste0('^select_one\\s',i,'$'), original_xml_file$type, v=T))# Find matching guide variables
+  #guide_var = unique(grep(paste0('^select_one\\s',i,'$'), original_xml_file$type, v=T))# Find matching guide variables
+  guide_var = unique(grep(paste0('^select_one\\s',i,'$|^select_multiple\\s',i,'$'), original_xml_file$type, v=T))
+  
   if (length(guide_var)>0)
   {
    match_var = (original_xml_file %>% dplyr::filter(type == guide_var) %>% dplyr::select(name))$name # Get matched variables
