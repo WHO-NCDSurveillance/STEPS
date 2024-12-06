@@ -397,7 +397,8 @@ indicator_matrix$excl_missing_ind = 'no'
 indicator_matrix = indicator_matrix %>% rowwise %>% mutate(ind_reduce = search_vars(logic_denom = concat_var, nonexist_vars = none_exist_var),
                                                excl_missing_ind = ifelse(ind_reduce == TRUE,'yes',excl_missing_ind),
                                                type_length = length(do.call('c',strsplit(type, "[;]"))),
-                                               type = ifelse(type_length==1,paste0(rep(type,n_semicolons),collapse = ';'),type))
+                                               type = ifelse(type_length==1,paste0(rep(type,n_semicolons),collapse = ';'),type),
+                                               pop_subset = ifelse(type_length==1,paste0(rep(pop_subset,n_semicolons),collapse = ';'),pop_subset))
 
 ###
 indicator_matrix = indicator_matrix %>% rowwise %>%

@@ -308,14 +308,19 @@ analysis_categorical_fn = function(row_strat = 'agerange', col_strat = 'sex')
     # Define the survey design object using appropriate weights, strata, and nesting
     svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
     
-  } else if(i=="Summary of Combined Risk Factors")
-  {
+  } else if(i=="Summary of Combined Risk Factors"){
     # Recode 'agerange' for combined risk factor analysis into 18-44 and 45-69 age groups
     data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
                           agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
     # Define the survey design object with different weights
     svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
+  } else if(i == "Cervical Cancer Screening"){
+    data = data %>%mutate(agerange = case_when(age>=30 & age <49 ~1),
+                          agerange = factor(agerange,levels=1, labels=c('30-49')))
+    # Define the survey design object using appropriate weights, strata, and nesting
+    svy_data = svydesign(id=~psu, weights=~wstep1,strata=~stratum, data=data,nest = T)
     # Default case: use the existing data without modification
+    
   }else{data = data}
   # Conditional filtering based on the specified denominator condition
   if (denom_condition == 'all') {

@@ -52,7 +52,7 @@ for (i in unique(indicator_matrix$section))
           {
             if(denom_logic[which(subset_indicators %in%k)] =='all')
             {
-              datum = data%>%dplyr::filter(!is.na(eval(parse(text = k)))) ###Possible to drop !is.na(agerange) &
+              datum = data%>%dplyr::filter(!is.na(eval(parse(text = k)))) 
             }else{
               datum = data%>%dplyr::filter(eval(parse(text=paste0('(',denom_logic[which(subset_indicators %in%k)],')'))))
             }
@@ -114,13 +114,13 @@ for (i in unique(indicator_matrix$section))
             }
              #####Calling summary table here
             #Adding computations across the age categories to the table above
-            list_demog_vars = c("agerange",'', setdiff(row_strat_variables,"agerange"))
+            list_demog_vars = c("agerange",'', setdiff(row_strat_variables,"agerange")) ####To recheck that '' not coming after 'Agerange"
             num_demog = NULL
             summary_table = NULL
             ##
             summary_table = demog_cat() 
             ###
-            for(num_demog in list_demog_vars[-1])
+            for(num_demog in list_demog_vars[-1]) #####Recheck the edits[-1]
             {
               summary_table = full_join(summary_table %>% mutate_all(as.character), 
                                         demog_cat(num_demog)%>% mutate_all(as.character))
