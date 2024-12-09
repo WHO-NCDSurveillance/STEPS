@@ -365,7 +365,8 @@ for (i in unique(indicator_matrix$section))
         next_no = next_no+1
       }
     }
-    
+   
+    if(i == "Cervical Cancer Screening"){final_hlines = final_hlines[-c(1:4)]-4}
     ####
     std_border = fp_border(color = "grey",width = 5)
     white_border = fp_border(color = "white")
