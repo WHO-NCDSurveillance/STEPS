@@ -1,3 +1,6 @@
+# Create 'outputs' and 'Temp_Tables' folders if it don't exist
+lapply(c('/temp/', '/outputs/'), function(folder) dir.exists(paste0(getwd(), folder)) || dir.create(paste0(getwd(), folder), recursive = TRUE))
+
 i=NULL
 j=NULL
 k=NULL
@@ -604,7 +607,7 @@ for (i in unique(indicator_matrix$section))
     } else{}
     
     section_position = grep(i, unique(indicator_matrix$section))
-    print(doc, target =paste0('temp/Part',section_position+1,'_Indicator',ind_no,'.docx'))
+    print(doc, target =paste0('temp/Part',section_position,'_Indicator',ind_no,'.docx'))
     ind_no = ind_no+1
   }
   
@@ -617,11 +620,11 @@ for (i in unique(indicator_matrix$section))
   ##
   p=NULL
   for(p in 1:length(names(output_table))){
-    path = paste0(getwd(),'/temp/Part',section_position+1,'_Indicator',p,'.docx')
+    path = paste0(getwd(),'/temp/Part',section_position,'_Indicator',p,'.docx')
     docx = body_add_docx(docx, path, pos = "after") 
   }
   ##
-  print(docx, target =paste0('temp/Part',section_position+1,'.docx'))
+  print(docx, target =paste0('temp/Part',section_position,'.docx'))
 }
 
 
@@ -630,14 +633,16 @@ i=NULL
 library(officer)
 library(magrittr)
 
-# Initialize databook using the style template templates/style_template.docx
-databook <- read_docx(path = "templates/style_template.docx")
 
-# Copy Part1.docx from the "templates" folder to the "temp" folder
-file.copy("templates/Part1.docx", "temp/Part1.docx", overwrite = TRUE)
+# Initialize databook using the style template templates/databook_template.docx
+databook <- read_docx(path = "templates/databook_template.docx")
+databook <- databook %>%
+  body_replace_all_text(old_value = "survey_year", new_value = as.character(survey_year), only_at_cursor = FALSE) %>%
+  body_replace_all_text(old_value = "country_name", new_value = as.character(country), only_at_cursor = FALSE)
+
 
 # Loop through each section and add content to databook
-for(i in 1:(1 + length(unique(indicator_matrix$section)))) {
+for(i in 1:(length(unique(indicator_matrix$section)))) {
   
   # Specify the path for the current Part file
   path <- paste0(getwd(), '/temp/Part', i, '.docx')
@@ -649,7 +654,7 @@ for(i in 1:(1 + length(unique(indicator_matrix$section)))) {
   
   # Add a page break after each part, except the last one
   if (i < (1 + length(unique(indicator_matrix$section)))) {
-    databook <- databook %>% body_add_break(pos = "after")
+    databook <- databook %>% body_add_break(pos = "after") # Start a new section (on a new page)
   }
 }
 ####

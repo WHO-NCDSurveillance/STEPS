@@ -176,6 +176,10 @@ flex_fact_sheet = factsheet_table%>% flextable() %>% autofit() %>%
 ####
 ####
 doc = read_docx(paste0(getwd(),'/templates/factsheet_template.docx'))
+doc <- doc %>%
+  body_replace_all_text(old_value = "survey_year", new_value = as.character(survey_year), only_at_cursor = FALSE) %>%
+  body_replace_all_text(old_value = "country_name", new_value = as.character(country), only_at_cursor = FALSE)
+
 doc=doc %>% cursor_bookmark(id  = "bmk1") %>%
   body_add_flextable(width(flex_fact_sheet, width = dim(flex_fact_sheet)$widths*7.25/(flextable_dim(flex_fact_sheet)$widths)), pos = "on", align = 'left')
 

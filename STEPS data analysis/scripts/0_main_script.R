@@ -38,7 +38,7 @@ eval(parse(text = paste0('library(',list_packages,')', sep='\n')))
 ######################## Specifying analysis inputs ########################################
 
 ### Define the country and year of the survey
-country = 'Country Name'      # Country for the survey
+country = 'Country'      # Country for the survey
 survey_year = 2024       # Year of the survey
 
 ### Define stratification variables for the analysis
@@ -62,9 +62,6 @@ country_ISO = 'ISO'  # ISO code for the country
 ISO_existence = country_ISO %in% unique(read_dta('scripts/functions/risk_ref_data.dta')$ccode)
 # If the ISO code does not exist, stop the script and display an error message
 if(!ISO_existence)stop('The supplied ISO code does not exist in the reference dataset for cvd risk calculation')
-
-# Create 'outputs' and 'Temp_Tables' folders if it don't exist
-lapply(c('/temp/', '/outputs/'), function(folder) dir.exists(paste0(getwd(), folder)) || dir.create(paste0(getwd(), folder), recursive = TRUE))
 
 
 ################# Running scripts #################
