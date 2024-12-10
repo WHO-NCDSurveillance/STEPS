@@ -64,7 +64,7 @@ ISO_existence = country_ISO %in% unique(read_dta('scripts/functions/risk_ref_dat
 if(!ISO_existence)stop('The supplied ISO code does not exist in the reference dataset for cvd risk calculation')
 
 # Create 'outputs' and 'Temp_Tables' folders if it don't exist
-lapply(c('/Temp_Tables/', '/outputs/'), function(folder) dir.exists(paste0(getwd(), folder)) || dir.create(paste0(getwd(), folder), recursive = TRUE))
+lapply(c('/temp/', '/outputs/'), function(folder) dir.exists(paste0(getwd(), folder)) || dir.create(paste0(getwd(), folder), recursive = TRUE))
 
 
 ################# Running scripts #################

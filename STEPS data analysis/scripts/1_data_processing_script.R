@@ -520,9 +520,9 @@ print(doc,target=paste0(getwd(),'/outputs/Data processing report.docx'))
 #####Stopping script execution if ISO code is missing
 if(!ISO_existence)stop('The supplied ISO code does not exist in the reference dataset for cvd calculation')
 
-####clearing Temp_Tables folder
-unlink(paste0(getwd(),'/Temp_Tables/*'))
+####clearing temp folder
+unlink(paste0(getwd(),'/temp/*'))
 # clearing Tables folder 
-files_to_remove = setdiff(list.files(paste0(getwd(),'/Tables')),'Part1.docx')
-eval(parse(text = paste0('file.remove("',getwd(),'/Tables/',files_to_remove,'")', sep='\n')))
+#files_to_remove = setdiff(list.files(paste0(getwd(),'/temp')),'Part1.docx')
+#eval(parse(text = paste0('file.remove("',getwd(),'/temp/',files_to_remove,'")', sep='\n')))
 

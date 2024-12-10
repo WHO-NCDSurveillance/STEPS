@@ -604,7 +604,7 @@ for (i in unique(indicator_matrix$section))
     } else{}
     
     section_position = grep(i, unique(indicator_matrix$section))
-    print(doc, target =paste0('Temp_Tables/Part',section_position+1,'_Indicator',ind_no,'.docx'))
+    print(doc, target =paste0('temp/Part',section_position+1,'_Indicator',ind_no,'.docx'))
     ind_no = ind_no+1
   }
   
@@ -617,11 +617,11 @@ for (i in unique(indicator_matrix$section))
   ##
   p=NULL
   for(p in 1:length(names(output_table))){
-    path = paste0(getwd(),'/Temp_Tables/Part',section_position+1,'_Indicator',p,'.docx')
+    path = paste0(getwd(),'/temp/Part',section_position+1,'_Indicator',p,'.docx')
     docx = body_add_docx(docx, path, pos = "after") 
   }
   ##
-  print(docx, target =paste0('Tables/Part',section_position+1,'.docx'))
+  print(docx, target =paste0('temp/Part',section_position+1,'.docx'))
 }
 
 
@@ -633,11 +633,14 @@ library(magrittr)
 # Initialize databook using the style template templates/style_template.docx
 databook <- read_docx(path = "templates/style_template.docx")
 
+# Copy Part1.docx from the "templates" folder to the "temp" folder
+file.copy("templates/Part1.docx", "temp/Part1.docx", overwrite = TRUE)
+
 # Loop through each section and add content to databook
 for(i in 1:(1 + length(unique(indicator_matrix$section)))) {
   
   # Specify the path for the current Part file
-  path <- paste0(getwd(), '/Tables/Part', i, '.docx')
+  path <- paste0(getwd(), '/temp/Part', i, '.docx')
   
   
   # Add the content of the current Part document
