@@ -1,6 +1,3 @@
-# Create 'outputs' and 'Temp_Tables' folders if it don't exist
-lapply(c('/temp/', '/outputs/'), function(folder) dir.exists(paste0(getwd(), folder)) || dir.create(paste0(getwd(), folder), recursive = TRUE))
-
 i=NULL
 j=NULL
 k=NULL
