@@ -1,6 +1,7 @@
 
 
 backup/
-.*
-!.gitignore
+.Rhistory
+.DS_Store
+
 
