@@ -1,6 +1,6 @@
 
 
 backup/
-.Rproj.user
 .*
-STEPS data analysis/.Rhistory
+!.gitignore
+
