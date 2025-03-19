@@ -9,7 +9,7 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
   
   section_matrix = fact_sheet_matrix %>% dplyr::filter(section == sect)%>% arrange(fsctsheet_desc)
   ##
-  wt_step = unique(section_matrix$weight_step)
+  wt_step = unique(section_matrix$weight_step)[1]
   numeric_step = as.numeric(str_extract(wt_step, "\\d+"))
   data = data %>% dplyr::filter(!is.na(get(wt_step)))
   svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)

@@ -6,7 +6,7 @@ for (i in unique(indicator_matrix$section))
   data = analysis_data
   section_matrix = indicator_matrix %>% dplyr::filter(section == i)
   
-  wt_step = unique(section_matrix$weight_step)
+  wt_step = unique(section_matrix$weight_step)[1]
   data[,wt_step] = as.numeric(as.character(data[,wt_step]))
   data = data %>% dplyr::filter(!is.na(get(wt_step)))
   svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
@@ -44,7 +44,10 @@ for (i in unique(indicator_matrix$section))
       total_tab = list() 
       for(k in subset_indicators)
       {
-        
+       #data[,"agerange"] = data[,unique(sub_matrix$agevar)]
+      #svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
+       
+  
         if(type_indicators[which(subset_indicators %in%k)] == 'median'|type_indicators[which(subset_indicators %in%k)] == 'mean') 
         {
           data[,k] = as.numeric(data[,k])
@@ -311,28 +314,28 @@ for (i in unique(indicator_matrix$section))
     ###
     extract_table = output_table[[g]]
     ###
-    range_levels = length(names(table(data[,row_strat_variables[1]])))
+    range_levels = length(names(table(data[,unique(sub_formatrix$agevar)])))
 
-    if(i=="Cardiovascular disease risk")
-    {
-      datax = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
-                            agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
-      range_levels = length(names(table(datax[,row_strat_variables[1]])))
-      
-    } else if(i=="Summary of Combined Risk Factors")
-    {
-      datax = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
-                            agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
-      range_levels = length(names(table(datax[,row_strat_variables[1]])))
-      
-    }else{range_levels = length(names(table(data[,row_strat_variables[1]])))}
+    # if(i=="Cardiovascular disease risk")
+    # {
+    #   datax = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
+    #                         agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
+    #   range_levels = length(names(table(datax[,row_strat_variables[1]])))
+    #   
+    # } else if(i=="Summary of Combined Risk Factors")
+    # {
+    #   datax = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
+    #                         agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
+    #   range_levels = length(names(table(datax[,row_strat_variables[1]])))
+    #   
+    # }else{range_levels = length(names(table(data[,row_strat_variables[1]])))}
     
     #####
     all_hlines = c()
     strat_var_levels = if(any(!is.na(row_strat_variables)))
     {
       length_strat = length(row_strat_variables)
-      sub_var_levels = eval(parse(text=paste0('c(',paste0('length(names(table(data[,"',row_strat_variables,'"])))', collapse = ','),')')))
+      sub_var_levels = eval(parse(text=paste0('c(',paste0('length(names(table(data[,"',unique(sub_formatrix$agevar),'"])))', collapse = ','),')')))
       all_hlines = c(all_hlines,sub_var_levels)
     } else{NA}
     ###Determining lines to colour white
@@ -366,7 +369,7 @@ for (i in unique(indicator_matrix$section))
       }
     }
    
-    if(i == "Cervical Cancer Screening"){final_hlines = final_hlines[-c(1:4)]-4}
+    #if(i == "Cervical Cancer Screening"){final_hlines = final_hlines[-c(1:4)]-4}
     ####
     std_border = fp_border(color = "grey",width = 5)
     white_border = fp_border(color = "white")
@@ -609,7 +612,10 @@ for (i in unique(indicator_matrix$section))
   }
   
   ########Consolidating printed pieces per indicator
-  translated_text = unique(section_matrix$section_translated)
+  section_header_eng = unique(section_matrix$section)[1]
+  lang_translation = with(language_translation, cbind(english, get(language)))
+  translated_text = lang_translation[,2][which(lang_translation[,1] %in% section_header_eng)]
+  #######
   title_text = ftext(translated_text) %>% fpar()
   docx = read_docx()%>% 
          body_add(title_text, style = "heading 1")

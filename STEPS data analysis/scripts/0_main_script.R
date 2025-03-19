@@ -30,7 +30,7 @@ options(survey.adjust.domain.lonely=TRUE)
 ### Loading required packages
 # List of packages needed for the analysis
 list_packages = c('openxlsx','readxl','tidyverse','survey','stringr',
-                  'officer','flextable','readstata13','dplyr','haven','polyglotr')
+                  'officer','flextable','dplyr','haven')#,'readstata13','polyglotr'
 
 # Load each package in the list
 eval(parse(text = paste0('library(',list_packages,')', sep='\n')))
@@ -57,7 +57,7 @@ language = tolower(language)  # Convert language to lowercase for consistency
 
 ### Inputs for cardiovascular disease (CVD) risk computation
 country_ISO = 'ISO'  # ISO code for the country
-
+##
 ### Check if the specified ISO code exists in the reference dataset
 ISO_existence = country_ISO %in% unique(read_dta('scripts/functions/risk_ref_data.dta')$ccode)
 # If the ISO code does not exist, stop the script and display an error message

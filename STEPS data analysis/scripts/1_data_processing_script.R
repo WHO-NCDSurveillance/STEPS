@@ -351,6 +351,16 @@ for(i in  existing_vars_dataset) ###unique(matched_variables$matched_var)
 # Convert the data frame to a data frame and adjust factor levels
 data = data %>% as.data.frame() %>% mutate(sex = factor(c1, levels=1:2, labels=c('Men','Women')),
                                            agerange = factor(agerange, levels=names(table(data[,'agerange'])), labels=names(table(data[,'agerange']))))
+
+###########Generating agecat2 variable for testing agevar in the matrix
+  data = data %>%mutate(agerange1 = case_when(age>=30 & age <50 ~1),
+                        agerange1 = factor(agerange1,levels=1, labels=c('30-49')),
+                        agerange2 = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
+                        agerange2 = factor(agerange2,levels=1:2, labels=c('40-54','55-69')),
+                        agerange3 = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
+                        agerange3 = factor(agerange3,levels=1:2, labels=c('18-44','45-69')))
+  
+  
 # Copying the cleaned data to analysis_data for further analysis
 analysis_data = data
 ####Adjusting col_strat_variable and row_strat_variables objects
@@ -387,6 +397,10 @@ row_strat_variables = adj_row_strat_variable
 other_language = read_excel(paste0('data_input/',country_ISO,'_input_matrix.xls'),sheet = 'other')%>%as.data.frame()
 colnames(other_language)=tolower(colnames(other_language))
 other_language = other_language[,c('item',language)]
+
+###Otiginal file for other_language
+language_translation = read_excel(paste0('data_input/',country_ISO,'_input_matrix.xls'),sheet = 'other')%>%as.data.frame()
+colnames(language_translation)=tolower(colnames(language_translation))
 
 # Rewriting translations for 'sex'
 other_language[1,2] = levels(data$demog_c1)[1]
@@ -525,4 +539,5 @@ unlink(paste0(getwd(),'/temp/*'))
 # clearing Tables folder 
 #files_to_remove = setdiff(list.files(paste0(getwd(),'/temp')),'Part1.docx')
 #eval(parse(text = paste0('file.remove("',getwd(),'/temp/',files_to_remove,'")', sep='\n')))
+
 

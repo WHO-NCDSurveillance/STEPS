@@ -2,6 +2,8 @@
 # Define a function to generate a summary table for numeric demographic data
 demog_numeric = function(strat_variable = 'agerange')
 {
+  datum[,"agerange"] = datum[,unique(sub_matrix$agevar)]
+
   # Create a summary table by grouping data based on the specified stratification variable and sex
   summary_table = datum %>%
     # Group by the stratification variable and sex, and calculate counts and means
@@ -60,6 +62,7 @@ demog_numeric = function(strat_variable = 'agerange')
 # Define a function to generate a summary table for categorical demographic data
 demog_cat = function (strat_variable = 'agerange')
 {
+  datum[,"agerange"] = datum[,unique(sub_matrix$agevar)]
   # Create a count table by filtering and grouping data
   count_table = datum %>% dplyr::filter(!is.na(eval(parse(text = k))))%>%# Filter out rows with NA values in the specified variable and 'agerange'
     group_by(eval(parse(text=strat_variable)), eval(parse(text=k)), sex, .drop = FALSE) %>%# Group data by stratification variable, the categorical variable (k), and sex
@@ -121,13 +124,19 @@ demog_cat = function (strat_variable = 'agerange')
 # Define a function to analyze numeric non-demog data with stratification
 analysis_numeric_fn = function(row_strat = 'agerange', col_strat = 'sex')
 {
+  #####
+  sub_wt_step = unique(sub_matrix$weight_step)
+  data[,sub_wt_step] = as.numeric(as.character(data[,sub_wt_step]))
+  rev_data = data %>% dplyr::filter(!is.na(get(sub_wt_step)))
+  rev_svy_data = svydesign(id=~psu, weights=~get(sub_wt_step),strata=~stratum, data=rev_data,nest = T)
+  
   # Filtering and processing data based on condition
 if (denom_condition == 'all') {
   # If denominator condition is 'all', include all data with non-NA values
   datum = data %>% dplyr::filter(!is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))))
   datum[,k] = as.numeric(datum[,k])
-  
-  svy_datum = subset(svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))))
+    ####
+  svy_datum = subset(rev_svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))))
   eval(parse(text = paste0('svy_datum$variables$',k,' = as.numeric(as.character(svy_datum$variables$',k,'))')))
   svy_datum = subset(svy_datum, !is.na(eval(parse(text = k))))
   # If no rows in the data, set survey data to have zero counts for the variable
@@ -140,7 +149,7 @@ if (denom_condition == 'all') {
 } else {    # Apply a specific condition to filter the data
   datum = data %>% dplyr::filter(!is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))) & eval(parse(text = paste0('(',denom_condition,')'))))
   datum[,k] = as.numeric(datum[,k])
-  svy_datum = subset(svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))) & eval(parse(text = paste0('(',denom_condition,')'))))
+  svy_datum = subset(rev_svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))) & eval(parse(text = paste0('(',denom_condition,')'))))
   ##
   eval(parse(text = paste0('svy_datum$variables$',k,' = as.numeric(as.character(svy_datum$variables$',k,'))')))
   svy_datum = subset(svy_datum, !is.na(eval(parse(text = k))))
@@ -151,6 +160,11 @@ if (denom_condition == 'all') {
     svy_datum$variables[,k]=0
   }
 }
+
+####Setting agerange variable to what is reflected in the matrix
+datum[,"agerange"] = datum[,unique(sub_matrix$agevar)]
+eval(parse(text = paste0('svy_datum$variables$','agerange',' = svy_datum$variables$',unique(sub_matrix$agevar))))
+
   
 # Determine degrees of freedom for survey analysis
 degrees_freedom = ifelse(degf(svy_datum)==0,1,degf(svy_datum)-1)
@@ -299,35 +313,43 @@ analysis_categorical_fn = function(row_strat = 'agerange', col_strat = 'sex')
 {
   # Convert the row stratification variable to a factor, ensuring consistent levels and labels
   data[,row_strat] = factor(data[,row_strat], levels = names(table(data[,row_strat])), labels = names(table(data[,row_strat])))
+  
+  #####
+  sub_wt_step = unique(sub_matrix$weight_step)
+  data[,sub_wt_step] = as.numeric(as.character(data[,sub_wt_step]))
+  rev_data = data %>% dplyr::filter(!is.na(get(sub_wt_step)))
+  rev_svy_data = svydesign(id=~psu, weights=~get(sub_wt_step),strata=~stratum, data=rev_data,nest = T)
+  
+  
   # Conditional logic based on specific analysis types
-  if(i=="Cardiovascular disease risk")
-  {
-    # Recode 'agerange' for cardiovascular risk analysis into 40-54 and 55-69 age groups
-    data = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
-                          agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
-    # Define the survey design object using appropriate weights, strata, and nesting
-    svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
-    
-  } else if(i=="Summary of Combined Risk Factors"){
-    # Recode 'agerange' for combined risk factor analysis into 18-44 and 45-69 age groups
-    data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
-                          agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
-    # Define the survey design object with different weights
-    svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
-  } else if(i == "Cervical Cancer Screening"){
-    data = data %>%mutate(agerange = case_when(age>=30 & age <49 ~1),
-                          agerange = factor(agerange,levels=1, labels=c('30-49')))
-    # Define the survey design object using appropriate weights, strata, and nesting
-    svy_data = svydesign(id=~psu, weights=~wstep1,strata=~stratum, data=data,nest = T)
-    # Default case: use the existing data without modification
-    
-  }else{data = data}
+  # if(i=="Cardiovascular disease risk")
+  # {
+  #   # Recode 'agerange' for cardiovascular risk analysis into 40-54 and 55-69 age groups
+  #   data = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
+  #                         agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
+  #   # Define the survey design object using appropriate weights, strata, and nesting
+  #   svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
+  #   
+  # } else if(i=="Summary of Combined Risk Factors"){
+  #   # Recode 'agerange' for combined risk factor analysis into 18-44 and 45-69 age groups
+  #   data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
+  #                         agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
+  #   # Define the survey design object with different weights
+  #   svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
+  # } else if(i == "Cervical Cancer Screening"){
+  #   data = data %>%mutate(agerange = case_when(age>=30 & age <49 ~1),
+  #                         agerange = factor(agerange,levels=1, labels=c('30-49')))
+  #   # Define the survey design object using appropriate weights, strata, and nesting
+  #   svy_data = svydesign(id=~psu, weights=~wstep1,strata=~stratum, data=data,nest = T)
+  #   # Default case: use the existing data without modification
+  #   
+  # }else{data = data}
   # Conditional filtering based on the specified denominator condition
   if (denom_condition == 'all') {
     # Filter data where the key variable (k) and the row stratification variable are not missing
     datum = data %>% dplyr::filter(!is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))))
     # Subset the survey design data similarly
-    svy_datum = subset(svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))))
+    svy_datum = subset(rev_svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))))
     # Handle cases where no rows match the filter criteria
     if(nrow(datum)==0)
     {
@@ -338,7 +360,7 @@ analysis_categorical_fn = function(row_strat = 'agerange', col_strat = 'sex')
   } else {
     # Apply custom filtering condition along with the default criteria
     datum = data %>% dplyr::filter(!is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))) & eval(parse(text = paste0('(',denom_condition,')'))))
-    svy_datum = subset(svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))) & eval(parse(text = paste0('(',denom_condition,')'))))
+    svy_datum = subset(rev_svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))) & eval(parse(text = paste0('(',denom_condition,')'))))
     # Handle cases where no rows match the filter criteria
     if(nrow(datum)==0)
     {
@@ -346,6 +368,11 @@ analysis_categorical_fn = function(row_strat = 'agerange', col_strat = 'sex')
       svy_datum$variables[,k]=0# Set the key variable to 0 if no data matches
     }
   }
+  
+  ##########
+  ####Setting agerange variable to what is reflected in the matrix
+  datum[,"agerange"] = datum[,unique(sub_matrix$agevar)]
+  eval(parse(text = paste0('svy_datum$variables$','agerange',' = svy_datum$variables$',unique(sub_matrix$agevar))))
   
   # Calculate degrees of freedom for survey-based estimates, ensuring a minimum value of 1
   degrees_freedom = ifelse(degf(svy_datum)==0,1,degf(svy_datum)-1)
