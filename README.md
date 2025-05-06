@@ -1,1 +1,1 @@
-WHO STEPS survey analysis and quality monitoring code
+WHO STEPS survey analysis code
