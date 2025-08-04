@@ -5,7 +5,7 @@ data = read.xlsx(paste0('data_input/',country_ISO,'_data.xlsx'))# Reads data fro
 colnames(data) =tolower(colnames(data))# Converts all column names in the 'data' data frame to lowercase to ensure uniformity in column name handling.
 #######Generating minimum and maximum age
 data = data %>% dplyr::filter(valid ==1) %>% mutate(minage = min(age, na.rm = T),maxage = max(age, na.rm = T))
-
+##
 ####Variable groups
 var_groups =c(
             'c10a','c10b','c10c','c10d',
