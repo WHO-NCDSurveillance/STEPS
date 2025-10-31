@@ -1,3 +1,5 @@
+##Also possible to change reporting language at this point: for example language = 'french' if original data collection was not done in that language 
+
 ###Editing the matrix
 #Addition section number
 section_part_edit = cbind(section_title = unique(indicator_matrix$section_title))%>% 
