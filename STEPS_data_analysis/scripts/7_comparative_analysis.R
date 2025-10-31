@@ -301,8 +301,8 @@ chart_function = function(indicator_group = unique(sec_report_matrix$grp_tab_tit
     rowwise() %>%
     mutate(category = factor(category_level,
       levels = category_level,
-      labels = category_label
-      #labels = ifelse(language == "english", category, llm_translate(category_label))
+      #labels = category_label
+      labels = ifelse(language == "english", category_label, llm_translate(category_label))
       ),
       category = gsub('NA:|NA :|NA :| NA:| NA :| NA :','',category),
     ) %>%
