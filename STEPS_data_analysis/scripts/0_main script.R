@@ -24,7 +24,7 @@ package.list = c('ggplot2','ggtext','dplyr','tidyr','ggimage','ggpubr','grid','c
 eval(parse(text = paste0('library("',package.list,'")', sep ='\n')))
 ###
 # 'certainty' ensures lonely PSUs are treated with certainty weights
-options(survey.lonely.psu="certainty")
+options(survey.lonely.psu="adjust")
 # Adjust for lonely PSUs in domain analyses
 options(survey.adjust.domain.lonely=TRUE)
 
