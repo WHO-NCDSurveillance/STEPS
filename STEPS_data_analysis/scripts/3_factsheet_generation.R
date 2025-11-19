@@ -1,4 +1,4 @@
-fact_sheet_matrix = indicator_matrix %>% dplyr::filter(!is.na(fsctsheet_desc)) 
+fact_sheet_matrix = indicator_matrix %>% dplyr::filter(!is.na(factsheet_desc)) 
 if(nrow(fact_sheet_matrix)>0)
 {
 sect = NULL
@@ -7,7 +7,7 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
 {
   data = analysis_data
   
-  section_matrix = fact_sheet_matrix %>% dplyr::filter(section == sect)%>% arrange(fsctsheet_desc)
+  section_matrix = fact_sheet_matrix %>% dplyr::filter(section == sect)%>% arrange(factsheet_desc)
   ##
   wt_step = unique(section_matrix$weight_step)[1]
   numeric_step = as.numeric(str_extract(wt_step, "\\d+"))
