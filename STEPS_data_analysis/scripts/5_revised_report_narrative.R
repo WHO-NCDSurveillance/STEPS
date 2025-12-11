@@ -1,9 +1,9 @@
 ########################################################################
-#https://console.groq.com/keys;models - llama3-8b-8192, gemma2-9b-it, meta-llama/llama-4-scout-17b-16e-instruct
+#https://console.groq.com/keys;models - llama3-8b-8192, gemma2-9b-it, meta-llama/llama-4-scout-17b-16e-instruct,llama-3.3-70B-Versatile
 #https://console.groq.com/docs/rate-limits
 
 
-llm_wrapper_groq = function(prompt_text, model = "llama-3.3-70B-Versatile", max_tokens = 8192) {
+llm_wrapper_groq = function(prompt_text, model = "llama-3.3-70b-versatile", max_tokens = 8192) {
   # API key
   api_key = Sys.getenv("GROQ_API_KEY")
   
@@ -96,8 +96,13 @@ if(language!='english')
   translates_charts_headr = "Charts"
 }
 ####
+# Path to the folder
+folder_path = file.path(getwd(), "outputs", "report sections")
+# List everything inside the folder (files and subfolders)
+contents = list.files(folder_path, full.names = TRUE)
 
-####
+# Delete all contents
+unlink(contents, recursive = TRUE)####
 i = NULL
 sect_no = 1
 all_references = NULL
@@ -110,8 +115,8 @@ for(i in unique(reporting_matrix$section_title))
   ##Linking with matrix
   sec_report_matrix = reporting_matrix %>% dplyr::filter(section_title == i)%>% arrange(order_ind)
   ##
-  bacground_text = unique(sec_report_matrix$background)
-  survey_measures = unique(sec_report_matrix$survey_measures)
+  bacground_text = unique(sec_report_matrix$background)[1]
+  survey_measures = unique(sec_report_matrix$survey_measures)[1]
   ##Adjusting background text and survey measures using LLM
   adj_background_text = llm_wrapper_groq(
     paste0("Adjust the following text, adding critical statistics in the background for ",
@@ -168,7 +173,7 @@ for(i in unique(reporting_matrix$section_title))
   bullet_items = text_parts[-1] %>% str_trim()  # all bullets 
   
   ###
-  sec_doc = officer::read_docx('section_templates/section_template.docx') %>%
+  sec_doc = officer::read_docx('templates/section_template.docx') %>%
     body_add_par(translated_section_header,   style = "heading 1", pos = 'on') %>%
     body_add_par(translated_background_header, style = "heading 2") %>%
     body_add_par(translated_background_text,   style = "JustifiedNormal") %>%
@@ -228,7 +233,7 @@ for(i in unique(reporting_matrix$section_title))
     #
     #all_tables_text = enc2utf8(paste(all_tables_text, collapse = "\n"))
     #
-    sample_narration = na.omit(unique(sub_sec_report_matrix$text_example))
+    sample_narration = na.omit(unique(sub_sec_report_matrix$text_example)[1])
     ##
     # prompt = paste0(
     #   "Tables:\n", all_tables_text, "\n",
@@ -242,8 +247,6 @@ for(i in unique(reporting_matrix$section_title))
     #    to stratifier level, for example, the p - values would show whether there is a difference by age as a variable. Difference is considered significant if p-value < 0.05.
     #    Together with percentage estimates, provide the corresponding 95% CIs. Let the summary be as concise as possible without repetitions.")
     # 
-    
-    
     prompt1 <- paste0(
       "You are provided with the following tables:\n\n",
       all_tables_text, "\n\n",
@@ -256,15 +259,26 @@ for(i in unique(reporting_matrix$section_title))
       "2. Interpret all tables and describe the main findings clearly.\n",
       "3. Highlight only statistically significant differences (p < 0.05).\n",
       "4. Report p-values to four decimal places. If a p-value equals 0.0000, show it as <0.0001 (always report p-values in 4 decimal points).\n",
-      "5a. P-values indicate overall differences across each stratifier (e.g., age, sex), not within specific levels. Only one p-value should be reported per test.\n",
+      "5a. P-values indicate overall differences across each stratifier (e.g., age, sex), not within specific levels (e.g. we do not have p - values associated with being male alone rather it shows differences between 
+           males and females. Same applies to age). 
+      Only one p-value should be reported per test.\n",
       "5b. When a significant difference exists, state it clearly without repetition. For example, instead of: \n",
       "   'Prevalence was significantly higher among men (19.8%, 95% CI: 17.3–22.6%) compared with women (2.4%, 95% CI: 1.7–3.3%), with a significant difference (p < 0.0001)',\n",
       "   write: \n",
       "   'Prevalence was significantly higher among men (19.8%, 95% CI: 17.3–22.6%) compared with women (2.4%, 95% CI: 1.7–3.3%) (p < 0.0001)'.\n",
+      "5c. Significant difference should only be inferred in the text when one truly exists based on the p - values.\n ",
       "6. For each percentage estimate, report the 95% confidence interval (CI).\n",
-      "7. Keep the summary concise, non-repetitive, and focused on key messages and insights.\n\n",
+      "7. Keep the summary concise, non-repetitive, and focused on key messages and insights.\n",
+      "8. The narrative should be as meaningful as possible in a flowing manner in terms of technical knowledge without mix ups.\n",
+      "9. Do not start a sentence with a number but word.\n",
+      "10. If related indicators are presented in a table, then aim to interpret only one not both. 
+           for instance, if a table has both daily and non-daily smoking as indicators, then only daily will need to be interpreted\n",
+      "11. For each indicator, interpret the overall before disaggregated analysis.\n",
       "Write the final narrative directly — do not preface it with phrases like 'Here is the summary'."
     )
+    
+    
+   
     
     #
     prompt2 <- paste0(
@@ -275,6 +289,8 @@ for(i in unique(reporting_matrix$section_title))
       "Instructions:\n",
       "1. Interpret all tables and describe the main findings clearly.\n",
       "2. Keep the summary concise, non-repetitive, and focused on key messages and insights.\n\n",
+      "3. The narrative should be as meaningful as possible in a flowing manner in terms of technical knowledge without mix ups.\n",
+      "4. Do not start a sentence with a number but word.\n",
       "Write the final narrative directly — do not preface it with phrases like 'Here is the summary'."
     )
     ###selecting prompt based on the need to report significance
@@ -295,17 +311,17 @@ for(i in unique(reporting_matrix$section_title))
     sec_doc = sec_doc %>% body_add_par(complete_narrative, style = "JustifiedNormal")##translated_narrative
   }
   
-  print(sec_doc,target=paste0(getwd(),'/report outputs/report sections/',sect_no,'_section_file.docx')) 
+  print(sec_doc,target=paste0(getwd(),'/outputs/report sections/',sect_no,'_section_file.docx')) 
   sect_no=sect_no+1
   all_references = c(all_references, translated_ref)
 }
 
 #####
 ##Combining sections
-all_section_reports = eval(parse(text = paste0('c(',paste0('"report outputs/report sections/',1:length(unique(reporting_matrix$section_title)),
+all_section_reports = eval(parse(text = paste0('c(',paste0('"outputs/report sections/',1:length(unique(reporting_matrix$section_title)),
                                                            '_section_file.docx"',collapse = ','),')')))
 ###
-combined_report = officer::read_docx('section_templates/section_template.docx')
+combined_report = officer::read_docx('templates/section_template.docx')
 # Loop through each section and add content to databook
 for(i in all_section_reports) {
   
@@ -328,7 +344,6 @@ for (item in all_references) {
   combined_report = combined_report %>% body_add_par(item, style = "bullet")
 }
 
-
 #######
-print(combined_report, target = paste0('report outputs/combined_report', '.docx'))
+print(combined_report, target = paste0('outputs/', country_ISO, '-', survey_year, '_Combined_Narrative_Report_', format(Sys.time(), "%d-%b-%y_%H-%M-%S"), '.docx'))
 

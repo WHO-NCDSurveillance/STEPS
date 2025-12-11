@@ -562,6 +562,7 @@ unlink(paste0(getwd(),'/outputs/*'))
 # unlink(paste0(getwd(),'/report sections/*'))
 file.remove(paste0(getwd(),'/report outputs/combined_report.docx'))
 ###Reducing the matrix to required fields for written report
-#indicator_matrix = indicator_matrix #%>% dplyr::filter(!is.na(section_title))
+##To deactivate when generating databook and accompanying facheet
+#indicator_matrix = indicator_matrix %>% dplyr::filter(!is.na(section_title))
 #original_matrix = indicator_matrix
 

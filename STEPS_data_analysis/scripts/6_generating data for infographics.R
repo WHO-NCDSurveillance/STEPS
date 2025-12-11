@@ -32,6 +32,7 @@ gen_numbers_fn = function(sect = unique(reporting_matrix$section)[2])
   
   for (ind in 1:nrow(section_matrix))
   {
+    #print(ind)
     sub_matrix = section_matrix[ind,]
     
     #
@@ -45,6 +46,8 @@ gen_numbers_fn = function(sect = unique(reporting_matrix$section)[2])
     
     for(ind_level in subset_indicators)
     {
+      if(!all(is.na(analysis_data[[ind_level]])))
+      {
       denom_condition = denom_logic[grep(ind_level,subset_indicators)]
       #
       if(sect=="Cardiovascular disease risk")
@@ -136,8 +139,10 @@ gen_numbers_fn = function(sect = unique(reporting_matrix$section)[2])
                            c(ind_level,"Total",total_est_ciprop[1]))
       }
       ########Combining estimates
-      sub_section_results = rbind(sub_section_results,comb_rslts)    
+      sub_section_results = rbind(sub_section_results,comb_rslts)  
+      }else{}
     }
+
     section_results = rbind(section_results,sub_section_results) 
     
   }

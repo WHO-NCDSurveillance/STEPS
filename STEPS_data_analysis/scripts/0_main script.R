@@ -30,13 +30,13 @@ options(survey.adjust.domain.lonely=TRUE)
 
 ################################Setup########################################
 #GROQ - LLAMA key
-Sys.setenv(GROQ_API_KEY = "PUT KEY HERE")
+Sys.setenv(GROQ_API_KEY = "API KEY HERE")
 
 #year, country, and language
-survey_year = 2025
-country = "Lebanon"
-previous_survey_year = 2024
-report_signf = 'No'
+survey_year = 2024
+country = "ISO"
+previous_survey_year = 2017
+report_signf = 'Yes'
 ###
 ### Language setting for the analysis
 language =c('ENGLISH','FRENCH','ARABIC', 'SPANISH','RUSSIAN','OTHER')[1]  # Select language
@@ -47,7 +47,7 @@ language = tolower(language)  # Convert language to lowercase for consistency
 country_ISO = 'ISO'  # ISO code for the country
 
 ### Check if the specified ISO code exists in the reference dataset
-##default ISO
+##default is LBN when country_ISO = 'ISO'
 if(country_ISO == 'ISO'){check_ISO = 'LBN'} else{check_ISO = country_ISO}
 ISO_existence = check_ISO %in% unique(read_dta('scripts/functions/risk_ref_data.dta')$ccode)
 # If the ISO code does not exist, stop the script and display an error message
@@ -70,3 +70,4 @@ source('scripts/4_generating_numbers_for_narrative.R', local = T)
 source('scripts/5_revised_report_narrative.R', local = T)
 source('scripts/6_generating data for infographics.R', local = T)
 source('scripts/7_comparative_analysis.R', local = T)
+source('scripts/8_comparative_factsheet.R', local = T)

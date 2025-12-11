@@ -32,7 +32,7 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
     subset_indicators = do.call('c',strsplit(sub_matrix$indicator_var, "[;]"))[ind_position]
     type_indicators = do.call('c',strsplit(sub_matrix$type, "[;]"))[ind_position]
     denom_logic = do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))[ind_position]
-    ind_desc = do.call('c',strsplit(sub_matrix$fsctsheet_desc, "[;]"))
+    ind_desc = do.call('c',strsplit(sub_matrix$factsheet_desc, "[;]"))
     
     ind_level = NULL
     sub_section_results = NULL

@@ -132,8 +132,9 @@ rev_compute_pvalue <- function(ind_level, indicator, svy_datum, strat_col = NULL
     } else if (indicator$type == "categorical") {
       svy_datum$variables[[ind_level]] <- factor(svy_datum$variables[[ind_level]])
       #test <- svychisq(as.formula(paste0("~", ind_level, " + ", strat_col)), design = svy_datum)
-      test <- chisq.test(svytable(as.formula(paste0("~", ind_level, " + ", strat_col)),design = svy_datum),
-                 correct = TRUE) 
+      # test <- chisq.test(svytable(as.formula(paste0("~", ind_level, " + ", strat_col)),design = svy_datum),
+      #            correct = TRUE) 
+      test <- svychisq(as.formula(paste0("~", ind_level, " + ", strat_col)),design = svy_datum,statistic = "Chisq",simulate.p.value = TRUE)
       test$p.value
     } else {
       NA_real_
@@ -193,6 +194,7 @@ rev_comp_numbers <- function(sect) {
   section_results <- NULL
   
   for (i in 1:nrow(section_matrix)) {
+    #print(i)
     sub_matrix <- section_matrix[i,]
     subset_indicators <- strsplit(sub_matrix$indicator_var, ";")[[1]]
     type_indicators <- strsplit(sub_matrix$type, ";")[[1]]
@@ -210,6 +212,9 @@ rev_comp_numbers <- function(sect) {
     if (!all(is.na(tab_subtitle2))) tab_subtitle1 <- tab_subtitle2
     
     for (ind_level in subset_indicators) {
+      #print(ind_level)
+      if(!all(is.na(analysis_data[[ind_level]])))
+      {
       ind_position <- grep(ind_level, subset_indicators)
       denom_condition <- denom_logic[ind_position]
       ind_subtitle <- tab_subtitle1[ind_position]
@@ -241,7 +246,8 @@ rev_comp_numbers <- function(sect) {
                                       sect, section_title, grp_tab_title, ind_subtitle, arrange_num,
                                       sub_section_text, background_text)
       section_results <- bind_rows(section_results, comb_rslts)
-    }
+      }else{}
+    } 
   }
   
   return(section_results)
@@ -251,7 +257,7 @@ rev_comp_numbers <- function(sect) {
 # Parallel computation for all sections
 # -------------------------------
 cores_detected <- parallel::detectCores()
-analysis_cores <- ifelse(cores_detected == 1, 1, cores_detected - 4) # leave cores free
+analysis_cores <- ifelse(cores_detected == 1, 1, cores_detected - round(cores_detected/2)) # leave cores free
 plan(multisession, workers = analysis_cores)  
 
 rev_comp_indicator_results_list <- future_lapply(

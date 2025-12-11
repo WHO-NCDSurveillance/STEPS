@@ -2,16 +2,35 @@
 # Preparing datasets
 # -------------------------------
 dataset1 = analysis_data
-
-n = nrow(dataset1)
-resampled_idx = sample(1:n, size = n, replace = TRUE)
-dataset2 = dataset1[resampled_idx, ]
-
+source('scripts/functions/processing_dataset2.R')
+dataset2 = analysis_dataset2
+# 
 common_variables = intersect(names(dataset1), names(dataset2))
 
+###Conversion to common variable types
+# Create a list of classes from dataset1 for the common variables
+target_classes <- sapply(dataset1[common_variables], class)
+
+# Function to safely convert a column (x) to a target class (target_class)
+convert_to_target_class <- function(x, target_class) {
+  # Get the appropriate 'as.' function (e.g., as.numeric, as.factor)
+  conversion_function <- match.fun(paste0("as.", target_class))
+  
+  # Apply the conversion
+  return(conversion_function(x))
+}
+
+# Apply the conversion across all common columns in dataset2 using mutate and across
+dataset2 <- dataset2 %>%
+  mutate(across(
+    all_of(common_variables),
+    ~ convert_to_target_class(., target_classes[cur_column()])
+  ))
+
+######
 dataset1 = dataset1 %>%
   select(all_of(common_variables)) %>%
-  mutate(#svy_year = survey_year,
+  mutate(svy_year = survey_year,
          wstep1_norm = wstep1 / sum(wstep1, na.rm = TRUE),
          wstep2_norm = wstep2 / sum(wstep2, na.rm = TRUE),
          wstep3_norm = wstep3 / sum(wstep3, na.rm = TRUE))
@@ -25,6 +44,28 @@ dataset2 = dataset2 %>%
 
 combined_dataset = full_join(dataset1, dataset2)
 
+###
+combined_dataset = combined_dataset %>%
+  mutate(sex_age = case_when(sex == 'Men' & (agerange=='18-29'|agerange=='30-44') ~ 1,
+                             sex == 'Men' & (agerange=='45-59'|agerange=='60-69') ~ 2,
+                             sex == 'Women' & (agerange=='18-29'|agerange=='30-44') ~ 3,
+                             sex == 'Women' & (agerange=='45-59'|agerange=='60-69') ~ 4),
+         sex_age = factor(sex_age, levels = 1:4, 
+                          labels = c('Men 18 - 44','Men 45 - 69','Women 18 - 44','Women 45 - 69')),
+         bin_age = case_when(agerange=='18-29'|agerange=='30-44' ~ 1,
+                             agerange=='45-59'|agerange=='60-69' ~ 2),
+         bin_age = factor(bin_age,levels = 1:2, labels = c('18-44','45-69')))
+
+###Deriving comparative_reporting_matrix
+reporting_matrix_v2 = indicator_matrix_v2 %>% dplyr::filter(!is.na(section_title))
+common_ind_desc = intersect(reporting_matrix$indicator,reporting_matrix_v2$indicator)
+#
+comparative_reporting_matrix = reporting_matrix %>%
+                               dplyr::filter(eval(parse(text = paste0('indicator == "',common_ind_desc,'"', collapse = '|'))))
+
+
+###Run the script to process the combined dataset: deriving indicators
+#######
 comp_stratifiers = c(col_strat_variable, row_strat_variables, "sex_age")
 
 #################################Helper functions#################################
@@ -107,9 +148,8 @@ compute_pvalue = function(ind_level, indicator, svy_datum, strat_col = NULL, str
       test$p.value
     } else if (indicator$type == "categorical") {
       subset_design$variables[[ind_level]] = factor(subset_design$variables[[ind_level]])
-      #test = svychisq(as.formula(paste0("~", ind_level, "+ svy_year")), design = subset_design, statistic = "Chisq")
-      test <- chisq.test(svytable(as.formula(paste0("~", ind_level, " + ", svy_year)),design = subset_design, statistic = "Chisq"),
-                         correct = TRUE) 
+      test = svychisq(as.formula(paste0("~", ind_level, "+ svy_year")), design = subset_design, statistic = "Chisq",simulate.p.value = TRUE)
+      #test <- chisq.test(svytable(as.formula(paste0("~", ind_level, " + ", svy_year)),design = subset_design, statistic = "Chisq"),correct = TRUE) 
       test$p.value
     } else {
       NA_real_
@@ -173,7 +213,7 @@ analyse_indicator = function(ind_level, type_indicators, subset_indicators, svy_
 # -------------------------------
 comp_numbers = function(sect) {
   data = combined_dataset
-  section_matrix = reporting_matrix %>% filter(section == sect)
+  section_matrix = comparative_reporting_matrix %>% filter(section == sect)
   wt_step = unique(section_matrix$weight_step)[1]
   data = data %>% filter(!is.na(get(wt_step)))
   svy_data = svydesign(id = ~psu, weights = ~get(wt_step), strata = ~stratum, data = data, nest = TRUE)
@@ -197,7 +237,9 @@ comp_numbers = function(sect) {
     if (!all(is.na(tab_subtitle2))) tab_subtitle1 = tab_subtitle2
     
     for (ind_level in subset_indicators) {
-      
+      if(!all(is.na(data[[ind_level]])))
+      {
+      #print()
       ind_position = grep(ind_level, subset_indicators)
       denom_condition = denom_logic[ind_position]
       ind_subtitle = tab_subtitle1[ind_position]
@@ -228,6 +270,7 @@ comp_numbers = function(sect) {
       comb_rslts = analyse_indicator(ind_level, type_indicators, subset_indicators, svy_datum,
                                       sect,section_title, grp_tab_title, ind_subtitle,arrange_num,sub_section_text,background_text)
       section_results = bind_rows(section_results, comb_rslts)
+      }else{}
     }
   }
   
@@ -237,7 +280,7 @@ comp_numbers = function(sect) {
 # -------------------------------
 # Generating numbers for all sections
 # -------------------------------
-#comp_indicator_results = do.call(rbind, lapply(unique(reporting_matrix$section), comp_numbers))
+#comp_indicator_results = do.call(rbind, lapply(unique(comparative_reporting_matrix$section), comp_numbers))
 # Using multisession for cross-platform compatibility (Windows, Mac, Linux)
 cores_detected = parallel::detectCores()
 analysis_cores = ifelse(cores_detected == 1, 1, cores_detected - 4) # leave 1 core free
@@ -245,7 +288,7 @@ plan(multisession, workers = analysis_cores)
 
 # Parallel computation of indicator results
 comp_indicator_results_list = future_lapply(
-  unique(reporting_matrix$section),
+  unique(comparative_reporting_matrix$section),
   FUN = comp_numbers
 )
 # Combine results into a single data frame
@@ -280,13 +323,13 @@ add_grey_header = function(text, doc_width_in_inches = 7.3, min_row_height = NUL
 }
 #
 #clear contents of the folder with comparative factsheets/reports
-unlink(list.files(paste0(getwd(),'/report outputs/comparative'), full.names = TRUE, recursive = TRUE), recursive = TRUE)
+unlink(list.files(paste0(getwd(),'/outputs/comparative'), full.names = TRUE, recursive = TRUE), recursive = TRUE)
 
 #############################Helper function###########################
 chart_function = function(indicator_group = unique(sec_report_matrix$grp_tab_title)[1])
 {
   ###Indicator type
-  type_data = reporting_matrix %>% dplyr::filter(table_title == indicator_group)%>%
+  type_data = comparative_reporting_matrix %>% dplyr::filter(table_title == indicator_group)%>%
               dplyr::select(type)
   ind_type = strsplit(type_data$type, ";")[[1]][1]
   ##### 
@@ -384,7 +427,8 @@ chart_function = function(indicator_group = unique(sec_report_matrix$grp_tab_tit
                         llm_translate(unique(test_data$grp_tab_title)))
   
   ##Chart position
-  chart_position = grep(paste0("^",unique(test_data$grp_tab_title),"$"),indicator_groups)
+  #chart_position = grep(paste0("^",unique(test_data$grp_tab_title),"$"),indicator_groups)
+  chart_position = which(indicator_groups %in% unique(test_data$grp_tab_title))
   mod_title = as.character(paste0(chart_position,': ',chart_title))
   #p1 <- p1 + coord_cartesian(clip = "off")
   p_whole <- p1 + p_gap +
@@ -446,7 +490,7 @@ for(i in unique(comp_indicator_results$section_title))#sect
   }
  
   ###
-  sec_doc = officer::read_docx('section_templates/template_comparative_factsheet.docx') %>%
+  sec_doc = officer::read_docx('templates/template_comparative_factsheet.docx') %>%
     #body_add_par(translated_section_header,   style = "heading 1") %>%
     body_add_flextable(add_grey_header(translated_background_header)) %>%
     body_add_par(translated_background_text,   style = "Normal")  %>%
@@ -529,7 +573,7 @@ for(i in unique(comp_indicator_results$section_title))#sect
   # Generate all charts in a list (no eval/parse)
   chart_list <- lapply(indicator_groups, function(grp) chart_function(indicator_group = grp))
   
-  # Split charts into groups of up to 6 (for 2 columns × max 3 rows)
+  # Split charts into groups of up to 2
   split_groups <- split(chart_list, ceiling(seq_along(chart_list) / 2))
   
   sec_doc = sec_doc %>% body_add_break(pos = 'on') %>%
@@ -544,17 +588,17 @@ for(i in unique(comp_indicator_results$section_title))#sect
     ##
     ##
     # Now save it:
-    chart_path = paste0(getwd(),"/report outputs/comparative/temp_plots/charts_group_", m, ".png")
+    chart_path = paste0(getwd(),"/outputs/comparative/temp_plots/charts_group_", m, ".png")
     ggsave(filename = chart_path, plot = gg_charts,width = 15,height = 11,dpi = 600)
     ####
     sec_doc <- sec_doc %>% body_add_img(src = chart_path, width = 7.25, height = 4.5)
   }
   
   ##deleting temporary plot files
-  unlink(list.files(paste0(getwd(),'/report outputs/comparative/temp_plots/'), full.names = TRUE, recursive = TRUE), recursive = TRUE)
+  unlink(list.files(paste0(getwd(),'/outputs/comparative/temp_plots/'), full.names = TRUE, recursive = TRUE), recursive = TRUE)
   
   #########
-  print(sec_doc,target=paste0(getwd(),'/report outputs/comparative/',translated_section_header,'.docx')) 
+  print(sec_doc,target=paste0(getwd(),'/outputs/comparative/',translated_section_header,'.docx')) 
 }
 
 
