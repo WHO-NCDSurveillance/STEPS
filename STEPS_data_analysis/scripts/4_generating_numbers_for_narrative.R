@@ -188,7 +188,7 @@ rev_comp_numbers <- function(sect) {
   data <- analysis_data ##combined_dataset
   section_matrix <- reporting_matrix %>% filter(section == sect)
   wt_step <- unique(section_matrix$weight_step)[1]
-  data <- data %>% filter(!is.na(get(wt_step)))
+  data <- data %>% dplyr::filter(!is.na(get(wt_step)))
   svy_data <- svydesign(id = ~psu, weights = ~get(wt_step), strata = ~stratum, data = data, nest = TRUE)
   
   section_results <- NULL

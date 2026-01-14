@@ -29,7 +29,7 @@ none_exist_var = setdiff(c(var_groups,'b5','b8'),var_intersect)
 # Identifies which variables from 'var_groups' and 'b5', 'b8' are not present in the dataset by taking the set difference between the total list and the intersected list.
 
 ###Adding these to the data with NAs initialised
-eval(parse(text = paste0('data$',none_exist_var,' = NA', sep = '\n')))
+if(length(none_exist_var)>0) {eval(parse(text = paste0('data$',none_exist_var,' = NA', sep = '\n')))}
 # Dynamically adds columns for the variables that do not exist in 'data' and initializes them with NA values. 'eval(parse(text = ...))' is used to construct and execute R code as a string.
 
 ####Calling functions to be used for analysis
@@ -80,6 +80,13 @@ vars_not_indataset = setdiff(reduced_xml$name, names(data))
 ##
 reduced_xml = reduced_xml%>%dplyr::filter(eval(parse(text = paste0('name!="',vars_not_indataset,'"', collapse = '& '))))
 # Filters out rows in 'reduced_xml' where the 'name' column matches any of the variables in 'vars_not_indataset'.
+###Enforcing variables to be of type numeric
+#Selecting numeric variables from xls file--NOTE on timestamp
+select_numeric_vars = reduced_xml %>% rename_with(tolower) %>% 
+                      dplyr::filter(type %in% c("calculate", "integer")) %>% dplyr::pull(name)
+
+##Converting the variables to type numeric
+data = data %>% mutate(across(all_of(select_numeric_vars),~ as.numeric(as.character(.))))
 
 ########Cleaning out of range values:
 outofrange_logic = reduced_xml %>% dplyr::filter(!is.na(constraint)) %>%
@@ -261,14 +268,14 @@ indicator_matrix = indicator_matrix %>%
   rowwise() %>%  # Apply transformations row by row
   mutate(
     has_log_exp = grepl('=|>|<', logic_condition_var),  # Check if logic_condition_var contains any logical operators
-    logic_condition_var = gsub('=', '==', logic_condition_var),  # Replace '=' with '==' in logic_condition_var
-    logic_condition_var = gsub('<==', '<=', logic_condition_var),  # Replace '<==' with '<=' in logic_condition_var
-    logic_condition_var = gsub('>==', '>=', logic_condition_var),  # Replace '>==' with '>=' in logic_condition_var
-    logic_condition_var = gsub('!==', '!=', logic_condition_var),  # Replace '!==', '!=' in logic_condition_var
-    pop_subset = gsub('=', '==', pop_subset),  # Replace '=' with '==' in pop_subset
-    pop_subset = gsub('<==', '<=', pop_subset),  # Replace '<==' with '<=' in pop_subset
-    pop_subset = gsub('>==', '>=', pop_subset),  # Replace '>==' with '>=' in pop_subset
-    pop_subset = gsub('!==', '!=', pop_subset),  # Replace '!==', '!=' in pop_subset
+    # logic_condition_var = gsub('=', '==', logic_condition_var),  # Replace '=' with '==' in logic_condition_var
+    # logic_condition_var = gsub('<==', '<=', logic_condition_var),  # Replace '<==' with '<=' in logic_condition_var
+    # logic_condition_var = gsub('>==', '>=', logic_condition_var),  # Replace '>==' with '>=' in logic_condition_var
+    # logic_condition_var = gsub('!==', '!=', logic_condition_var),  # Replace '!==', '!=' in logic_condition_var
+    # pop_subset = gsub('=', '==', pop_subset),  # Replace '=' with '==' in pop_subset
+    # pop_subset = gsub('<==', '<=', pop_subset),  # Replace '<==' with '<=' in pop_subset
+    # pop_subset = gsub('>==', '>=', pop_subset),  # Replace '>==' with '>=' in pop_subset
+    # pop_subset = gsub('!==', '!=', pop_subset),  # Replace '!==', '!=' in pop_subset
     n_semicolons = str_count(logic_condition_var, ";") + 1,  # Count number of semicolons in logic_condition_var and add 1
     indicator_var = paste0(indicator_var, 1:n_semicolons, collapse = ';')  # Append a sequence number to indicator_var
   )

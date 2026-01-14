@@ -2,26 +2,25 @@
 # Preparing datasets
 # -------------------------------
 dataset1 = analysis_data
-source('scripts/functions/processing_dataset2.R')
+source('scripts/functions/processing_dataset2.R', local = TRUE)
 dataset2 = analysis_dataset2
 # 
 common_variables = intersect(names(dataset1), names(dataset2))
 
 ###Conversion to common variable types
 # Create a list of classes from dataset1 for the common variables
-target_classes <- sapply(dataset1[common_variables], class)
+target_classes = sapply(dataset1[common_variables], class)
 
-# Function to safely convert a column (x) to a target class (target_class)
-convert_to_target_class <- function(x, target_class) {
-  # Get the appropriate 'as.' function (e.g., as.numeric, as.factor)
-  conversion_function <- match.fun(paste0("as.", target_class))
-  
+# Function to safely convert a column(x) to a target class (target_class)
+convert_to_target_class = function(x, target_class) {
+  # Get the appropriate 'as.' function (eg as.numeric, as.factor)
+  conversion_function = match.fun(paste0("as.", target_class))
   # Apply the conversion
   return(conversion_function(x))
 }
 
 # Apply the conversion across all common columns in dataset2 using mutate and across
-dataset2 <- dataset2 %>%
+dataset2 = dataset2 %>%
   mutate(across(
     all_of(common_variables),
     ~ convert_to_target_class(., target_classes[cur_column()])
@@ -29,14 +28,14 @@ dataset2 <- dataset2 %>%
 
 ######
 dataset1 = dataset1 %>%
-  select(all_of(common_variables)) %>%
+  dplyr::select(all_of(common_variables)) %>%
   mutate(svy_year = survey_year,
          wstep1_norm = wstep1 / sum(wstep1, na.rm = TRUE),
          wstep2_norm = wstep2 / sum(wstep2, na.rm = TRUE),
          wstep3_norm = wstep3 / sum(wstep3, na.rm = TRUE))
 
 dataset2 = dataset2 %>%
-  select(all_of(common_variables)) %>%
+  dplyr::select(all_of(common_variables)) %>%
   mutate(svy_year = previous_survey_year,
          wstep1_norm = wstep1 / sum(wstep1, na.rm = TRUE),
          wstep2_norm = wstep2 / sum(wstep2, na.rm = TRUE),
@@ -46,15 +45,22 @@ combined_dataset = full_join(dataset1, dataset2)
 
 ###
 combined_dataset = combined_dataset %>%
-  mutate(sex_age = case_when(sex == 'Men' & (agerange=='18-29'|agerange=='30-44') ~ 1,
-                             sex == 'Men' & (agerange=='45-59'|agerange=='60-69') ~ 2,
-                             sex == 'Women' & (agerange=='18-29'|agerange=='30-44') ~ 3,
-                             sex == 'Women' & (agerange=='45-59'|agerange=='60-69') ~ 4),
-         sex_age = factor(sex_age, levels = 1:4, 
-                          labels = c('Men 18 - 44','Men 45 - 69','Women 18 - 44','Women 45 - 69')),
-         bin_age = case_when(agerange=='18-29'|agerange=='30-44' ~ 1,
-                             agerange=='45-59'|agerange=='60-69' ~ 2),
-         bin_age = factor(bin_age,levels = 1:2, labels = c('18-44','45-69')))
+                    mutate(
+                           ##Overwriting agerange variable
+                           agerange = case_when(age>=18 & age <29 ~1,age>=30 & age <44 ~2,
+                                                age>=45 & age <59 ~3,age>=60 & age <69 ~4),
+                           agerange = factor(agerange,levels=1:4, labels=c('18-29','30-44','45-59','60-69')),
+                           ######
+                           sex_age = case_when(sex == 'Men' & (agerange=='18-29'|agerange=='30-44') ~ 1,
+                                               sex == 'Men' & (agerange=='45-59'|agerange=='60-69') ~ 2,
+                                               sex == 'Women' & (agerange=='18-29'|agerange=='30-44') ~ 3,
+                                               sex == 'Women' & (agerange=='45-59'|agerange=='60-69') ~ 4),
+                           sex_age = factor(sex_age, levels = 1:4, 
+                                            labels = c('Men 18 - 44','Men 45 - 69','Women 18 - 44','Women 45 - 69')),
+                           bin_age = case_when(agerange=='18-29'|agerange=='30-44' ~ 1,
+                                               agerange=='45-59'|agerange=='60-69' ~ 2),
+                           bin_age = factor(bin_age,levels = 1:2, labels = c('18-44','45-69')))%>%
+                  dplyr::filter(!is.na(agerange))
 
 ###Deriving comparative_reporting_matrix
 reporting_matrix_v2 = indicator_matrix_v2 %>% dplyr::filter(!is.na(section_title))
@@ -149,7 +155,7 @@ compute_pvalue = function(ind_level, indicator, svy_datum, strat_col = NULL, str
     } else if (indicator$type == "categorical") {
       subset_design$variables[[ind_level]] = factor(subset_design$variables[[ind_level]])
       test = svychisq(as.formula(paste0("~", ind_level, "+ svy_year")), design = subset_design, statistic = "Chisq",simulate.p.value = TRUE)
-      #test <- chisq.test(svytable(as.formula(paste0("~", ind_level, " + ", svy_year)),design = subset_design, statistic = "Chisq"),correct = TRUE) 
+      #test = chisq.test(svytable(as.formula(paste0("~", ind_level, " + ", svy_year)),design = subset_design, statistic = "Chisq"),correct = TRUE) 
       test$p.value
     } else {
       NA_real_
@@ -175,7 +181,7 @@ analyse_indicator = function(ind_level, type_indicators, subset_indicators, svy_
         significance_of_change = case_when(
           #change == 0 ~ "No change",
           !is.na(p_value) & p_value < 0.05 ~ "Significant",
-          (!is.na(p_value) & p_value >= 0.05) |change == 0 ~ "Not significant",
+           is.na(p_value) | p_value >= 0.05 |change == 0 ~ "Not significant",
           TRUE ~ NA_character_
         )
       ) %>% ungroup()
@@ -190,7 +196,7 @@ analyse_indicator = function(ind_level, type_indicators, subset_indicators, svy_
       significance_of_change = case_when(
         #change == 0 ~ "No change",
         !is.na(p_value) & p_value < 0.05 ~ "Significant",
-        (!is.na(p_value) & p_value >= 0.05) |change == 0 ~ "Not significant",
+         is.na(p_value) | p_value >= 0.05 |change == 0 ~ "Not significant",
         TRUE ~ NA_character_
       )
     ) %>% ungroup()
@@ -217,7 +223,22 @@ comp_numbers = function(sect) {
   wt_step = unique(section_matrix$weight_step)[1]
   data = data %>% filter(!is.na(get(wt_step)))
   svy_data = svydesign(id = ~psu, weights = ~get(wt_step), strata = ~stratum, data = data, nest = TRUE)
+  #### Section-specific age grouping
+  if (sect == "Cardiovascular disease risk") {
+    data = data %>%
+      mutate(agerange = case_when(age >= 40 & age < 55 ~ 1,
+                                  age >= 55 & age < 70 ~ 2),
+             agerange = factor(agerange, levels = 1:2, labels = c("40-54","55-69")))
+    svy_data = svydesign(id = ~psu, weights = ~wstep3, strata = ~stratum, data = data, nest = TRUE)
+  } else if (sect == "Summary of Combined Risk Factors") {
+    data = data %>%
+      mutate(agerange = case_when(age >= 18 & age < 45 ~ 1,
+                                  age >= 45 & age < 70 ~ 2),
+             agerange = factor(agerange, levels = 1:2, labels = c("18-44","45-69")))
+    svy_data = svydesign(id = ~psu, weights = ~wstep2, strata = ~stratum, data = data, nest = TRUE)
+  }
   
+  #########
   section_results = NULL
   
   for (i in 1:nrow(section_matrix)) {
@@ -239,25 +260,10 @@ comp_numbers = function(sect) {
     for (ind_level in subset_indicators) {
       if(!all(is.na(data[[ind_level]])))
       {
-      #print()
+      #print(ind_level)
       ind_position = grep(ind_level, subset_indicators)
       denom_condition = denom_logic[ind_position]
       ind_subtitle = tab_subtitle1[ind_position]
-      
-      # Section-specific age grouping
-      if (sect == "Cardiovascular disease risk") {
-        data = data %>%
-          mutate(agerange = case_when(age >= 40 & age < 55 ~ 1,
-                                      age >= 55 & age < 70 ~ 2),
-                 agerange = factor(agerange, levels = 1:2, labels = c("40-54","55-69")))
-        svy_data = svydesign(id = ~psu, weights = ~wstep3, strata = ~stratum, data = data, nest = TRUE)
-      } else if (sect == "Summary of Combined Risk Factors") {
-        data = data %>%
-          mutate(agerange = case_when(age >= 18 & age < 45 ~ 1,
-                                      age >= 45 & age < 70 ~ 2),
-                 agerange = factor(agerange, levels = 1:2, labels = c("18-44","45-69")))
-        svy_data = svydesign(id = ~psu, weights = ~wstep2, strata = ~stratum, data = data, nest = TRUE)
-      }
       
       # Subset data
       if (denom_condition == "all") {

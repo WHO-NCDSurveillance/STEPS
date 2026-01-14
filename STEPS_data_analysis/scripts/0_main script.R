@@ -30,7 +30,7 @@ options(survey.adjust.domain.lonely=TRUE)
 
 ################################Setup########################################
 #GROQ - LLAMA key
-Sys.setenv(GROQ_API_KEY = "API KEY HERE")
+Sys.setenv(GROQ_API_KEY = "INSERT API KEY HERE")
 
 #year, country, and language
 survey_year = 2024

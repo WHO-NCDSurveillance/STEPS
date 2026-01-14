@@ -8,7 +8,7 @@ comparative_fact_sheet_matrix = fact_sheet_matrix %>%
 ####
 if(nrow(comparative_fact_sheet_matrix)>0)
 {
-  sect = NULL
+  #sect = NULL
   
   factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix$section)[1])
   {
@@ -20,6 +20,24 @@ if(nrow(comparative_fact_sheet_matrix)>0)
     numeric_step = as.numeric(str_extract(wt_step, "\\d+"))
     data = data %>% dplyr::filter(!is.na(get(wt_step)))
     svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
+    ##
+    #
+    if(sect=="Cardiovascular disease risk")
+    {
+      data = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
+                            agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
+      
+      svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
+      
+    } else if(sect=="Summary of Combined Risk Factors")
+    {
+      data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
+                            agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
+      svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
+      
+    }else{data = data}
+    
+    ##
     section_title = c(paste0('Step ',numeric_step,' ',unique(section_matrix$section)),'','','')
     
     # 
@@ -48,23 +66,7 @@ if(nrow(comparative_fact_sheet_matrix)>0)
       {
         denom_condition = denom_logic[grep(ind_level,subset_indicators)]
         full_ind_desc = ind_desc[grep(ind_level,subset_indicators)]
-        ##
-        #
-        if(sect=="Cardiovascular disease risk")
-        {
-          data = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
-                                agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
-          
-          svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
-          
-        } else if(sect=="Summary of Combined Risk Factors")
-        {
-          data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
-                                agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
-          svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
-          
-        }else{data = data}
-        #
+        ###
         if (denom_condition == 'all') {
           datum = data %>% filter(!is.na(eval(parse(text = ind_level))) & !is.na(agerange))
           svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange))
@@ -145,25 +147,39 @@ if(nrow(comparative_fact_sheet_matrix)>0)
           
           ##
           svy_datum$variables[[ind_level]] = factor(svy_datum$variables[[ind_level]])
-          # tbl = svytable(as.formula(paste0("~", ind_level, " + svy_year")), design = svy_datum)
-          # test = chisq.test(tbl, correct = TRUE)
-          # p.value = as.numeric(test$p.value)
-          test <- svychisq(
-            as.formula(paste0("~", ind_level, " + svy_year")),
-            design = svy_datum,
-            statistic = "Chisq",simulate.p.value = TRUE)
-          p.value <- test$p.value
+          # test <- svychisq(
+          #   as.formula(paste0("~", ind_level, " + svy_year")),
+          #   design = svy_datum,
+          #   statistic = "Chisq",simulate.p.value = TRUE)
+          
+          ###contigency table 
+          tab = svytable(as.formula(paste0("~", ind_level, " + svy_year")),design = svy_datum)
+          #
+          if (nrow(tab) < 2 || ncol(tab) < 2) {
+            p.value = NA_real_
+          } else {
+            test = svychisq(
+              as.formula(paste0("~", ind_level, " + svy_year")),
+              design = svy_datum,
+              statistic = "Chisq",simulate.p.value = TRUE)
+            #
+            p.value = test$p.value
+          }       
+          
         }
         ###
         colnames(svyr_est_ciprop)=c("svy_year",ind_level,"ci_l","ci_u")
         #
+        all_years = data.frame(svy_year = sort(unique(combined_dataset$svy_year)))
+        #
+        svyr_est_ciprop = all_years %>% left_join(svyr_est_ciprop, by = "svy_year") %>%
+                          mutate(dplyr::across(-svy_year,~ tidyr::replace_na(., 0)))
+        ##
         change_est_ciprop = round(mult_n*as.numeric(svyr_est_ciprop[2,ind_level]),1)-round(mult_n*as.numeric(svyr_est_ciprop[1,ind_level]),1)
         ##formatting
-        significance = ifelse(as.numeric(p.value) < 0.05, '*','')
+        significance = ifelse(!is.na(p.value) & as.numeric(p.value) < 0.05, '*','')
         
         change_est_ciprop = paste0(formatC(change_est_ciprop,format = "f", digits = 1), change_delim, significance)
-        
-        
        ########Combining estimates
         svyr_est1 = paste0(formatC(round(mult_n*as.numeric(svyr_est_ciprop[1,2]),1),format = "f", digits = 1),delim_char,
                            formatC(round(mult_n*as.numeric(svyr_est_ciprop[1,3]),1),format = "f", digits = 1), ' - ',

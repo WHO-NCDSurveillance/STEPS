@@ -19,11 +19,13 @@ colnames(raw_dataset2) =tolower(colnames(raw_dataset2))# Converts all column nam
 # Check if 'valid' column exists in the dataset
 if ("valid" %in% names(raw_dataset2)) {
   raw_dataset2 = raw_dataset2 %>% 
-                  dplyr::filter(valid ==1) %>% 
-                  mutate(minage = min(age, na.rm = T),maxage = max(age, na.rm = T))
+                 dplyr::filter(valid == 1) %>% 
+                 mutate(minage = min(age, na.rm = T),maxage = max(age, na.rm = T))
 } else {
   raw_dataset2 = raw_dataset2 %>% 
-                 mutate(valid =1,minage = min(age, na.rm = T),maxage = max(age, na.rm = T))
+                 mutate(valid = ifelse(!is.na(sex) & !is.na(age),1,0),
+                        minage = min(age, na.rm = T),maxage = max(age, na.rm = T))%>%
+                 dplyr::filter(valid == 1)
 }
 
 ####Variable groups
@@ -48,7 +50,7 @@ none_exist_var = setdiff(c(var_groups,'b5','b8'),var_intersect)
 # Identifies which variables from 'var_groups' and 'b5', 'b8' are not present in the dataset by taking the set difference between the total list and the intersected list.
 
 ###Adding these to the data with NAs initialised
-eval(parse(text = paste0('raw_dataset2$',none_exist_var,' = NA', sep = '\n')))
+if(length(none_exist_var)>0){eval(parse(text = paste0('raw_dataset2$',none_exist_var,' = NA', sep = '\n')))}
 # Dynamically adds columns for the variables that do not exist in 'data' and initializes them with NA values. 'eval(parse(text = ...))' is used to construct and execute R code as a string.
 
 ####Calling functions to be used for analysis
@@ -58,7 +60,7 @@ eval(parse(text = paste0('raw_dataset2$',none_exist_var,' = NA', sep = '\n')))
 # xml_file = read_excel('data input/xml_file.xlsx','survey') %>% 
 #   dplyr::filter(!(is.na(constraint) & is.na(relevant))) 
 xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'survey') %>% 
-  dplyr::filter(!(is.na(constraint) & is.na(relevant))) 
+           dplyr::filter(!(is.na(constraint) & is.na(relevant))) 
 # Reads the 'survey' sheet from the 'xml_file.xlsx' Excel file into 'xml_file', and filters out rows where both 'constraint' and 'relevant' columns are NA.
 
 colnames(xml_file)=tolower(colnames(xml_file))
@@ -98,6 +100,13 @@ vars_not_indataset = setdiff(reduced_xml$name, names(raw_dataset2))
 ##
 reduced_xml = reduced_xml%>%dplyr::filter(eval(parse(text = paste0('name!="',vars_not_indataset,'"', collapse = '& '))))
 # Filters out rows in 'reduced_xml' where the 'name' column matches any of the variables in 'vars_not_indataset'.
+
+######Selecting numeric variables from xls file--NOTE on timestamp
+select_numeric_vars = reduced_xml %>% rename_with(tolower) %>% 
+                      dplyr::filter(type %in% c("calculate", "integer")) %>% dplyr::pull(name)
+
+##Converting the variables to type numeric
+raw_dataset2 = raw_dataset2 %>% mutate(across(all_of(select_numeric_vars),~ as.numeric(as.character(.))))
 
 ########Cleaning out of range values:
 # outofrange_logic = reduced_xml %>% dplyr::filter(!is.na(constraint)) %>%
@@ -279,14 +288,14 @@ indicator_matrix_v2 = indicator_matrix_v2 %>%
   rowwise() %>%  # Apply transformations row by row
   mutate(
     has_log_exp = grepl('=|>|<', logic_condition_var),  # Check if logic_condition_var contains any logical operators
-    logic_condition_var = gsub('=', '==', logic_condition_var),  # Replace '=' with '==' in logic_condition_var
-    logic_condition_var = gsub('<==', '<=', logic_condition_var),  # Replace '<==' with '<=' in logic_condition_var
-    logic_condition_var = gsub('>==', '>=', logic_condition_var),  # Replace '>==' with '>=' in logic_condition_var
-    logic_condition_var = gsub('!==', '!=', logic_condition_var),  # Replace '!==', '!=' in logic_condition_var
-    pop_subset = gsub('=', '==', pop_subset),  # Replace '=' with '==' in pop_subset
-    pop_subset = gsub('<==', '<=', pop_subset),  # Replace '<==' with '<=' in pop_subset
-    pop_subset = gsub('>==', '>=', pop_subset),  # Replace '>==' with '>=' in pop_subset
-    pop_subset = gsub('!==', '!=', pop_subset),  # Replace '!==', '!=' in pop_subset
+    # logic_condition_var = gsub('=', '==', logic_condition_var),  # Replace '=' with '==' in logic_condition_var
+    # logic_condition_var = gsub('<==', '<=', logic_condition_var),  # Replace '<==' with '<=' in logic_condition_var
+    # logic_condition_var = gsub('>==', '>=', logic_condition_var),  # Replace '>==' with '>=' in logic_condition_var
+    # logic_condition_var = gsub('!==', '!=', logic_condition_var),  # Replace '!==', '!=' in logic_condition_var
+    # pop_subset = gsub('=', '==', pop_subset),  # Replace '=' with '==' in pop_subset
+    # pop_subset = gsub('<==', '<=', pop_subset),  # Replace '<==' with '<=' in pop_subset
+    # pop_subset = gsub('>==', '>=', pop_subset),  # Replace '>==' with '>=' in pop_subset
+    # pop_subset = gsub('!==', '!=', pop_subset),  # Replace '!==', '!=' in pop_subset
     n_semicolons = str_count(logic_condition_var, ";") + 1,  # Count number of semicolons in logic_condition_var and add 1
     indicator_var = paste0(indicator_var, 1:n_semicolons, collapse = ';')  # Append a sequence number to indicator_var
   )
@@ -301,7 +310,7 @@ eval(parse(text = paste0(cleaned_logic2, sep = '\n')))# Evaluate and execute the
 # Assigning data to indicators where no logical expressions are involved 
 matrix_without_logexp_v2 = indicator_matrix_v2 %>% dplyr::filter(has_log_exp == FALSE)# Filter rows without logical expressions
 indicators_without_logexp_v2 = do.call('c',strsplit(matrix_without_logexp_v2$indicator_var, "[;]"))# Extract indicator variables without logical expressions  
-vars_without_logexp_v2 = do.call('c',strsplit(matrix_without_logexp_v2$logic_condition_var, "[;]"))# Extract variables for logic conditions without logical expressions  
+vars_without_logexp_v2 = do.call('c',strsplit(matrix_without_logexp_v2$logic_condition_var, "[;]"))# Extract variables without logical expressions  
 #
 # ind_var_without_logexp = cbind(vars_without_logexp,indicators_without_logexp) %>% as.data.frame()
 # #  
@@ -386,7 +395,7 @@ if(!is.null(indicators_with_logexp_v2))
 # colnames(matched_variables) = c('level_var','matched_var')
 # # Removing '_3' suffix from matched variables
 # matched_variables$matched_var = gsub('_3','', matched_variables$matched_var)
-# Checking if matched variables exist in the data
+# Checking if matched demographic variables exist in the data
 existing_vars_dataset_v2 = unique(intersect(matched_variables$matched_var, names(raw_dataset2)))
 # Retaining original demographic variables in the dataset
 eval(parse(text=paste0('raw_dataset2$demog_',existing_vars_dataset_v2,'=raw_dataset2$',existing_vars_dataset_v2, sep='\n')))
@@ -404,7 +413,7 @@ for(i in  existing_vars_dataset_v2) ###unique(matched_variables$matched_var)
                            paste0('"',eval(parse(text = paste0('var_attrs$`label::',language,'`'))),'"', collapse = ',') ,'))')))
 }
 
-# Convert the data frame to a data frame and adjust factor levels
+# Convert the data to a data frame and adjust factor levels
 raw_dataset2 = raw_dataset2 %>% as.data.frame() %>% mutate(sex = factor(c1, levels=1:2, labels=c('Men','Women')),
                                            demog_sex = sex,
                                            agerange = factor(agerange, levels=names(table(raw_dataset2[,'agerange'])), labels=names(table(raw_dataset2[,'agerange']))))

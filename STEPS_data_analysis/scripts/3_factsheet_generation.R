@@ -39,6 +39,8 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
     
     for(ind_level in subset_indicators)
     {
+      if(!all(is.na(data[[ind_level]])))
+      {
       denom_condition = denom_logic[grep(ind_level,subset_indicators)]
       full_ind_desc = ind_desc[grep(ind_level,subset_indicators)]
       ##
@@ -78,9 +80,9 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
           pivot_wider(names_from = c(sex), values_from = participants) %>%
           mutate(across(contains(c("Men", "Women")), ~coalesce(., 0)), Total=Men+Women)
         ##
-        men_women_est_ciprop = svyby(formula, by = ~sex, design = svy_datum, FUN = svymean, method = "lo", df = degrees_freedom, vartype = 'ci')%>%
+        men_women_est_ciprop = svyby(formula, by = ~sex, design = svy_datum, FUN = svymean, method = "lo", df = degrees_freedom, vartype = 'ci', na.rm = TRUE)%>%
           mutate(ci_l = ifelse(ci_l<0,0,ci_l))
-        total_est_ciprop = svymean(formula, design = svy_datum, method = "lo", df = degrees_freedom) 
+        total_est_ciprop = svymean(formula, design = svy_datum, method = "lo", df = degrees_freedom, na.rm = TRUE) 
         conf_interval = confint(total_est_ciprop) 
         conf_interval[conf_interval<0] = 0
         ###
@@ -88,8 +90,8 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
         median_compute = unique(type_indicators)=='median'
         if(median_compute==TRUE)
         {
-          men_women_est_ciprop = svyby(formula, by = ~sex, design = svy_datum, FUN = svyquantile, quantiles = c(.5,.25,.75), method = "lo", df = degrees_freedom)[,1:4]
-          median_total_est_ciprop = svyquantile(formula, design = svy_datum, method = "lo", quantiles = c(.5,.25,.75), df = degrees_freedom, ci=FALSE) 
+          men_women_est_ciprop = svyby(formula, by = ~sex, design = svy_datum, FUN = svyquantile, quantiles = c(.5,.25,.75), method = "lo", df = degrees_freedom, na.rm = TRUE)[,1:4]
+          median_total_est_ciprop = svyquantile(formula, design = svy_datum, method = "lo", quantiles = c(.5,.25,.75), df = degrees_freedom, ci=FALSE, na.rm = TRUE) 
           total_est_ciprop = as.vector(unlist(median_total_est_ciprop)[1])
           conf_interval = as.vector(unlist(median_total_est_ciprop)[2:3])
         }
@@ -112,8 +114,8 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
           mutate(across(contains(c("Men", "Women")), ~coalesce(., 0)), Total=Men+Women)
         
         ###
-        men_women_est_ciprop = svyby(formula, by = ~sex, design = svy_datum, FUN = svyciprop, method = "lo", df = degrees_freedom, vartype = 'ci')
-        total_est_ciprop = svyciprop(formula, design = svy_datum, method = "lo", df = degrees_freedom) 
+        men_women_est_ciprop = svyby(formula, by = ~sex, design = svy_datum, FUN = svyciprop, method = "lo", df = degrees_freedom, vartype = 'ci', na.rm = TRUE)
+        total_est_ciprop = svyciprop(formula, design = svy_datum, method = "lo", df = degrees_freedom, na.rm = TRUE) 
         ##
         total_est = paste0(formatC(round(100*as.vector(total_est_ciprop),1),format = "f", digits = 1),'%\n(',
                            formatC(round(100*as.numeric(attr(total_est_ciprop, "ci")[1]),1),format = "f", digits = 1), ' - ',
@@ -133,7 +135,8 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
       
       combined_results = c(full_ind_desc, total_est,males_est,females_est)
       sub_section_results = rbind(sub_section_results,combined_results)    
-    }
+      }
+    } 
     section_results = rbind(section_results,sub_section_results) 
     
   }
