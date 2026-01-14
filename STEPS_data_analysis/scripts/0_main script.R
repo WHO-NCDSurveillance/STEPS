@@ -23,7 +23,7 @@ package.list = c('ggplot2','ggtext','dplyr','tidyr','ggimage','ggpubr','grid','c
 # Load each package in the list
 eval(parse(text = paste0('library("',package.list,'")', sep ='\n')))
 ###
-# 'certainty' ensures lonely PSUs are treated with certainty weights
+# set how to handle lone PSUs
 options(survey.lonely.psu="adjust")
 # Adjust for lonely PSUs in domain analyses
 options(survey.adjust.domain.lonely=TRUE)
@@ -60,12 +60,11 @@ row_strat_variable_titles =c("Age Categories (Years)")  # Titles for row stratif
 vars_exempt_77_88 = c('')                  # Variables exempt from specific conditions (e.g., missing codes)
 
 ### Denominator limit: Minimum sample size required for estimating point estimates and confidence intervals
-denom_limit = 1
+denom_limit = 50
 ###Generating tables and exporting to txt files
 source('scripts/1_data_processing_script.R', local = T)
 source('scripts/2_databook_generation.R', local = T)
 source('scripts/3_factsheet_generation.R', local = T)
-#
 source('scripts/4_generating_numbers_for_narrative.R', local = T)
 source('scripts/5_revised_report_narrative.R', local = T)
 source('scripts/6_generating data for infographics.R', local = T)
