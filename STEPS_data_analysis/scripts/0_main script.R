@@ -47,8 +47,8 @@ language = tolower(language)  # Convert language to lowercase for consistency
 country_ISO = 'ISO'  # ISO code for the country
 
 ### Check if the specified ISO code exists in the reference dataset
-##default is LBN when country_ISO = 'ISO'
-if(country_ISO == 'ISO'){check_ISO = 'LBN'} else{check_ISO = country_ISO}
+##default is CHE when country_ISO = 'ISO'
+if(country_ISO == 'ISO'){check_ISO = 'CHE'} else{check_ISO = country_ISO}
 ISO_existence = check_ISO %in% unique(read_dta('scripts/functions/risk_ref_data.dta')$ccode)
 # If the ISO code does not exist, stop the script and display an error message
 if(!ISO_existence)stop('The supplied ISO code does not exist in the reference dataset for cvd risk calculation')
