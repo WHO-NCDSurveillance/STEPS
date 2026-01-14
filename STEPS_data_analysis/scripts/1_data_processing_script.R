@@ -39,8 +39,13 @@ source('scripts/functions/analysis_functions.R')
 ###Reading xml file for cleaning of out of range values together with checking of skip logic
 # xml_file = read_excel('data input/xml_file.xlsx','survey') %>% 
 #   dplyr::filter(!(is.na(constraint) & is.na(relevant))) 
+
+# full_xml needed for var type enforcement
+full_xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'survey') 
+
 xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'survey') %>% 
   dplyr::filter(!(is.na(constraint) & is.na(relevant))) 
+
 # Reads the 'survey' sheet from the 'xml_file.xlsx' Excel file into 'xml_file', and filters out rows where both 'constraint' and 'relevant' columns are NA.
 
 colnames(xml_file)=tolower(colnames(xml_file))
@@ -80,10 +85,11 @@ vars_not_indataset = setdiff(reduced_xml$name, names(data))
 ##
 reduced_xml = reduced_xml%>%dplyr::filter(eval(parse(text = paste0('name!="',vars_not_indataset,'"', collapse = '& '))))
 # Filters out rows in 'reduced_xml' where the 'name' column matches any of the variables in 'vars_not_indataset'.
+
 ###Enforcing variables to be of type numeric
 #Selecting numeric variables from xls file--NOTE on timestamp
-select_numeric_vars = reduced_xml %>% rename_with(tolower) %>% 
-                      dplyr::filter(type %in% c("calculate", "integer")) %>% dplyr::pull(name)
+select_numeric_vars = full_xml_file %>% rename_with(tolower) %>% mutate(name = tolower(name)) %>%
+                      dplyr::filter(type %in% c("calculate", "integer") | str_detect(type, "select_one")) %>% dplyr::pull(name) %>% intersect(names(data))
 
 ##Converting the variables to type numeric
 data = data %>% mutate(across(all_of(select_numeric_vars),~ as.numeric(as.character(.))))
