@@ -129,7 +129,7 @@ if (denom_condition == 'all') {
   
   svy_datum = subset(svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))))
   eval(parse(text = paste0('svy_datum$variables$',k,' = as.numeric(as.character(svy_datum$variables$',k,'))')))
-  svy_datum = subset(svy_datum, !is.na(eval(parse(text = k))))
+  svy_datum = subset(svy_datum, !is.na(eval(parse(text = k))) & get(wt_step)!=0)
   # If no rows in the data, set survey data to have zero counts for the variable
   if(nrow(datum)==0)
   {
@@ -143,7 +143,7 @@ if (denom_condition == 'all') {
   svy_datum = subset(svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))) & eval(parse(text = paste0('(',denom_condition,')'))))
   ##
   eval(parse(text = paste0('svy_datum$variables$',k,' = as.numeric(as.character(svy_datum$variables$',k,'))')))
-  svy_datum = subset(svy_datum, !is.na(eval(parse(text = k))))
+  svy_datum = subset(svy_datum, !is.na(eval(parse(text = k))) & get(wt_step)!=0)
   # If no rows in the data, set survey data to have zero counts for the variable
   if(nrow(datum)==0)
   {
@@ -299,30 +299,30 @@ analysis_categorical_fn = function(row_strat = 'agerange', col_strat = 'sex')
 {
   # Convert the row stratification variable to a factor, ensuring consistent levels and labels
   data[,row_strat] = factor(data[,row_strat], levels = names(table(data[,row_strat])), labels = names(table(data[,row_strat])))
-  # Conditional logic based on specific analysis types
-  if(i=="Cardiovascular disease risk")
-  {
-    # Recode 'agerange' for cardiovascular risk analysis into 40-54 and 55-69 age groups
-    data = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
-                          agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
-    # Define the survey design object using appropriate weights, strata, and nesting
-    svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
-    
-  } else if(i=="Summary of Combined Risk Factors")
-  {
-    # Recode 'agerange' for combined risk factor analysis into 18-44 and 45-69 age groups
-    data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
-                          agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
-    # Define the survey design object with different weights
-    svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
-    # Default case: use the existing data without modification
-  }else{data = data}
+  # # Conditional logic based on specific analysis types
+  # if(i=="Cardiovascular disease risk")
+  # {
+  #   # Recode 'agerange' for cardiovascular risk analysis into 40-54 and 55-69 age groups
+  #   data = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
+  #                         agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
+  #   # Define the survey design object using appropriate weights, strata, and nesting
+  #   svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
+  #   
+  # } else if(i=="Summary of Combined Risk Factors")
+  # {
+  #   # Recode 'agerange' for combined risk factor analysis into 18-44 and 45-69 age groups
+  #   data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
+  #                         agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
+  #   # Define the survey design object with different weights
+  #   svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
+  #   # Default case: use the existing data without modification
+  # }else{data = data}
   # Conditional filtering based on the specified denominator condition
   if (denom_condition == 'all') {
     # Filter data where the key variable (k) and the row stratification variable are not missing
     datum = data %>% dplyr::filter(!is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))))
     # Subset the survey design data similarly
-    svy_datum = subset(svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))))
+    svy_datum = subset(svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat)))& get(wt_step)!=0)
     # Handle cases where no rows match the filter criteria
     if(nrow(datum)==0)
     {
@@ -333,7 +333,7 @@ analysis_categorical_fn = function(row_strat = 'agerange', col_strat = 'sex')
   } else {
     # Apply custom filtering condition along with the default criteria
     datum = data %>% dplyr::filter(!is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))) & eval(parse(text = paste0('(',denom_condition,')'))))
-    svy_datum = subset(svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))) & eval(parse(text = paste0('(',denom_condition,')'))))
+    svy_datum = subset(svy_data, !is.na(eval(parse(text = k))) & !is.na(eval(parse(text=row_strat))) & eval(parse(text = paste0('(',denom_condition,')'))) & get(wt_step)!=0)
     # Handle cases where no rows match the filter criteria
     if(nrow(datum)==0)
     {
@@ -710,7 +710,7 @@ custom_sort3 <- function(name) {
 
 ####################Extracting reference parameters for calibrating cvd risk: The ref dataset is named risk_ref_data.dta
 ref_year = 2017
-risk_ref_data = read_dta('scripts/functions/risk_ref_data.dta') %>%dplyr::filter(ccode==check_ISO & year == ref_year) %>%
+risk_ref_data = haven::read_dta('scripts/functions/risk_ref_data.dta') %>%dplyr::filter(ccode==check_ISO & year == ref_year) %>%
                 dplyr::select(sex, cal2_m1_cons_ep_crbv, cal2_m1_slope_ep_crbv,cal2_m1_cons_ep_chdmi,cal2_m1_slope_ep_chdmi)
 ####
 int_males_crbv = risk_ref_data$cal2_m1_cons_ep_crbv[risk_ref_data$sex==1]

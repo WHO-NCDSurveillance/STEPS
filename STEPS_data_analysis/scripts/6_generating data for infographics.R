@@ -1,16 +1,16 @@
 ###########Function to generate numbers for reporting
 ##Generate stratifier
-analysis_data = analysis_data %>%
-                mutate(sex_age = case_when(sex == 'Men' & (agerange=='18-29'|agerange=='30-44') ~ 1,
-                                           sex == 'Men' & (agerange=='45-59'|agerange=='60-69') ~ 2,
-                                           sex == 'Women' & (agerange=='18-29'|agerange=='30-44') ~ 3,
-                                           sex == 'Women' & (agerange=='45-59'|agerange=='60-69') ~ 4),
-                       sex_age = factor(sex_age, levels = 1:4, 
-                                                 labels = c('Men 18 - 44','Men 45 - 69','Women 18 - 44','Women 45 - 69')),
-                       bin_age = case_when(agerange=='18-29'|agerange=='30-44' ~ 1,
-                                           agerange=='45-59'|agerange=='60-69' ~ 2),
-                       bin_age = factor(bin_age,levels = 1:2, labels = c('18-44','45-69')))
-
+# analysis_data = analysis_data %>%
+#                 mutate(sex_age = case_when(sex == 'Men' & (agerange=='18-29'|agerange=='30-44') ~ 1,
+#                                            sex == 'Men' & (agerange=='45-59'|agerange=='60-69') ~ 2,
+#                                            sex == 'Women' & (agerange=='15-29'|agerange=='30-44') ~ 3,
+#                                            sex == 'Women' & (agerange=='45-59'|agerange=='60-69') ~ 4),
+#                        sex_age = factor(sex_age, levels = 1:4, 
+#                                                  labels = c('Men 15 - 44','Men 45 - 69','Women 15 - 44','Women 45 - 69')),
+#                        bin_age = case_when(age >=18 & age < 45 ~ 1,
+#                                            age >=45 & age < 70 ~ 2),
+#                        bin_age = factor(bin_age,levels = 1:2, labels = c('18-44','45-69')))
+# 
 ###
 all_stratifiers = c(col_strat_variable,row_strat_variables,'sex_age','bin_age')
 
@@ -21,10 +21,10 @@ gen_numbers_fn = function(sect = unique(reporting_matrix$section)[2])
   
   section_matrix = reporting_matrix %>% dplyr::filter(section == sect)
   ##
-  wt_step = unique(section_matrix$weight_step)[1]
-  numeric_step = as.numeric(str_extract(wt_step, "\\d+"))
-  data = data %>% dplyr::filter(!is.na(get(wt_step)))
-  svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
+  no_wt_step = unique(section_matrix$weight_step)[1]
+  numeric_step = as.numeric(str_extract(no_wt_step, "\\d+"))
+  # data = data %>% dplyr::filter(!is.na(get(wt_step)))
+  # svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
   
   #### 
   section_results = NULL
@@ -39,8 +39,13 @@ gen_numbers_fn = function(sect = unique(reporting_matrix$section)[2])
     subset_indicators = do.call('c',strsplit(sub_matrix$indicator_var, "[;]"))
     type_indicators = do.call('c',strsplit(sub_matrix$type, "[;]"))
     denom_logic = do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))
-    #
-    
+    ####Defining survey design structure
+    wt_step = unique(sub_matrix$weight_step)[1]
+    data[,wt_step] = as.numeric(as.character(data[,wt_step]))
+    ##Setting arbitrary weights 9999 to missing survey weights: This is later to preserve the design during analysis
+    data[,wt_step][is.na(data[,wt_step])] = 9999
+    svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
+    ###
     ind_level = NULL
     sub_section_results = NULL
     
@@ -50,27 +55,27 @@ gen_numbers_fn = function(sect = unique(reporting_matrix$section)[2])
       {
       denom_condition = denom_logic[grep(ind_level,subset_indicators)]
       #
-      if(sect=="Cardiovascular disease risk")
-      {
-        data = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
-                              agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
-        
-        svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
-        
-      } else if(sect=="Summary of Combined Risk Factors")
-      {
-        data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
-                              agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
-        svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
-        
-      }else{data = data}
+      # if(sect=="Cardiovascular disease risk")
+      # {
+      #   data = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
+      #                         agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
+      #   
+      #   svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
+      #   
+      # } else if(sect=="Summary of Combined Risk Factors")
+      # {
+      #   data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
+      #                         agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
+      #   svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
+      #   
+      # }else{data = data}
       #
       if (denom_condition == 'all') {
         datum = data %>% filter(!is.na(eval(parse(text = ind_level))) & !is.na(agerange))
-        svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange))
+        svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) & get(wt_step)!=9999)
       } else {
         datum = data %>% dplyr::filter(!is.na(eval(parse(text = ind_level))) & !is.na(agerange) & eval(parse(text = paste0('(',denom_condition,')'))))
-        svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) & eval(parse(text = paste0('(',denom_condition,')'))))
+        svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) & get(wt_step)!=9999 & eval(parse(text = paste0('(',denom_condition,')'))))
       }
       
       #####
@@ -78,7 +83,7 @@ gen_numbers_fn = function(sect = unique(reporting_matrix$section)[2])
       
       if(type_indicators[grep(ind_level,subset_indicators)] == 'mean'|type_indicators[grep(ind_level,subset_indicators)] == 'median')
       {
-        data[,ind_level] = as.numeric(data[,ind_level])
+        #data[,ind_level] = as.numeric(data[,ind_level])
         #
         eval(parse(text = paste0('formula = ~', ind_level)))
         ####
@@ -151,11 +156,11 @@ gen_numbers_fn = function(sect = unique(reporting_matrix$section)[2])
 
 
 # Generate a table for all indicators by applying `gen_numbers` to each unique section
-indicator_results = do.call('rbind',lapply(unique(reporting_matrix$section),gen_numbers_fn))%>%
+indicator_results = do.call('rbind',future_lapply(unique(reporting_matrix$section),gen_numbers_fn))%>%
                     mutate(col2 = as.numeric(col2))
 
 ##
-colnames(indicator_results)=c("ind_level","var_strat_level","col2")
+colnames(indicator_results)=c("ind_level","var_strat_level","value")
 
 #####################Exporting the numbers to Excel template with charts###########################
 # Path to workbook
@@ -169,10 +174,10 @@ transl_lang = read.xlsx(file, 'languages', skipEmptyRows = FALSE)[,language]
 # Updating only col2 where keys match
 updated = existing %>% 
   left_join(indicator_results, by = c("ind_level", "var_strat_level"), suffix = c("", "_new")) %>%
-  mutate(col2 = ifelse(!is.na(col2_new), col2_new, col2)) %>% dplyr::select(-c(col2_new))
+  mutate(value = ifelse(!is.na(value_new), value_new, value)) %>% dplyr::select(-c(value_new))
 
 # New data for col2
-new_values = updated$col2
+new_values = updated$value
 
 # Write numbers into col2
 writeData(wb, sheet = "data", x = new_values, 

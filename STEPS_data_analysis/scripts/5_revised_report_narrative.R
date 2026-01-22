@@ -186,8 +186,7 @@ for(i in unique(reporting_matrix$section_title))
   }
   
   sec_doc = sec_doc %>% body_add_par(translated_findings_header,   style = "heading 2")
-  
-  
+
   ##
   sub_sec_titles = unique(sec_report_matrix$sub_section_text)
   j = NULL
@@ -276,10 +275,6 @@ for(i in unique(reporting_matrix$section_title))
       "11. For each indicator, interpret the overall before disaggregated analysis.\n",
       "Write the final narrative directly — do not preface it with phrases like 'Here is the summary'."
     )
-    
-    
-   
-    
     #
     prompt2 <- paste0(
       "You are provided with the following tables:\n\n",
@@ -295,7 +290,6 @@ for(i in unique(reporting_matrix$section_title))
     )
     ###selecting prompt based on the need to report significance
     if(report_signf == 'No'){prompt = prompt2} else{ prompt = prompt1}
-    
     ###
     prompt = enc2utf8(paste(prompt, collapse = "\n"))
     ##Calling the wrapper

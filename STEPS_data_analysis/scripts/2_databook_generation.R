@@ -6,11 +6,6 @@ for (i in unique(indicator_matrix$section))
   data = analysis_data
   section_matrix = indicator_matrix %>% dplyr::filter(section == i)
   
-  wt_step = unique(section_matrix$weight_step)[1]
-  data[,wt_step] = as.numeric(as.character(data[,wt_step]))
-  data = data %>% dplyr::filter(!is.na(get(wt_step)))
-  svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
-  
   output_table = list()
   
   for(j in unique(section_matrix$indicator_short_desc))
@@ -19,13 +14,20 @@ for (i in unique(indicator_matrix$section))
       sub_row = NULL
       for(sub_row in 1:nrow(pre_sub_matrix))
       {
+      ##
       sub_matrix = pre_sub_matrix[sub_row,]
       subset_indicators = do.call('c',strsplit(sub_matrix$indicator_var, "[;]"))
       type_indicators = do.call('c',strsplit(sub_matrix$type, "[;]"))
       denom_logic = do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))
-      #median_compute = sub_matrix$median_computation =='yes' & !is.na(sub_matrix$median_computation)
-      median_compute = unique(type_indicators)=='median'
       
+      ##Defining survey design structure
+      wt_step = unique(sub_matrix$weight_step)[1]
+      data[,wt_step] = as.numeric(as.character(data[,wt_step]))
+      ##Setting arbitrary weights 0 to missing survey weights: This is later to preserve the design during analysis
+      data[,wt_step][is.na(data[,wt_step])] = 0
+      svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
+      ##
+      median_compute = unique(type_indicators)=='median'
       ###population level indicators
       if(is.na(sub_matrix$pop_level_num_denom))
       {
@@ -635,11 +637,6 @@ for (i in unique(indicator_matrix$section))
 
 
 #########################################################################
-i=NULL
-library(officer)
-library(magrittr)
-
-
 # Initialize databook using the style template templates/databook_template.docx
 databook <- officer::read_docx(path = "templates/databook_template.docx")
 databook <- databook %>%
@@ -648,6 +645,7 @@ databook <- databook %>%
 
 
 # Loop through each section and add content to databook
+i=NULL
 for(i in 1:(length(unique(indicator_matrix$section)))) {
   
   # Specify the path for the current Part file

@@ -1,4 +1,5 @@
 ###Editing the matrix
+#res_data = analysis_data
 #Addition section number
 section_part_edit = cbind(section_title = unique(indicator_matrix$section_title))%>% 
                     as.data.frame()%>% 
@@ -20,17 +21,17 @@ reporting_matrix = indicator_matrix %>% dplyr::filter(!is.na(section_title))%>%
 #relevant_name = reporting_matrix$arrange_num
 ###########Function to generate numbers for reporting
 ##Generate stratifier
-analysis_data = analysis_data %>%
-                mutate(svy_year = survey_year,
-                       sex_age = case_when(sex == 'Men' & (agerange=='18-29'|agerange=='30-44') ~ 1,
-                                           sex == 'Men' & (agerange=='45-59'|agerange=='60-69') ~ 2,
-                                           sex == 'Women' & (agerange=='18-29'|agerange=='30-44') ~ 3,
-                                           sex == 'Women' & (agerange=='45-59'|agerange=='60-69') ~ 4),
-                       sex_age = factor(sex_age, levels = 1:4, 
-                                        labels = c('Men 18 - 44','Men 45 - 69','Women 18 - 44','Women 45 - 69')),
-                       bin_age = case_when(agerange=='18-29'|agerange=='30-44' ~ 1,
-                                           agerange=='45-59'|agerange=='60-69' ~ 2),
-                       bin_age = factor(bin_age,levels = 1:2, labels = c('18-44','45-69')))
+# analysis_data = analysis_data %>%
+#                 mutate(svy_year = survey_year,
+#                        sex_age = case_when(sex == 'Men' & (agerange=='18-29'|agerange=='30-44') ~ 1,
+#                                            sex == 'Men' & (agerange=='45-59'|agerange=='60-69') ~ 2,
+#                                            sex == 'Women' & (agerange=='18-29'|agerange=='30-44') ~ 3,
+#                                            sex == 'Women' & (agerange=='45-59'|agerange=='60-69') ~ 4),
+#                        sex_age = factor(sex_age, levels = 1:4, 
+#                                         labels = c('Men 18 - 44','Men 45 - 69','Women 18 - 44','Women 45 - 69')),
+#                        bin_age = case_when(agerange=='18-29'|agerange=='30-44' ~ 1,
+#                                            agerange=='45-59'|agerange=='60-69' ~ 2),
+#                        bin_age = factor(bin_age,levels = 1:2, labels = c('18-44','45-69')))
 
 ###
 #all_stratifiers = c(col_strat_variable,row_strat_variables,'sex_age','bin_age')
@@ -57,6 +58,7 @@ rev_compute_indicator <- function(ind_level, type_indicators, subset_indicators)
 # Compute wide table with 95% CI
 # -------------------------------
 rev_compute_wide_tab <- function(indicator, svy_datum, strat = NULL) {
+  #
   by_formula <- as.formula(if (is.null(strat)) "~svy_year" else paste0("~", strat, "+ svy_year"))
   
   df <- svyby(
@@ -154,6 +156,9 @@ rev_analyse_indicator <- function(ind_level, type_indicators, subset_indicators,
   
   # Stratified results
   strat_results <- lapply(narrative_strat, function(s) {
+    ##NOTE Recheck this stratification substitution for agerange
+    if(s == "agerange"){strat = s}
+    ##
     df <- rev_compute_wide_tab(indicator, svy_datum, strat = s)
     pval <- rev_compute_pvalue(ind_level, indicator, svy_datum, strat_col = s)
     
@@ -187,9 +192,24 @@ rev_analyse_indicator <- function(ind_level, type_indicators, subset_indicators,
 rev_comp_numbers <- function(sect) {
   data <- analysis_data ##combined_dataset
   section_matrix <- reporting_matrix %>% filter(section == sect)
-  wt_step <- unique(section_matrix$weight_step)[1]
-  data <- data %>% dplyr::filter(!is.na(get(wt_step)))
-  svy_data <- svydesign(id = ~psu, weights = ~get(wt_step), strata = ~stratum, data = data, nest = TRUE)
+  # wt_step <- unique(section_matrix$weight_step)[1]
+  # data <- data %>% dplyr::filter(!is.na(get(wt_step)))
+  # svy_data <- svydesign(id = ~psu, weights = ~get(wt_step), strata = ~stratum, data = data, nest = TRUE)
+  
+  # Section-specific age grouping
+  # if (sect == "Cardiovascular disease risk") {
+  #   data <- data %>%
+  #     mutate(agerange = case_when(age >= 40 & age < 55 ~ 1,
+  #                                 age >= 55 & age < 70 ~ 2),
+  #            agerange = factor(agerange, levels = 1:2, labels = c("40-54","55-69")))
+  #   svy_data <- svydesign(id = ~psu, weights = ~wstep3, strata = ~stratum, data = data, nest = TRUE)
+  # } else if (sect == "Summary of Combined Risk Factors") {
+  #   data <- data %>%
+  #     mutate(agerange = case_when(age >= 18 & age < 45 ~ 1,
+  #                                 age >= 45 & age < 70 ~ 2),
+  #            agerange = factor(agerange, levels = 1:2, labels = c("18-44","45-69")))
+  #   svy_data <- svydesign(id = ~psu, weights = ~wstep2, strata = ~stratum, data = data, nest = TRUE)
+  # }
   
   section_results <- NULL
   
@@ -208,8 +228,18 @@ rev_comp_numbers <- function(sect) {
     sub_section_text <- sub_matrix$sub_section_text
     background_text <- sub_matrix$background
     section_title <- sub_matrix$section_title#[1]
+    ##
+    agegrp_var = unique(sub_matrix$agevar)
+    ##
     
     if (!all(is.na(tab_subtitle2))) tab_subtitle1 <- tab_subtitle2
+    
+    ####Defining survey design structure
+    wt_step = unique(sub_matrix$weight_step)[1]
+    data[,wt_step] = as.numeric(as.character(data[,wt_step]))
+    ##Setting arbitrary weights 0 to missing survey weights: This is later to preserve the design during analysis
+    data[,wt_step][is.na(data[,wt_step])] = 0
+    svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
     
     for (ind_level in subset_indicators) {
       #print(ind_level)
@@ -218,27 +248,11 @@ rev_comp_numbers <- function(sect) {
       ind_position <- grep(ind_level, subset_indicators)
       denom_condition <- denom_logic[ind_position]
       ind_subtitle <- tab_subtitle1[ind_position]
-      
-      # Section-specific age grouping
-      if (sect == "Cardiovascular disease risk") {
-        data <- data %>%
-          mutate(agerange = case_when(age >= 40 & age < 55 ~ 1,
-                                      age >= 55 & age < 70 ~ 2),
-                 agerange = factor(agerange, levels = 1:2, labels = c("40-54","55-69")))
-        svy_data <- svydesign(id = ~psu, weights = ~wstep3, strata = ~stratum, data = data, nest = TRUE)
-      } else if (sect == "Summary of Combined Risk Factors") {
-        data <- data %>%
-          mutate(agerange = case_when(age >= 18 & age < 45 ~ 1,
-                                      age >= 45 & age < 70 ~ 2),
-                 agerange = factor(agerange, levels = 1:2, labels = c("18-44","45-69")))
-        svy_data <- svydesign(id = ~psu, weights = ~wstep2, strata = ~stratum, data = data, nest = TRUE)
-      }
-      
       # Subset data
       if (denom_condition == "all") {
-        svy_datum <- subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange))
+        svy_datum <- subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(get(agegrp_var)) & get(wt_step)!=0)
       } else {
-        svy_datum <- subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) &
+        svy_datum <- subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(get(agegrp_var)) & get(wt_step)!=0 &
                               eval(parse(text = paste0("(", denom_condition, ")"))))
       }
       
@@ -256,9 +270,9 @@ rev_comp_numbers <- function(sect) {
 # -------------------------------
 # Parallel computation for all sections
 # -------------------------------
-cores_detected <- parallel::detectCores()
-analysis_cores <- ifelse(cores_detected == 1, 1, cores_detected - round(cores_detected/2)) # leave cores free
-plan(multisession, workers = analysis_cores)  
+# cores_detected <- parallel::detectCores()
+# analysis_cores <- ifelse(cores_detected == 1, 1, cores_detected - round(cores_detected/2)) # leave cores free
+# plan(multisession, workers = analysis_cores)  
 
 rev_comp_indicator_results_list <- future_lapply(
   unique(reporting_matrix$section),
@@ -271,7 +285,8 @@ rev_comp_indicator_results = do.call(rbind, rev_comp_indicator_results_list) #%>
 estimate_lo_hi = grep('estimate|low|high', names(rev_comp_indicator_results), v=T)
 ##
 rev_comp_indicator_results <- rev_comp_indicator_results %>%
-                              mutate(across(all_of(estimate_lo_hi), ~ round(.x, 1)))
+                              mutate(across(all_of(estimate_lo_hi), ~ round(.x, 1)))%>%
+                              unique()
 
 
 

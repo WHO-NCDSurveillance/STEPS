@@ -18,25 +18,24 @@ rm(srcdir, parent_dir)
 package.list = c('ggplot2','ggtext','dplyr','tidyr','ggimage','ggpubr','grid','cowplot','officer',
                  'flextable','readxl','writexl','purrr','stringr','openai','httr','jsonlite',
                  'openxlsx','tidyverse','survey','haven','polyglotr','magrittr','knitr','docxtractr',
-                 'future.apply','future','patchwork','cowplot')
+                 'future.apply','future','patchwork','cowplot','magrittr')
 
 # Load each package in the list
 eval(parse(text = paste0('library("',package.list,'")', sep ='\n')))
 ###
-# set how to handle lone PSUs
+# 'certainty' ensures lonely PSUs are treated with certainty weights
 options(survey.lonely.psu="adjust")
 # Adjust for lonely PSUs in domain analyses
 options(survey.adjust.domain.lonely=TRUE)
 
 ################################Setup########################################
 #GROQ - LLAMA key
-Sys.setenv(GROQ_API_KEY = "INSERT API KEY HERE")
-
+Sys.setenv(GROQ_API_KEY = "INDICATE API KEY HERE")
 #year, country, and language
 survey_year = 2024
 country = "ISO"
 previous_survey_year = 2017
-report_signf = 'Yes'
+report_signf = 'ISO'
 ###
 ### Language setting for the analysis
 language =c('ENGLISH','FRENCH','ARABIC', 'SPANISH','RUSSIAN','OTHER')[1]  # Select language
@@ -44,7 +43,7 @@ if (language =='OTHER'){language = 'SPECIFY'} else{}  # Handle 'OTHER' language 
 language = tolower(language)  # Convert language to lowercase for consistency
 
 ### Inputs for cardiovascular disease (CVD) risk computation
-country_ISO = 'ISO'  # ISO code for the country
+country_ISO = 'OMN'  # ISO code for the country
 
 ### Check if the specified ISO code exists in the reference dataset
 ##default is CHE when country_ISO = 'ISO'
@@ -59,12 +58,21 @@ row_strat_variables = c('agerange')  # Row stratifiers (e.g., age range, nationa
 row_strat_variable_titles =c("Age Categories (Years)")  # Titles for row stratifiers
 vars_exempt_77_88 = c('')                  # Variables exempt from specific conditions (e.g., missing codes)
 
+###Setting for paralle computation
+cores_detected <- parallel::detectCores()
+analysis_cores <- ifelse(cores_detected == 1, 1, cores_detected - round(cores_detected/2)) # leave cores free
+plan(multisession, workers = analysis_cores)  
+####
+####
+# Check if temp folder exists in the current working directory
+if (!dir.exists('temp')) {dir.create('temp') }
 ### Denominator limit: Minimum sample size required for estimating point estimates and confidence intervals
-denom_limit = 50
+denom_limit = 1
 ###Generating tables and exporting to txt files
 source('scripts/1_data_processing_script.R', local = T)
 source('scripts/2_databook_generation.R', local = T)
 source('scripts/3_factsheet_generation.R', local = T)
+###
 source('scripts/4_generating_numbers_for_narrative.R', local = T)
 source('scripts/5_revised_report_narrative.R', local = T)
 source('scripts/6_generating data for infographics.R', local = T)

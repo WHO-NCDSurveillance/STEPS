@@ -33,16 +33,12 @@ if(length(none_exist_var)>0) {eval(parse(text = paste0('data$',none_exist_var,' 
 # Dynamically adds columns for the variables that do not exist in 'data' and initializes them with NA values. 'eval(parse(text = ...))' is used to construct and execute R code as a string.
 
 ####Calling functions to be used for analysis
-source('scripts/functions/analysis_functions.R')
+source('scripts/functions/analysis_functions.R', local = T)
 # Sources the R script 'analysis_functions.R' from the 'scripts/functions' directory, making any functions defined in that script available for use.
 
 ###Reading xml file for cleaning of out of range values together with checking of skip logic
 # xml_file = read_excel('data input/xml_file.xlsx','survey') %>% 
 #   dplyr::filter(!(is.na(constraint) & is.na(relevant))) 
-
-# full_xml needed for var type enforcement
-full_xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'survey') 
-
 xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'survey') %>% 
   dplyr::filter(!(is.na(constraint) & is.na(relevant))) 
 
@@ -88,8 +84,13 @@ reduced_xml = reduced_xml%>%dplyr::filter(eval(parse(text = paste0('name!="',var
 
 ###Enforcing variables to be of type numeric
 #Selecting numeric variables from xls file--NOTE on timestamp
+full_xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'survey') 
+#
+full_xml_file = full_xml_file[-sort(unique(c(eff_step_rows,type_rows,note_rows,group_rows,one_quin_rows))),] 
+#
 select_numeric_vars = full_xml_file %>% rename_with(tolower) %>% mutate(name = tolower(name)) %>%
-                      dplyr::filter(type %in% c("calculate", "integer") | str_detect(type, "select_one")) %>% dplyr::pull(name) %>% intersect(names(data))
+                      dplyr::filter(type %in% c("calculate", "integer") | str_detect(type, "select_one")) %>% #
+                      dplyr::pull(name) %>% intersect(setdiff(names(data),c('agerange','sex')))
 
 ##Converting the variables to type numeric
 data = data %>% mutate(across(all_of(select_numeric_vars),~ as.numeric(as.character(.))))
@@ -383,13 +384,12 @@ data = data %>% as.data.frame() %>% mutate(sex = factor(c1, levels=1:2, labels=c
                                            agerange = factor(agerange, levels=names(table(data[,'agerange'])), labels=names(table(data[,'agerange']))))
 
 ###########Generating agecat2 variable for testing agevar in the matrix
-data = data %>%mutate(agerange1 = case_when(age>=30 & age <50 ~1),
-                      agerange1 = factor(agerange1,levels=1, labels=c('30-49')),
-                      agerange2 = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
-                      agerange2 = factor(agerange2,levels=1:2, labels=c('40-54','55-69')),
-                      agerange3 = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
-                      agerange3 = factor(agerange3,levels=1:2, labels=c('18-44','45-69')))
-
+# data = data %>%mutate(agerange1 = case_when(age>=30 & age <50 ~1),
+#                       agerange1 = factor(agerange1,levels=1, labels=c('30-49')),
+#                       agerange2 = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
+#                       agerange2 = factor(agerange2,levels=1:2, labels=c('40-54','55-69')),
+#                       agerange3 = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
+#                       agerange3 = factor(agerange3,levels=1:2, labels=c('18-44','45-69')))
 
 # Copying the cleaned data to analysis_data for further analysis
 analysis_data = data
@@ -578,4 +578,5 @@ file.remove(paste0(getwd(),'/report outputs/combined_report.docx'))
 ##To deactivate when generating databook and accompanying facheet
 #indicator_matrix = indicator_matrix %>% dplyr::filter(!is.na(section_title))
 #original_matrix = indicator_matrix
+
 

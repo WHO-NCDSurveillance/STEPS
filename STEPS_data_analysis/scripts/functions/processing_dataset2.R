@@ -102,9 +102,10 @@ reduced_xml = reduced_xml%>%dplyr::filter(eval(parse(text = paste0('name!="',var
 # Filters out rows in 'reduced_xml' where the 'name' column matches any of the variables in 'vars_not_indataset'.
 
 ######Selecting numeric variables from xls file--NOTE on timestamp
-select_numeric_vars = reduced_xml %>% rename_with(tolower) %>% 
-                      dplyr::filter(type %in% c("calculate", "integer")) %>% dplyr::pull(name)
-
+#Selecting numeric variables from xls file--NOTE on timestamp
+select_numeric_vars = full_xml_file %>% rename_with(tolower) %>% mutate(name = tolower(name)) %>%
+  dplyr::filter(type %in% c("calculate", "integer") | str_detect(type, "select_one")) %>% #
+  dplyr::pull(name) %>% intersect(setdiff(names(raw_dataset2),c('agerange','sex')))
 ##Converting the variables to type numeric
 raw_dataset2 = raw_dataset2 %>% mutate(across(all_of(select_numeric_vars),~ as.numeric(as.character(.))))
 
@@ -419,12 +420,12 @@ raw_dataset2 = raw_dataset2 %>% as.data.frame() %>% mutate(sex = factor(c1, leve
                                            agerange = factor(agerange, levels=names(table(raw_dataset2[,'agerange'])), labels=names(table(raw_dataset2[,'agerange']))))
 
 ###########Generating agecat2 variable for testing agevar in the matrix
-raw_dataset2 = raw_dataset2 %>%mutate(agerange1 = case_when(age>=30 & age <50 ~1),
-                      agerange1 = factor(agerange1,levels=1, labels=c('30-49')),
-                      agerange2 = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
-                      agerange2 = factor(agerange2,levels=1:2, labels=c('40-54','55-69')),
-                      agerange3 = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
-                      agerange3 = factor(agerange3,levels=1:2, labels=c('18-44','45-69')))
+# raw_dataset2 = raw_dataset2 %>%mutate(agerange1 = case_when(age>=30 & age <50 ~1),
+#                       agerange1 = factor(agerange1,levels=1, labels=c('30-49')),
+#                       agerange2 = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
+#                       agerange2 = factor(agerange2,levels=1:2, labels=c('40-54','55-69')),
+#                       agerange3 = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
+#                       agerange3 = factor(agerange3,levels=1:2, labels=c('18-44','45-69')))
 
 
 # Copying the cleaned data to analysis_data for further analysis

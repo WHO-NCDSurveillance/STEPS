@@ -18,24 +18,24 @@ if(nrow(comparative_fact_sheet_matrix)>0)
     ##
     wt_step = unique(section_matrix$weight_step)[1]
     numeric_step = as.numeric(str_extract(wt_step, "\\d+"))
-    data = data %>% dplyr::filter(!is.na(get(wt_step)))
-    svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
+    # data = data %>% dplyr::filter(!is.na(get(wt_step)))
+    # svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
     ##
     #
-    if(sect=="Cardiovascular disease risk")
-    {
-      data = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
-                            agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
-      
-      svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
-      
-    } else if(sect=="Summary of Combined Risk Factors")
-    {
-      data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
-                            agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
-      svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
-      
-    }else{data = data}
+    # if(sect=="Cardiovascular disease risk")
+    # {
+    #   data = data %>%mutate(agerange = case_when(age>=40 & age <55 ~1,age>=55 & age <70 ~2),
+    #                         agerange = factor(agerange,levels=1:2, labels=c('40-54','55-69')))
+    #   
+    #   svy_data = svydesign(id=~psu, weights=~wstep3,strata=~stratum, data=data,nest = T)
+    #   
+    # } else if(sect=="Summary of Combined Risk Factors")
+    # {
+    #   data = data %>%mutate(agerange = case_when(age>=18 & age <45 ~1,age>=45 & age <70 ~2),
+    #                         agerange = factor(agerange,levels=1:2, labels=c('18-44','45-69')))
+    #   svy_data = svydesign(id=~psu, weights=~wstep2,strata=~stratum, data=data,nest = T)
+    #   
+    # }else{data = data}
     
     ##
     section_title = c(paste0('Step ',numeric_step,' ',unique(section_matrix$section)),'','','')
@@ -58,7 +58,15 @@ if(nrow(comparative_fact_sheet_matrix)>0)
       type_indicators = do.call('c',strsplit(sub_matrix$type, "[;]"))[ind_position]
       denom_logic = do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))[ind_position]
       ind_desc = do.call('c',strsplit(sub_matrix$factsheet_desc, "[;]"))
-      
+      #
+      ###Defining survey design structure
+      wt_step = unique(sub_matrix$weight_step)[1]
+      data[,wt_step] = as.numeric(as.character(data[,wt_step]))
+      ##Setting arbitrary weights 0 to missing survey weights: This is later to preserve the design during analysis
+      data[,wt_step][is.na(data[,wt_step])] = 0
+      svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
+    
+      #
       ind_level = NULL
       sub_section_results = NULL
       
@@ -69,10 +77,10 @@ if(nrow(comparative_fact_sheet_matrix)>0)
         ###
         if (denom_condition == 'all') {
           datum = data %>% filter(!is.na(eval(parse(text = ind_level))) & !is.na(agerange))
-          svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange))
+          svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) & get(wt_step)!=0)
         } else {
           datum = data %>% dplyr::filter(!is.na(eval(parse(text = ind_level))) & !is.na(agerange) & eval(parse(text = paste0('(',denom_condition,')'))))
-          svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) & eval(parse(text = paste0('(',denom_condition,')'))))
+          svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) & eval(parse(text = paste0('(',denom_condition,')')) & get(wt_step)!=0))
         }
         
         #####
@@ -80,7 +88,7 @@ if(nrow(comparative_fact_sheet_matrix)>0)
         
         if(type_indicators[grep(ind_level,subset_indicators)] == 'mean'|type_indicators[grep(ind_level,subset_indicators)] == 'median')
         {
-          data[,ind_level] = as.numeric(data[,ind_level])
+          #data[,ind_level] = as.numeric(data[,ind_level])
           #
           eval(parse(text = paste0('formula = ~', ind_level)))
 

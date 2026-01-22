@@ -26,24 +26,53 @@ dataset2 = dataset2 %>%
     ~ convert_to_target_class(., target_classes[cur_column()])
   ))
 
-######
-dataset1 = dataset1 %>%
-  dplyr::select(all_of(common_variables)) %>%
-  mutate(svy_year = survey_year,
-         wstep1_norm = wstep1 / sum(wstep1, na.rm = TRUE),
-         wstep2_norm = wstep2 / sum(wstep2, na.rm = TRUE),
-         wstep3_norm = wstep3 / sum(wstep3, na.rm = TRUE))
+#############Normalisation######################
+# Function to normalise wstep variables in any dataset
+normalize_wstep_vars = function(datum, prefix = "wstep", postfix = "_norm") {
+  
+  # Find all columns starting with the prefix
+  wstep_vars <- grep(paste0("^", prefix), names(datum), value = TRUE)
+  # If no matching columns, return dataset as is
+  if (length(wstep_vars) == 0) return(datum)
+  # Normalise and store with postfix
+  datum %>%
+    dplyr::mutate(
+      dplyr::across(
+        all_of(wstep_vars),
+        ~ .x / sum(.x, na.rm = TRUE),
+        .names = "{.col}{postfix}"
+      )
+    )
+}
 
+###
+dataset1 = dataset1 %>%
+            dplyr::select(all_of(common_variables)) %>%
+            dplyr::mutate(svy_year = survey_year) %>%
+            normalize_wstep_vars(postfix = "_norm")
+##
 dataset2 = dataset2 %>%
-  dplyr::select(all_of(common_variables)) %>%
-  mutate(svy_year = previous_survey_year,
-         wstep1_norm = wstep1 / sum(wstep1, na.rm = TRUE),
-         wstep2_norm = wstep2 / sum(wstep2, na.rm = TRUE),
-         wstep3_norm = wstep3 / sum(wstep3, na.rm = TRUE))
+            dplyr::select(all_of(common_variables)) %>%
+            dplyr::mutate(svy_year = previous_survey_year) %>%
+            normalize_wstep_vars(postfix = "_norm")
+
+# dataset1 = dataset1 %>%
+#   dplyr::select(all_of(common_variables)) %>%
+#   mutate(svy_year = survey_year,
+#          wstep1_norm = wstep1 / sum(wstep1, na.rm = TRUE),
+#          wstep2_norm = wstep2 / sum(wstep2, na.rm = TRUE),
+#          wstep3_norm = wstep3 / sum(wstep3, na.rm = TRUE))
+# 
+# dataset2 = dataset2 %>%
+#   dplyr::select(all_of(common_variables)) %>%
+#   mutate(svy_year = previous_survey_year,
+#          wstep1_norm = wstep1 / sum(wstep1, na.rm = TRUE),
+#          wstep2_norm = wstep2 / sum(wstep2, na.rm = TRUE),
+#          wstep3_norm = wstep3 / sum(wstep3, na.rm = TRUE))
 
 combined_dataset = full_join(dataset1, dataset2)
 
-###
+###NOTE: Case by case: agerange should be similar between two surveys
 combined_dataset = combined_dataset %>%
                     mutate(
                            ##Overwriting agerange variable
@@ -220,23 +249,23 @@ analyse_indicator = function(ind_level, type_indicators, subset_indicators, svy_
 comp_numbers = function(sect) {
   data = combined_dataset
   section_matrix = comparative_reporting_matrix %>% filter(section == sect)
-  wt_step = unique(section_matrix$weight_step)[1]
-  data = data %>% filter(!is.na(get(wt_step)))
-  svy_data = svydesign(id = ~psu, weights = ~get(wt_step), strata = ~stratum, data = data, nest = TRUE)
+  # wt_step = unique(section_matrix$weight_step)[1]
+  # data = data %>% filter(!is.na(get(wt_step)))
+  # svy_data = svydesign(id = ~psu, weights = ~get(wt_step), strata = ~stratum, data = data, nest = TRUE)
   #### Section-specific age grouping
-  if (sect == "Cardiovascular disease risk") {
-    data = data %>%
-      mutate(agerange = case_when(age >= 40 & age < 55 ~ 1,
-                                  age >= 55 & age < 70 ~ 2),
-             agerange = factor(agerange, levels = 1:2, labels = c("40-54","55-69")))
-    svy_data = svydesign(id = ~psu, weights = ~wstep3, strata = ~stratum, data = data, nest = TRUE)
-  } else if (sect == "Summary of Combined Risk Factors") {
-    data = data %>%
-      mutate(agerange = case_when(age >= 18 & age < 45 ~ 1,
-                                  age >= 45 & age < 70 ~ 2),
-             agerange = factor(agerange, levels = 1:2, labels = c("18-44","45-69")))
-    svy_data = svydesign(id = ~psu, weights = ~wstep2, strata = ~stratum, data = data, nest = TRUE)
-  }
+  # if (sect == "Cardiovascular disease risk") {
+  #   data = data %>%
+  #     mutate(agerange = case_when(age >= 40 & age < 55 ~ 1,
+  #                                 age >= 55 & age < 70 ~ 2),
+  #            agerange = factor(agerange, levels = 1:2, labels = c("40-54","55-69")))
+  #   svy_data = svydesign(id = ~psu, weights = ~wstep3, strata = ~stratum, data = data, nest = TRUE)
+  # } else if (sect == "Summary of Combined Risk Factors") {
+  #   data = data %>%
+  #     mutate(agerange = case_when(age >= 18 & age < 45 ~ 1,
+  #                                 age >= 45 & age < 70 ~ 2),
+  #            agerange = factor(agerange, levels = 1:2, labels = c("18-44","45-69")))
+  #   svy_data = svydesign(id = ~psu, weights = ~wstep2, strata = ~stratum, data = data, nest = TRUE)
+  # }
   
   #########
   section_results = NULL
@@ -256,6 +285,14 @@ comp_numbers = function(sect) {
     background_text = sub_matrix$background
     
     if (!all(is.na(tab_subtitle2))) tab_subtitle1 = tab_subtitle2
+    ###
+    ####Defining survey design structure
+    wt_step = unique(sub_matrix$weight_step)[1]
+    data[,wt_step] = as.numeric(as.character(data[,wt_step]))
+    ##Setting arbitrary weights 0 to missing survey weights: This is later to preserve the design during analysis
+    data[,wt_step][is.na(data[,wt_step])] = 0
+    svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
+    ###
     
     for (ind_level in subset_indicators) {
       if(!all(is.na(data[[ind_level]])))
@@ -270,7 +307,7 @@ comp_numbers = function(sect) {
         svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange))
       } else {
         svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) &
-                              eval(parse(text = paste0("(", denom_condition, ")"))))
+                              eval(parse(text = paste0("(", denom_condition, ")"))) & get(wt_step)!=0)
       }
       
       comb_rslts = analyse_indicator(ind_level, type_indicators, subset_indicators, svy_datum,
@@ -288,9 +325,9 @@ comp_numbers = function(sect) {
 # -------------------------------
 #comp_indicator_results = do.call(rbind, lapply(unique(comparative_reporting_matrix$section), comp_numbers))
 # Using multisession for cross-platform compatibility (Windows, Mac, Linux)
-cores_detected = parallel::detectCores()
-analysis_cores = ifelse(cores_detected == 1, 1, cores_detected - 4) # leave 1 core free
-plan(multisession, workers = analysis_cores)  
+# cores_detected = parallel::detectCores()
+# analysis_cores = ifelse(cores_detected == 1, 1, cores_detected - 4) # leave 1 core free
+# plan(multisession, workers = analysis_cores)  
 
 # Parallel computation of indicator results
 comp_indicator_results_list = future_lapply(
