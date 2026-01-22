@@ -43,7 +43,7 @@ if (language =='OTHER'){language = 'SPECIFY'} else{}  # Handle 'OTHER' language 
 language = tolower(language)  # Convert language to lowercase for consistency
 
 ### Inputs for cardiovascular disease (CVD) risk computation
-country_ISO = 'OMN'  # ISO code for the country
+country_ISO = 'ISO'  # ISO code for the country
 
 ### Check if the specified ISO code exists in the reference dataset
 ##default is CHE when country_ISO = 'ISO'
