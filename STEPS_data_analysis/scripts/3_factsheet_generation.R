@@ -175,7 +175,7 @@ flex_fact_sheet = factsheet_table%>% flextable() %>% autofit() %>%
                   merge_h_range(i=extract_rows, j1=1,j2=4)%>%
                   width(j = 2:4, 4.3, unit = "in")%>% 
                   bg(bg="#339966",i=1,part="header")%>%
-                  bg(bg="#CCFFFF",i=extract_rows,part="body")%>%
+                  bg(bg="#C9DDF3",i=extract_rows,part="body")%>%
                   color(color = "white", part = 'header')%>%
                   padding(padding = 0, part = "all") %>%
                   paginate()
