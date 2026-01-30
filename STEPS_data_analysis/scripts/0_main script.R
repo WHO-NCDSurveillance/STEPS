@@ -23,7 +23,7 @@ package.list = c('ggplot2','ggtext','dplyr','tidyr','ggimage','ggpubr','grid','c
 # Load each package in the list
 eval(parse(text = paste0('library("',package.list,'")', sep ='\n')))
 ###
-# 'certainty' ensures lonely PSUs are treated with certainty weights
+# set how to handle lone PSUs
 options(survey.lonely.psu="adjust")
 # Adjust for lonely PSUs in domain analyses
 options(survey.adjust.domain.lonely=TRUE)
@@ -53,26 +53,24 @@ ISO_existence = check_ISO %in% unique(read_dta('scripts/functions/risk_ref_data.
 if(!ISO_existence)stop('The supplied ISO code does not exist in the reference dataset for cvd risk calculation')
 
 ### Define stratification variables for the analysis
-col_strat_variable = c('sex')              # Column stratifier (e.g., sex)
-row_strat_variables = c('agerange')  # Row stratifiers (e.g., age range, nationality)
+col_strat_variable = c('sex')                # Column stratifier (e.g., sex)
+row_strat_variables = c('agerange')         # Row stratifiers (e.g., age range, nationality)
 row_strat_variable_titles =c("Age Categories (Years)")  # Titles for row stratifiers
 vars_exempt_77_88 = c('')                  # Variables exempt from specific conditions (e.g., missing codes)
 
-###Setting for paralle computation
+
+###Setting for parallel computation
 cores_detected <- parallel::detectCores()
 analysis_cores <- ifelse(cores_detected == 1, 1, cores_detected - round(cores_detected/2)) # leave cores free
 plan(multisession, workers = analysis_cores)  
-####
-####
-# Check if temp folder exists in the current working directory
+# Check if temp folder exists in the current working directory, if not create it
 if (!dir.exists('temp')) {dir.create('temp') }
 ### Denominator limit: Minimum sample size required for estimating point estimates and confidence intervals
-denom_limit = 1
-###Generating tables and exporting to txt files
+denom_limit = 50
+
 source('scripts/1_data_processing_script.R', local = T)
 source('scripts/2_databook_generation.R', local = T)
 source('scripts/3_factsheet_generation.R', local = T)
-###
 source('scripts/4_generating_numbers_for_narrative.R', local = T)
 source('scripts/5_revised_report_narrative.R', local = T)
 source('scripts/6_generating data for infographics.R', local = T)
