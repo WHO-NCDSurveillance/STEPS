@@ -65,8 +65,10 @@ analysis_cores <- ifelse(cores_detected == 1, 1, cores_detected - round(cores_de
 plan(multisession, workers = analysis_cores)  
 # Check if temp folder exists in the current working directory, if not create it
 if (!dir.exists("temp")) {
-  dir.create("temp", mode = "0777")
-} else {
+  dir.create("temp", recursive = TRUE)
+}
+# 
+if (.Platform$OS.type != "windows") {
   Sys.chmod("temp", mode = "0777")
 }
 ### Denominator limit: Minimum sample size required for estimating point estimates and confidence intervals
@@ -81,3 +83,4 @@ source('scripts/6_generating data for infographics.R', local = T)
 source('scripts/7_comparative_analysis.R', local = T)
 
 source('scripts/8_comparative_factsheet.R', local = T)
+
