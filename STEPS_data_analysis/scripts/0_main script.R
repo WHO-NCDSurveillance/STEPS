@@ -62,7 +62,12 @@ vars_exempt_77_88 = c('')                  # Variables exempt from specific cond
 ###Setting for parallel computation
 cores_detected <- parallel::detectCores()
 analysis_cores <- ifelse(cores_detected == 1, 1, cores_detected - round(cores_detected/2)) # leave cores free
-plan(multisession, workers = analysis_cores)  
+#plan(multisession, workers = analysis_cores)  
+if (.Platform$OS.type == "windows") {
+  future::plan(sequential)
+} else {
+plan(multisession, workers = analysis_cores) 
+}
 # Check if temp folder exists in the current working directory, if not create it
 if (!dir.exists("temp")) {
   dir.create("temp", recursive = TRUE)
@@ -83,4 +88,5 @@ source('scripts/6_generating data for infographics.R', local = T)
 source('scripts/7_comparative_analysis.R', local = T)
 
 source('scripts/8_comparative_factsheet.R', local = T)
+
 
