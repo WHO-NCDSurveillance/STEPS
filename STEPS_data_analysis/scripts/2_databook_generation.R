@@ -3,7 +3,7 @@ j=NULL
 k=NULL
 for (i in unique(indicator_matrix$section))
 {
-  data = analysis_data
+  #data = analysis_data
   section_matrix = indicator_matrix %>% dplyr::filter(section == i)
   
   output_table = list()
@@ -22,6 +22,7 @@ for (i in unique(indicator_matrix$section))
       
       ##Defining survey design structure
       wt_step = unique(sub_matrix$weight_step)[1]
+      data = analysis_data
       data[,wt_step] = as.numeric(as.character(data[,wt_step]))
       ##Setting arbitrary weights 0 to missing survey weights: This is later to preserve the design during analysis
       data[,wt_step][is.na(data[,wt_step])] = 0
