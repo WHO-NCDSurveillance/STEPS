@@ -73,7 +73,7 @@ plan(multisession, workers = analysis_cores)
 #{
 #  unlink("temp", recursive = TRUE, force = TRUE)
 #} else{dir.create("temp", recursive = TRUE)}
-if (!dir.exists('temp')) {dir.create('temp') }
+#if (!dir.exists('temp')) {dir.create('temp') }
 
 # 
 if (.Platform$OS.type != "windows") {
@@ -91,6 +91,7 @@ source('scripts/6_generating data for infographics.R', local = T)
 source('scripts/7_comparative_analysis.R', local = T)
 
 source('scripts/8_comparative_factsheet.R', local = T)
+
 
 
 
