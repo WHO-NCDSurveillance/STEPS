@@ -565,18 +565,14 @@ data_processing_report = cbind(Item = c('Existence of ISO code','Completeness of
 if(!ISO_existence)stop('The supplied ISO code does not exist in the reference dataset for cvd calculation')
 
 ####clearing temp folder
-#unlink(paste0(getwd(),'/temp/*'))
-# clearing Tables folder 
-files_to_remove = list.files(paste0(getwd(),'/temp'))#setdiff(list.files(paste0(getwd(),'/temp')),'Part1.docx')
-eval(parse(text = paste0('file.remove("',getwd(),'/temp/',files_to_remove,'")', sep='\n')))
+if (dir.exists('temp')) {
+  unlink('temp', recursive = TRUE, force = TRUE)
+}
+dir.create('temp', recursive = TRUE)
 ##Clearing other folders
 unlink(paste0(getwd(),'/outputs/*'))
 # unlink(paste0(getwd(),'/comparative/*'))
 # unlink(paste0(getwd(),'/report sections/*'))
 file.remove(paste0(getwd(),'/report outputs/combined_report.docx'))
-###Reducing the matrix to required fields for written report
-##To deactivate when generating databook and accompanying facheet
-#indicator_matrix = indicator_matrix %>% dplyr::filter(!is.na(section_title))
-#original_matrix = indicator_matrix
 
 
