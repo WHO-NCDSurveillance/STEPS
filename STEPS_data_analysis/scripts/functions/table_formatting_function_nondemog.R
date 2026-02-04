@@ -46,8 +46,8 @@ if(column_strat =='all')
       theme_vanilla() %>% 
       merge_h(i = 1:2) %>%
       padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
-      align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")%>%
-      hline(i=final_hlines, border = white_border)
+      align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")#%>%
+      #hline(i=final_hlines, border = white_border)
     
   }else{
     pre_sub_edited_table = pre_sub_edited_table[c(1:3,nrow(pre_sub_edited_table)),]
