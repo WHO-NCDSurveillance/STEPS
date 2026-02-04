@@ -35,7 +35,7 @@ Sys.setenv(GROQ_API_KEY = "INDICATE API KEY HERE")
 survey_year = 2024
 country = "ISO"
 previous_survey_year = 2017
-report_signf = 'ISO'
+report_signf = 'Yes'
 ###
 ### Language setting for the analysis
 language =c('ENGLISH','FRENCH','ARABIC', 'SPANISH','RUSSIAN','OTHER')[1]  # Select language
@@ -88,5 +88,6 @@ source('scripts/6_generating data for infographics.R', local = T)
 source('scripts/7_comparative_analysis.R', local = T)
 
 source('scripts/8_comparative_factsheet.R', local = T)
+
 
 
