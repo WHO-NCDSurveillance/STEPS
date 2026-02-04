@@ -25,6 +25,8 @@ for (i in unique(indicator_matrix$section))
       data[,wt_step] = as.numeric(as.character(data[,wt_step]))
       ##Setting arbitrary weights 0 to missing survey weights: This is later to preserve the design during analysis
       data[,wt_step][is.na(data[,wt_step])] = 0
+      if(!is.null(data[,"agerange"])){data[,"agerange"] = data[,unique(sub_matrix$agevar)]}
+      #
       svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
       ##
       median_compute = unique(type_indicators)=='median'
