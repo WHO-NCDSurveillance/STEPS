@@ -102,8 +102,8 @@ select_numeric_vars = full_xml_file %>%
   intersect(setdiff(names(data), c("agerange", "sex"))) %>%
   .[
     sapply(data[.], function(x) {
-      x <- as.character(x)
-      x <- x[!is.na(x)]
+      x = as.character(x)
+      x = x[!is.na(x)]
       
       if (length(x) == 0) return(TRUE)
       
