@@ -88,9 +88,30 @@ full_xml_file = read_excel(paste0('data_input/',country_ISO,'_xls_form.xlsx'),'s
 #
 full_xml_file = full_xml_file[-sort(unique(c(eff_step_rows,type_rows,note_rows,group_rows,one_quin_rows))),] 
 #
-select_numeric_vars = full_xml_file %>% rename_with(tolower) %>% mutate(name = tolower(name)) %>%
-                      dplyr::filter(type %in% c("calculate", "integer") | str_detect(type, "select_one")) %>% #
-                      dplyr::pull(name) %>% intersect(setdiff(names(data),c('agerange','sex')))
+#select_numeric_vars = full_xml_file %>% rename_with(tolower) %>% mutate(name = tolower(name)) %>%
+#                      dplyr::filter(type %in% c("calculate", "integer") | str_detect(type, "select_one")) %>% #
+#                      dplyr::pull(name) %>% intersect(setdiff(names(data),c('agerange','sex')))
+select_numeric_vars = full_xml_file %>%
+  rename_with(tolower) %>%
+  mutate(name = tolower(name)) %>%
+  dplyr::filter(
+    type %in% c("calculate", "integer") |
+      str_detect(type, "select_one")
+  ) %>%
+  dplyr::pull(name) %>%
+  intersect(setdiff(names(data), c("agerange", "sex"))) %>%
+  .[
+    sapply(data[.], function(x) {
+      x <- as.character(x)
+      x <- x[!is.na(x)]
+      
+      if (length(x) == 0) return(TRUE)
+      
+      all(
+        grepl("[0-9]", x) & !grepl("[A-Za-z]", x)
+      )
+    })
+  ]
 
 ##Converting the variables to type numeric
 data = data %>% mutate(across(all_of(select_numeric_vars),~ as.numeric(as.character(.))))
