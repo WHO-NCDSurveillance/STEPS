@@ -80,7 +80,8 @@ if(nrow(comparative_fact_sheet_matrix)>0)
           svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) & get(wt_step)!=0)
         } else {
           datum = data %>% dplyr::filter(!is.na(eval(parse(text = ind_level))) & !is.na(agerange) & eval(parse(text = paste0('(',denom_condition,')'))))
-          svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) & eval(parse(text = paste0('(',denom_condition,')')) & get(wt_step)!=0))
+          svy_datum = subset(svy_data, !is.na(eval(parse(text = ind_level))) & !is.na(agerange) & eval(parse(text = paste0('(',denom_condition,')'))) & get(wt_step)!=0)
+
         }
         
         #####
