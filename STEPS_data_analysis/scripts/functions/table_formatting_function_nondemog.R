@@ -39,6 +39,8 @@ if(column_strat =='all')
   #
   if(has_full)
   {
+    no_lines = 4:(length(names(table(data[,"agerange"])))+2)
+
     sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
       flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
       bold(i = c(1:2,total_pos+3))%>% 
@@ -46,8 +48,8 @@ if(column_strat =='all')
       theme_vanilla() %>% 
       merge_h(i = 1:2) %>%
       padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
-      align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")#%>%
-      #hline(i=final_hlines, border = white_border)
+      align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")%>%
+      hline(i=no_lines, border = white_border)
     
   }else{
     pre_sub_edited_table = pre_sub_edited_table[c(1:3,nrow(pre_sub_edited_table)),]
