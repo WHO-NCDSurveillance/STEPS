@@ -529,16 +529,18 @@ for(i in unique(comp_indicator_results$section_title))#sect
     translated_header_title = llm_translate(header_title)
     translated_background_header = llm_translate("Background")
     translated_findings_header   = llm_translate("Findings")
+    translates_charts_headr = llm_translate("Charts")
   }else{
     translated_background_text = adj_background_text
     translated_section_header = gsub('/',' or ',i)
     translated_header_title = header_title
     translated_background_header = "Background"
     translated_findings_header   = "Findings"
+    translates_charts_headr = "Charts"
   }
  
   ###
-  sec_doc = officer::read_docx('templates/template_comparative_factsheet.docx') %>%
+  sec_doc = officer::read_docx('templates/template_comparative_report.docx') %>%
     #body_add_par(translated_section_header,   style = "heading 1") %>%
     body_add_flextable(add_grey_header(translated_background_header)) %>%
     body_add_par(translated_background_text,   style = "Normal")  %>%
