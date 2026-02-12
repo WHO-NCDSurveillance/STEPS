@@ -70,7 +70,9 @@ dataset2 = dataset2 %>%
 #          wstep2_norm = wstep2 / sum(wstep2, na.rm = TRUE),
 #          wstep3_norm = wstep3 / sum(wstep3, na.rm = TRUE))
 
-combined_dataset = full_join(dataset1, dataset2)
+combined_dataset = full_join(dataset1, dataset2) = full_join(dataset1, dataset2) %>%
+                    mutate(strata_year = interaction(svy_year, stratum),
+                      psu_year = interaction(svy_year, psu))
 
 ###NOTE: Case by case: agerange should be similar between two surveys
 combined_dataset = combined_dataset %>%
@@ -291,7 +293,7 @@ comp_numbers = function(sect) {
     data[,wt_step] = as.numeric(as.character(data[,wt_step]))
     ##Setting arbitrary weights 0 to missing survey weights: This is later to preserve the design during analysis
     data[,wt_step][is.na(data[,wt_step])] = 0
-    svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
+    svy_data = svydesign(id=~psu_year, weights=~get(wt_step),strata=~strata_year, data=data,nest = T)
     ###
     
     for (ind_level in subset_indicators) {
