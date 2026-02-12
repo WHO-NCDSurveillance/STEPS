@@ -64,7 +64,7 @@ if(nrow(comparative_fact_sheet_matrix)>0)
       data[,wt_step] = as.numeric(as.character(data[,wt_step]))
       ##Setting arbitrary weights 0 to missing survey weights: This is later to preserve the design during analysis
       data[,wt_step][is.na(data[,wt_step])] = 0
-      svy_data = svydesign(id=~psu, weights=~get(wt_step),strata=~stratum, data=data,nest = T)
+      svy_data = svydesign(id=~psu_year, weights=~get(wt_step),strata=~strata_year, data=data,nest = T)
     
       #
       ind_level = NULL
@@ -94,7 +94,7 @@ if(nrow(comparative_fact_sheet_matrix)>0)
           eval(parse(text = paste0('formula = ~', ind_level)))
 
           ##
-          svyr_est_ciprop = svyby(formula, by = ~svy_year, design = svy_datum, FUN = svymean, method = "lo", df = degrees_freedom, vartype = 'ci')%>%
+          svyr_est_ciprop = svyby(formula, by = ~svy_year, design = svy_datum, FUN = svymean, method = "lo", vartype = 'ci')%>%
             mutate(ci_l = ifelse(ci_l<0,0,ci_l))
           
           ##
@@ -108,12 +108,12 @@ if(nrow(comparative_fact_sheet_matrix)>0)
           median_compute = unique(type_indicators)=='median'
           if(median_compute==TRUE)
           {
-            svyr_est_ciprop = svyby(formula, by = ~svy_year, design = svy_datum, FUN = svyquantile, quantiles = c(.5,.25,.75), method = "lo", df = degrees_freedom)[,1:4]
+            svyr_est_ciprop = svyby(formula, by = ~svy_year, design = svy_datum, FUN = svyquantile, quantiles = c(.5,.25,.75), method = "lo")[,1:4]
             ##colnames
             #colnames(svyr_est_ciprop)=c("svy_year",ind_level,"ci_l","ci_u")
             
             
-            #median_total_est_ciprop = svyquantile(formula, design = svy_datum, method = "lo", quantiles = c(.5,.25,.75), df = degrees_freedom, ci=FALSE) 
+            #median_total_est_ciprop = svyquantile(formula, design = svy_datum, method = "lo", quantiles = c(.5,.25,.75), ci=FALSE) 
             # total_est_ciprop = as.vector(unlist(median_total_est_ciprop)[1])
             # conf_interval = as.vector(unlist(median_total_est_ciprop)[2:3])
           }
@@ -143,7 +143,7 @@ if(nrow(comparative_fact_sheet_matrix)>0)
           #   mutate(across(contains(c("Men", "Women")), ~coalesce(., 0)), Total=Men+Women)
           
           ###
-          svyr_est_ciprop = svyby(formula, by = ~svy_year, design = svy_datum, FUN = svyciprop, method = "lo", df = degrees_freedom, vartype = 'ci')
+          svyr_est_ciprop = svyby(formula, by = ~svy_year, design = svy_datum, FUN = svyciprop, method = "lo", vartype = 'ci')
           # total_est_ciprop = svyciprop(formula, design = svy_datum, method = "lo", df = degrees_freedom) 
           # ##
           # total_est = paste0(formatC(round(100*as.vector(total_est_ciprop),1),format = "f", digits = 1),'%\n(',
