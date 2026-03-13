@@ -52,7 +52,7 @@ Sys.setenv(API_KEY = "INSERT API HERE")
 # Survey and report settings
 survey_year = 2024
 previous_survey_year = 2017
-country = "Oman"
+country = "ISO"
 report_signf = 'Yes'
 
 # Language selection
@@ -64,7 +64,7 @@ language = tolower(language)  # Standardize to lowercase
 # Inputs for cardiovascular disease (CVD) risk computation
 ########################################
 
-country_ISO = 'OMN'  # ISO code for the country
+country_ISO = 'ISO'  # ISO code for the country
 
 # Check if the specified ISO code exists in the reference dataset
 check_ISO = ifelse(country_ISO == 'ISO', 'CHE', country_ISO)
