@@ -437,11 +437,12 @@ for (i in unique(indicator_matrix$section))
     # Retrieve indicator description from matrix
     sub_formatrix = indicator_matrix[grep(paste0('\\b',matching_indicator,'\\b'), 
                                           tolower(indicator_matrix$indicator)),] 
-    #
+
     indicator = sub_formatrix$indicator
     indicator_short_desc = unique(sub_formatrix$indicator_short_desc)
     description = sub_formatrix$description
     instrument_questions = sub_formatrix$instrument_questions
+    agevar = sub_formatrix$agevar ## ADDED 
     group_type = unique(do.call('c',strsplit(sub_formatrix$type, "[;]")))[1]
     #
     table_title = sub_formatrix$table_title
@@ -561,7 +562,8 @@ for (i in unique(indicator_matrix$section))
     #########################################################################
     
     # Identify number of age group levels used in the table.
-    range_levels = length(names(table(data[,unique(sub_formatrix$agevar)])))
+    #range_levels = length(names(table(data[,unique(sub_formatrix$agevar)])))
+    range_levels = length(names(table(analysis_data[,unique(sub_formatrix$agevar)]))) ## ADDED
     # Initialize vector for storing row group boundaries.
     all_hlines = c()
     # Determine number of levels in row stratification variables.
@@ -569,7 +571,7 @@ for (i in unique(indicator_matrix$section))
     {
       length_strat = length(row_strat_variables)
       sub_var_levels = eval(parse(text=paste0('c(',
-                                              paste0('length(names(table(data[,"',
+                                              paste0('length(names(table(analysis_data[,"', ## ADDED - changed "data" to "analysis_data"
                                                      unique(sub_formatrix$agevar),'"])))', collapse = ','),
                                               ')')))
       all_hlines = c(all_hlines,sub_var_levels)
