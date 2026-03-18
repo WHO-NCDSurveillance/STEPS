@@ -146,7 +146,7 @@ for(i in unique(comp_indicator_results$section_title))
   
   # Load Word template and add background and findings headers
   sec_doc = officer::read_docx(
-    'templates/template_comparative_factsheet.docx'
+    'templates/comparative_report_template.docx'
   ) %>%
     body_add_flextable(add_grey_header(translated_background_header)) %>%
     body_add_par(translated_background_text, style = "Normal") %>%

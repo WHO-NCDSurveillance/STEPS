@@ -79,7 +79,7 @@ for (i in unique(indicator_matrix$section))
         svy_data = svydesign(id=~psu, 
                              weights=~get(wt_step),
                              strata=~stratum, 
-                             fpc = fpc, 
+                             fpc = ~fpc, 
                              data=data,nest = T)
       }
       ########################################
@@ -951,11 +951,8 @@ for (i in unique(indicator_matrix$section))
   }
 
   # ---------------- Consolidate Individual Indicators into Section Document ----------------
-  section_header_eng = unique(section_matrix$section)[1]
-  lang_translation = with(language_translation, cbind(english, get(language)))
-  translated_text = lang_translation[,2][which(lang_translation[,1] %in% section_header_eng)]
-  #
-  title_text = ftext(translated_text) %>% fpar()
+  section_header = unique(section_matrix$section)[1]
+  title_text = ftext(section_header) %>% fpar()
   docx = officer::read_docx()%>%
          body_add(title_text, style = "heading 1")
 

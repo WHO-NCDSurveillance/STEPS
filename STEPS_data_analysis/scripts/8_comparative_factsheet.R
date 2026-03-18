@@ -1,20 +1,20 @@
 ############################################################
-## SCRIPT FOR GENERATING COMPARATIVE FACTSHEET
+## SCRIPT FOR GENERATING COMPARATIVE FACT SHEET
 ############################################################
 
-# Only execute this section if the comparative factsheet matrix
-# contains at least one row (i.e., if factsheet indicators exist)
+# Only execute this section if the comparative fact sheet matrix
+# contains at least one row (i.e., if fact sheet indicators exist)
 if(nrow(comparative_fact_sheet_matrix)>0)
 {
   
   ##########################################################
-  ## CREATE FACTSHEET TABLE
+  ## CREATE FACT SHEET TABLE
   ##########################################################
   
   # Extract survey years from the combined dataset and sort them
   survey_yrs = sort(as.numeric(unique(combined_dataset$svy_year)))
   
-  # Generate results for all factsheet sections by applying the
+  # Generate results for all fact sheet sections by applying the
   # factsheet_section_fn function to each section and stacking results
   factsheet_table = do.call(
     'rbind',
@@ -24,10 +24,10 @@ if(nrow(comparative_fact_sheet_matrix)>0)
   
   # Assign column names to the final table
   colnames(factsheet_table) = c(
-    other_language[12,language],
+    other_language[11,language],
     survey_yrs[1],
     survey_yrs[2],
-    other_language[13,language]
+    other_language[12,language]
   )
   
   # Convert table to matrix for easier manipulation
@@ -66,6 +66,9 @@ if(nrow(comparative_fact_sheet_matrix)>0)
   factsheet_table = factsheet_table %>%
     dplyr::select(-row_numbers)
   
+  # change * footnote markers to † since * is used to indicate 
+  # significant differences in comparison fact sheet
+  factsheet_table[, 1] <- gsub("\\*", "†", factsheet_table[, 1])
   
   ##########################################################
   ## FORMAT TABLE USING FLEXTABLE
@@ -100,7 +103,7 @@ if(nrow(comparative_fact_sheet_matrix)>0)
     # Apply header background color
     bg(bg="#339966",i=1,part="header") %>%
     # Apply background color to section rows
-    bg(bg="#CCFFFF",i=extract_rows,part="body") %>%
+    bg(bg="#C9DDF3",i=extract_rows,part="body") %>%
     # Set header text color
     color(color = "white", part = 'header') %>%
     # Reduce cell padding
@@ -115,7 +118,7 @@ if(nrow(comparative_fact_sheet_matrix)>0)
   
   # Read Word template containing placeholders
   doc = officer::read_docx(
-    paste0(getwd(),'/templates/factsheet_template.docx')
+    paste0(getwd(),'/templates/comparative_factsheet_template.docx')
   )
   
   # Replace placeholder text in the template with
@@ -171,3 +174,4 @@ if(nrow(comparative_fact_sheet_matrix)>0)
 }else{
   # Do nothing if no factsheet indicators are available
 }
+

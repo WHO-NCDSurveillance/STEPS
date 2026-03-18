@@ -25,14 +25,10 @@ data = data %>% dplyr::filter(valid == 1) %>%
 ########################################
 
 var_groups = c(
-  'c10a','c10b','c10c','c10d',
-  't4a','t4b','t4c',
   't5a','t5b','t5c','t5d','t5e','t5other',
   't5aw','t5bw','t5cw','t5dw','t5ew','t5otherw',
   't14a','t14b','t14c','t14d','t14e','t14other',
   't14aw','t14bw','t14cw','t14dw','t14ew','t14otherw',
-  'a10a','a10b','a10c','a10d','a10e','a10f','a10g',
-  't11a','t11b','t11c',
   'a12a','a12b','a12c','a12d','a12e'
 ) # Defines a vector 'var_groups' containing a list of variable names or codes grouped for later reference.
 
@@ -169,10 +165,9 @@ matched_variables_77_88 = map_dfr(extracted_variables_77_88, function(var_group)
 # Remove exempt variables and keep only those existing in data
 vars_with_77_or_88 = intersect(setdiff(matched_variables_77_88$variable, vars_exempt_77_88), names(data))
 
-# Replace 77/88 with NA in all relevant columns
-walk(vars_with_77_or_88, ~{
-  data[[.x]] = ifelse(data[[.x]] %in% c(77, 88), NA, data[[.x]])
-})
+# Sets values to NA in the specified columns where the values are either 77 or 88.
+if(length(vars_with_77_or_88)>0)
+{eval(parse(text=paste0('data$',vars_with_77_or_88,'[data$',vars_with_77_or_88,'==77 | data$',vars_with_77_or_88,'==88] = NA', sep='\n')))}
 
 ########################################
 ### Other unique numbers to NA
@@ -180,10 +175,12 @@ walk(vars_with_77_or_88, ~{
 # Define numbers to replace with NA
 unique_NA_numbers = c(66, 666, 6666, 77, 777, 7777, 88, 888, 8888, 99, 999, 9999)
 
-# Identify variables in reduced_xml that contain these numbers in their constraints
+# Identify variables in reduced_xml (xls form) that contain these numbers in their constraints
 na_vars_list = map(unique_NA_numbers, function(num) {
-  vars = reduced_xml$name[str_detect(reduced_xml$constraint, as.character(num))]
-  vars = intersect(vars, names(data))  # Keep only variables that exist in data
+  pattern <- paste0("(^|[^0-9])", num, "([^0-9]|$)")
+  vars <- reduced_xml$name[str_detect(reduced_xml$constraint, pattern)]
+  # Keep only variables that exist in data
+  vars <- intersect(vars, names(data))
   if(length(vars) > 0) {
     tibble(variable = vars, value_to_na = num)
   } else {
@@ -191,10 +188,13 @@ na_vars_list = map(unique_NA_numbers, function(num) {
   }
 }) %>% bind_rows()
 
-# Replace values in data for each variable
-walk2(na_vars_list$variable, na_vars_list$value_to_na, ~{
-  data[[.x]] = ifelse(data[[.x]] == .y, NA, data[[.x]])
-})
+# Replace 66, 77, 88, etc. values in data with NA for each variable
+i=NULL
+for (i in seq_len(nrow(na_vars_list))) {
+  var <- na_vars_list$variable[i]
+  val <- na_vars_list$value_to_na[i]
+  data[[var]][data[[var]] == val] <- NA
+}
 
 ######### Generating indicators #########
 
@@ -400,17 +400,10 @@ row_strat_variables = adjust_strat_vars(row_strat_variables, matched_variables)
 # Load translations from Excel for a specific language
 other_language = read_excel(
   paste0('data_input/', country_ISO, '_input_matrix.xlsx'),
-  sheet = 'other'
+  sheet = 'translations'
 ) %>% as.data.frame()
 colnames(other_language) = tolower(colnames(other_language))
 other_language = other_language[, c('item', language)]
-
-# Original translation matrix for reference
-language_translation = read_excel(
-  paste0('data_input/', country_ISO, '_input_matrix.xlsx'),
-  sheet = 'other'
-) %>% as.data.frame()
-colnames(language_translation) = tolower(colnames(language_translation))
 
 #################################### 
 #### Editing the Indicator Matrix to Drop Indicators with NA ####
@@ -502,6 +495,49 @@ dir.create('temp', recursive = TRUE)
 unlink(paste0(getwd(), '/outputs/*'))
 file.remove(paste0(getwd(), '/report outputs/combined_report.docx'))
 
+##################
+#################Generating data processing report
 
+all_vars_with_err_codes <- unique(na_vars_list$variable)
+all_vars_with_err_codes <- c(vars_with_77_or_88, all_vars_with_err_codes)
+                        
+non_exisiting_group_vars = ifelse(length(none_exist_var)>0, 
+                                  paste0('The following variables are not in the dataset and have been generated and set to missing as they are required as part of a group of variables for analysis: ',
+                                         paste0(none_exist_var,collapse = ',')),'All required grouped variables are available.')
+vars_in_xml_not_dataset = ifelse(length(vars_not_indataset)>0, 
+                                 paste0('The following variables are in the xls form and not in the dataset: ',
+                                        paste0(vars_not_indataset,collapse = ',')),'Variables match between the xls form and the dataset')
+resp_77_88  = ifelse(length(all_vars_with_err_codes)>0, 
+                     paste0("The following variables have had don't know or refused codes (e.g. 666, 77, 777, 88, 99) set to missing: ",
+                            paste0(all_vars_with_err_codes,collapse = ',')),"No variables have had don't know or refusal values set to missing in the dataset.")  
+
+sec_derivarion  = ifelse(length(list_nonexist_dervars)>0, 
+                         paste0('The following secondary variables were derived from primary variables in the dataset: ',
+                                paste0(list_nonexist_dervars,collapse = ',')),'No additional variables were derived from primary variables in the dataset.') 
+
+data_processing_report = cbind(Item = c('Completeness of grouped variables','Variables in xls form vs dataset','Variables with values set to NA',
+                                        'Derived variables'),
+                               Description = c(non_exisiting_group_vars,vars_in_xml_not_dataset,resp_77_88,sec_derivarion))
+
+
+
+flex_processing_report = data_processing_report %>% as.data.frame() %>% flextable()%>%
+  flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
+  bold(part = 'header')%>%
+  fontsize(size = 9 ,part = "all")%>%
+  align(j = 2, align = 'center', part = 'header') %>% theme_vanilla() 
+
+flex_processing_report <- set_table_properties(flex_processing_report, layout="fixed")
+flex_processing_report <- width(flex_processing_report, 1:2, c(6.5*0.3, 6.5*0.7))
+
+
+## Printing of data processing report
+doc = officer::read_docx(paste0(getwd(),'/templates/data_processing_template.docx'))
+#
+doc = headers_replace_text_at_bkm(doc,"country",paste0(toupper(country),' ',survey_year))
+doc=doc %>% cursor_bookmark(id  = "table1") %>%
+  body_add_flextable(width(flex_processing_report, width = dim(flex_processing_report)$widths*6.5/(flextable_dim(flex_processing_report)$widths)), pos = "on", align = 'left')
+
+print(doc,target=paste0(getwd(),'/outputs/Data processing report.docx'))
 
 

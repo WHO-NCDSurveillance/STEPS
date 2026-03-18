@@ -22,6 +22,16 @@ setwd(parent_dir)
 # Clean up temporary variables
 rm(srcdir, parent_dir)
 
+# generate outputs directory if it doesn't exist
+if (!dir.exists("outputs")) {
+  dir.create("outputs")
+}
+
+# Create "outputs/report sections" directory if it doesn't exist
+if (!dir.exists("outputs/report sections")) {
+  dir.create("outputs/report sections", recursive = TRUE)
+}
+
 ########################################
 # Load required packages
 ########################################
@@ -78,6 +88,10 @@ if (!ISO_existence) stop('The supplied ISO code does not exist in the reference 
 col_strat_variable = c('sex')  # Column stratifier
 row_strat_variables = c('agerange')  # Row stratifiers
 row_strat_variable_titles = c("Age Categories (Years)")
+# row_strat_variables = c('agerange','nationality')  # Row stratifiers (e.g., age range, nationality)
+# row_strat_variable_titles =c("Age Categories (Years)","Nationality")  # Titles for row stratifiers
+# row_strat_variables = c('governorate')  # Row stratifiers (e.g., age range, nationality)
+# row_strat_variable_titles =c("Governorate")  # Titles for row stratifiers
 vars_exempt_77_88 = c('')  # Variables exempt from missing code handling
 
 ########################################
@@ -102,7 +116,7 @@ denom_limit = 50  # Minimum sample size for estimates
 ########################################
 
 # This project contains a set of scripts used to process survey data and
-# generate outputs such as databooks, factsheets, narratives, infographics,
+# generate outputs such as data books, fact sheets, narratives, infographics,
 # and comparative analyses.
 #
 # IMPORTANT:
@@ -122,10 +136,10 @@ source("scripts/1_data_processing_script.R", local = TRUE)
 # After running Script 1, the following scripts can be run independently.
 # Each script produces a different output and does not require the others.
 
-# Databook for the current survey
+# Data book for the current survey
 source("scripts/2_databook_generation.R", local = TRUE)
 
-# Factsheet for the current survey
+# Fact sheet for the current survey
 source("scripts/3_factsheet_generation.R", local = TRUE)
 
 # Report numbers and narrative text
@@ -150,5 +164,5 @@ source("scripts/6_comparative_data_and_matrix_processing.R", local = TRUE)
 # Comparative analysis for report sections
 source("scripts/7_comparative_analysis.R", local = TRUE)
 
-# Comparative factsheet
+# Comparative fact sheet
 source("scripts/8_comparative_factsheet.R", local = TRUE)

@@ -105,7 +105,7 @@ comparative_reporting_matrix = reporting_matrix %>%
   dplyr::filter(eval(parse(text = paste0('indicator == "',common_ind_desc,'"', collapse = '|'))))
 
 ### ----------------------------------------------------------
-### Deriving comparative factsheet matrix
+### Deriving comparative fact sheet matrix
 ### ----------------------------------------------------------
 
 # Extract factsheet configuration from the second survey matrix

@@ -1,11 +1,11 @@
 ############################################################
-## SCRIPT FOR GENERATING FACTSHEET BASED ON A SURVEY ROUND
+## SCRIPT FOR GENERATING SINGLE YEAR FACT SHEET
 ############################################################
 
 ###-----------------------------------------------------------
-### Generate factsheet table for all sections
+### Generate fact sheet table for all sections
 ###-----------------------------------------------------------
-# Check that the factsheet configuration matrix contains rows
+# Check that the fact sheet configuration matrix contains rows
 if(nrow(fact_sheet_matrix)>0)
 {
   factsheet_table = do.call('rbind',
@@ -57,21 +57,25 @@ flex_fact_sheet = factsheet_table%>%
   paginate()
 
 #-----------------------------------------------------------
-# Insert the factsheet table into a Word template
+# Insert the fact sheet table into a Word template
 #-----------------------------------------------------------
 doc = officer::read_docx(paste0(getwd(),'/templates/factsheet_template.docx'))
 
 # Replace template placeholders
+final_sample_size <- nrow(data)
+age_range <- paste0(min(data$age, na.rm = TRUE), "–", max(data$age, na.rm = TRUE))
 doc <- doc %>%
   body_replace_all_text(old_value = "survey_year", new_value = as.character(survey_year), only_at_cursor = FALSE) %>%
-  body_replace_all_text(old_value = "country_name", new_value = as.character(country), only_at_cursor = FALSE)
+  body_replace_all_text(old_value = "country_name", new_value = as.character(country), only_at_cursor = FALSE) %>%
+  body_replace_all_text(old_value = "final_sample_size", new_value = as.character(final_sample_size), only_at_cursor = FALSE) %>%
+  body_replace_all_text(old_value = "age_range", new_value = as.character(age_range), only_at_cursor = FALSE)
 
 # Insert table at bookmark location
 doc=doc %>% cursor_bookmark(id  = "bmk1") %>%
   body_add_flextable(width(flex_fact_sheet, width = dim(flex_fact_sheet)$widths*7.25/(flextable_dim(flex_fact_sheet)$widths)), pos = "on", align = 'left')
 
 # Save Word document
-print(doc, target = paste0('outputs/', country_ISO, '-', survey_year, '_Factsheet_', format(Sys.time(), "%d-%b-%y_%H-%M-%S"), '.docx'))
+print(doc, target = paste0('outputs/', country_ISO, '-', survey_year, '_Fact_Sheet_', format(Sys.time(), "%d-%b-%y_%H-%M-%S"), '.docx'))
 
 }else{}
 
