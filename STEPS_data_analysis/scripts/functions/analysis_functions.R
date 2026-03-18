@@ -977,7 +977,7 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
       svy_data = svydesign(id=~psu, 
                            weights=~get(wt_step),
                            strata=~stratum, 
-                           fpc = fpc, 
+                           fpc = ~fpc, 
                            data=data,nest = T)
     }
     ###
@@ -1504,7 +1504,7 @@ rev_comp_numbers = function(sect) {
       svy_data = svydesign(id=~psu, 
                            weights=~get(wt_step),
                            strata=~stratum, 
-                           fpc = fpc, 
+                           fpc = ~fpc, 
                            data=data,nest = T)
     }
     
@@ -1589,7 +1589,7 @@ gen_numbers_fn = function(sect = unique(infographic_matrix$section)[2])
       svy_data = svydesign(id=~psu, 
                            weights=~get(wt_step),
                            strata=~stratum, 
-                           fpc = fpc, 
+                           fpc = ~fpc, 
                            data=data,nest = T)
     }
     
@@ -1929,7 +1929,7 @@ comp_numbers = function(sect) {
       svy_data = svydesign(id=~psu_year, 
                            weights=~get(wt_step),
                            strata=~strata_year, 
-                           fpc = fpc,
+                           fpc = ~fpc,
                            data=data,nest = T)    
       }
     ###
@@ -2262,7 +2262,7 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
       svy_data = svydesign(id=~psu_year, 
                            weights=~get(wt_step),
                            strata=~strata_year, 
-                           fpc = fpc,
+                           fpc = ~fpc,
                            data=data,nest = T)    
     }
     
