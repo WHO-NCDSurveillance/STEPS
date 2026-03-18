@@ -60,13 +60,14 @@ if(column_strat =='all')
   incl_level_names = col_strat_var_levels[extracted_integers]
   
   # Keep only columns corresponding to selected stratification levels
-  pre_sub_edited_table = pre_sub_edited_table[,c(1,grep(paste0(incl_level_names, collapse = '|'),names(pre_sub_edited_table)))]
+  pre_sub_edited_table <- pre_sub_edited_table[,c(1,grep(paste0(incl_level_names, collapse = '|'),names(pre_sub_edited_table)))]
   
   #
   if(has_full)
   {
     # Identify rows for horizontal line formatting
-    no_lines = 4:(length(names(table(data[,"agerange"])))+2)
+    #no_lines = 4:(length(names(table(data[,"agerange"])))+2)
+    no_lines = 4:(nrow(pre_sub_edited_table)-2)
     
     #
     sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
