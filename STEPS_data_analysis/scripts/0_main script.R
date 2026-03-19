@@ -87,9 +87,9 @@ if (!ISO_existence) stop('The supplied ISO code does not exist in the reference 
 
 col_strat_variable = c('sex')  # Column stratifier
 row_strat_variables = c('agerange')  # Row stratifiers
-row_strat_variable_titles = c("Age Categories (Years)")
+row_strat_variable_titles = c("Age group (years)")
 # row_strat_variables = c('agerange','nationality')  # Row stratifiers (e.g., age range, nationality)
-# row_strat_variable_titles =c("Age Categories (Years)","Nationality")  # Titles for row stratifiers
+# row_strat_variable_titles =c("Age group (years)","Nationality")  # Titles for row stratifiers
 # row_strat_variables = c('governorate')  # Row stratifiers (e.g., age range, nationality)
 # row_strat_variable_titles =c("Governorate")  # Titles for row stratifiers
 vars_exempt_77_88 = c('')  # Variables exempt from missing code handling
