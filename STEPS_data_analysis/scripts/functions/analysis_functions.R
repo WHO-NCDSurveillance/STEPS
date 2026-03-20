@@ -949,7 +949,8 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
     type_indicators = do.call('c',strsplit(sub_matrix$type, "[;]"))[ind_position]
     
     # Denominator condition logic
-    denom_logic = do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))[ind_position]
+    #denom_logic = do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))[ind_position]
+    denom_logic = if (length(do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))) == 1) {sub_matrix$pop_subset[1]} else {do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))[ind_position]}
     
     # Indicator description
     ind_desc = do.call('c',strsplit(sub_matrix$factsheet_desc, "[;]"))
@@ -993,7 +994,8 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
       if(!all(is.na(data[[ind_level]])))
       {
         # Extract denominator logic for this indicator
-        denom_condition = denom_logic[grep(ind_level,subset_indicators)]
+        #denom_condition = denom_logic[grep(ind_level,subset_indicators)]
+        denom_condition = if (length(denom_logic) == 1) {denom_logic[1]} else {denom_logic[grep(ind_level,subset_indicators)]}
         
         # Extract full indicator description
         full_ind_desc = ind_desc[grep(ind_level,subset_indicators)]
@@ -2215,25 +2217,20 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
     sub_matrix = section_matrix[ind,]
     
     # Determine indicator positions when multiple indicators exist
-    ind_position = as.numeric(
-      do.call('c',strsplit(sub_matrix$ind_position, "[;]"))
-    )
+    ind_position = as.numeric(do.call('c',strsplit(sub_matrix$ind_position, "[;]")))
     
     # Extract indicators included in the section
-    subset_indicators =
-      do.call('c',strsplit(sub_matrix$indicator_var, "[;]"))[ind_position]
+    subset_indicators = do.call('c',strsplit(sub_matrix$indicator_var, "[;]"))[ind_position]
     
     # Extract indicator types (mean / median / categorical)
-    type_indicators =
-      do.call('c',strsplit(sub_matrix$type, "[;]"))[ind_position]
+    type_indicators = do.call('c',strsplit(sub_matrix$type, "[;]"))[ind_position]
     
     # Extract denominator conditions
-    denom_logic =
-      do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))[ind_position]
+    #denom_logic = do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))[ind_position]
+    denom_logic = if (length(do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))) == 1) {sub_matrix$pop_subset[1]} else {do.call('c',strsplit(sub_matrix$pop_subset, "[;]"))[ind_position]}
     
     # Extract indicator descriptions used in factsheet
-    ind_desc =
-      do.call('c',strsplit(sub_matrix$factsheet_desc, "[;]"))
+    ind_desc = do.call('c',strsplit(sub_matrix$factsheet_desc, "[;]"))
     
     
     ########################################################
@@ -2275,15 +2272,12 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
     
     for(ind_level in subset_indicators)
     {
-      
       # Extract denominator condition for this indicator
-      denom_condition =
-        denom_logic[grep(ind_level,subset_indicators)]
+      #denom_condition = denom_logic[grep(ind_level,subset_indicators)]
+      denom_condition = if (length(denom_logic) == 1) {denom_logic[1]} else {denom_logic[grep(ind_level,subset_indicators)]}
       
       # Extract indicator description
-      full_ind_desc =
-        ind_desc[grep(ind_level,subset_indicators)]
-      
+      full_ind_desc = ind_desc[grep(ind_level,subset_indicators)]
       
       ######################################################
       ## APPLY DENOMINATOR CONDITIONS
