@@ -123,17 +123,13 @@ if(nrow(comparative_fact_sheet_matrix)>0)
   
   # Replace placeholder text in the template with
   # the actual survey year and country name
+  final_sample_size <- nrow(data)
+  age_range <- paste0(min(data$age, na.rm = TRUE), "–", max(data$age, na.rm = TRUE))
   doc <- doc %>%
-    body_replace_all_text(
-      old_value = "survey_year",
-      new_value = as.character(survey_year),
-      only_at_cursor = FALSE
-    ) %>%
-    body_replace_all_text(
-      old_value = "country_name",
-      new_value = as.character(country),
-      only_at_cursor = FALSE
-    )
+    body_replace_all_text(old_value = "survey_year",new_value = as.character(survey_year),only_at_cursor = FALSE) %>%
+    body_replace_all_text(old_value = "country_name",new_value = as.character(country),only_at_cursor = FALSE) %>%
+    body_replace_all_text(old_value = "final_sample_size", new_value = as.character(final_sample_size), only_at_cursor = FALSE) %>%
+    body_replace_all_text(old_value = "age_range", new_value = as.character(age_range), only_at_cursor = FALSE)
   
   
   ##########################################################

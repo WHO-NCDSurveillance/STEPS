@@ -163,7 +163,8 @@ for (i in unique(indicator_matrix$section))
             
             # Create formula for survey analysis
             eval(parse(text = paste0('formula = ~', k)))
-            denom_condition = denom_logic[which(subset_indicators %in%k)]
+            #denom_condition = denom_logic[which(subset_indicators %in%k)]
+            denom_condition = if (length(denom_logic[subset_indicators %in% k]) == 1) {denom_logic[1]} else {denom_logic[which(subset_indicators %in% k)]}
             sub_pop_num_denom = pop_num_denom[which(subset_indicators %in%k)]
             # Initialize objects for stratified summaries
             s = NULL
@@ -304,7 +305,8 @@ for (i in unique(indicator_matrix$section))
 
           }else{
             eval(parse(text=paste0('formula = ~I(',k, '=="',1,'")')))
-            denom_condition = denom_logic[which(subset_indicators %in%k)]
+            #denom_condition = denom_logic[which(subset_indicators %in%k)]
+            denom_condition = if (length(denom_logic[subset_indicators %in% k]) == 1) {denom_logic[1]} else {denom_logic[which(subset_indicators %in% k)]}
             # Stratified categorical analysis
             s = NULL
             int_summary_table = list()
