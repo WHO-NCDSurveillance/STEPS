@@ -7,10 +7,10 @@
 # -----------------------------------------------------------
 
 # Path to the original Excel template containing chart structures
-file = 'excel_templates/template_data_fromR.xlsx'
+file = 'templates/template_data_fromR.xlsx'
 
 # Path where the updated Excel file will be saved
-save_file = 'excel_templates/data_fromR.xlsx'
+save_file = 'templates/data_fromR.xlsx'
 
 # -----------------------------------------------------------
 # Load the existing Excel workbook and required sheets
