@@ -1138,12 +1138,12 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
 # These parameters are country-specific, sex-specific, and year-specific.
 
 # Define the reference year used for calibration
-ref_year = 2017
+ref_year = 2017 # 2017 is the latest possible year in the CVD risk database and thus used by default
 
-# Load the reference dataset and filter to the country of interest (check_ISO)
+# Load the reference dataset and filter to the country of interest (CVD_ISO)
 # and the defined reference year. Only the relevant calibration variables are kept.
 risk_ref_data = haven::read_dta('scripts/functions/risk_ref_data.dta') %>%
-  dplyr::filter(ccode == check_ISO & year == ref_year) %>%
+  dplyr::filter(ccode == CVD_ISO & year == ref_year) %>%
   dplyr::select(
     sex,
     cal2_m1_cons_ep_crbv,   # intercept for cerebrovascular disease risk model
