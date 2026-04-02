@@ -56,10 +56,16 @@ all_stratifiers = c(col_strat_variable,row_strat_variables,'sex_age','bin_age')
 # -----------------------------------------------------------
 
 # Generate indicator values by applying gen_numbers_fn across sections
-indicator_results = do.call('rbind',
-                            future_lapply(unique(infographic_matrix$section),
-                                          gen_numbers_fn))%>%
-                    mutate(col2 = as.numeric(col2))
+
+indicator_results <- do.call(
+  rbind,
+  lapply(unique(infographic_matrix$section), gen_numbers_fn)) %>%
+  mutate(col2 = as.numeric(col2))
+         
+# indicator_results = do.call('rbind',
+#                             future_lapply(unique(infographic_matrix$section),
+#                                           gen_numbers_fn))%>%
+#                     mutate(col2 = as.numeric(col2))
 
 ##
 # Rename columns for clarity and compatibility with template keys
@@ -107,3 +113,19 @@ writeData(wb, sheet = "data", x = transl_lang,
 # -----------------------------------------------------------
 
 saveWorkbook(wb, save_file, overwrite = TRUE)
+
+file.copy(
+  from = "templates/infographic charts v2.xlsx",
+  to   = paste0('outputs/', country_ISO, '-', survey_year, '-infographic charts v2.xlsx'),
+  overwrite = TRUE
+)
+
+file.copy(
+  from = "templates/data_fromR.xlsx",
+  to   = "outputs/data_fromR.xlsx",
+  overwrite = TRUE
+)
+
+
+
+
