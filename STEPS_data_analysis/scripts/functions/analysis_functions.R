@@ -1515,7 +1515,8 @@ rev_comp_numbers = function(sect) {
       if(!all(is.na(analysis_data[[ind_level]])))
       {
         ind_position = grep(ind_level, subset_indicators)
-        denom_condition = denom_logic[ind_position]
+        #denom_condition = denom_logic[ind_position]
+        denom_condition = if (length(denom_logic) == 1) {denom_logic[1]} else {denom_logic[grep(ind_level,subset_indicators)]}
         ind_subtitle = tab_subtitle1[ind_position]
         # Subset data
         if (denom_condition == "all") {
@@ -1603,7 +1604,8 @@ gen_numbers_fn = function(sect = unique(infographic_matrix$section)[2])
     {
       if(!all(is.na(analysis_data[[ind_level]])))
       {
-        denom_condition = denom_logic[grep(ind_level,subset_indicators)]
+        #denom_condition = denom_logic[grep(ind_level,subset_indicators)]
+        denom_condition = if (length(denom_logic) == 1) {denom_logic[1]} else {denom_logic[grep(ind_level,subset_indicators)]}
         #
         if (denom_condition == 'all') {
           datum = data %>% 
@@ -1941,7 +1943,8 @@ comp_numbers = function(sect) {
       {
         #print(ind_level)
         ind_position = grep(ind_level, subset_indicators)
-        denom_condition = denom_logic[ind_position]
+        #denom_condition = denom_logic[ind_position]
+        denom_condition = if (length(denom_logic) == 1) {denom_logic[1]} else {denom_logic[grep(ind_level,subset_indicators)]}
         ind_subtitle = tab_subtitle1[ind_position]
 
         # Subset data
