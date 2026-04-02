@@ -56,13 +56,14 @@ options(survey.adjust.domain.lonely = TRUE) # Adjust for lonely PSUs in domain a
 ########################################
 # API keys and general settings
 ########################################
-#Comment out API key if will not be used in processing the reports
+# Insert your API key below if you wish to generate a draft report or draft 
+# comparison analysis report (4th and 7th scripts). 
 Sys.setenv(API_KEY = "INSERT API HERE")
 
 # Survey and report settings
 survey_year = 2024
 previous_survey_year = 2017
-country = "ISO"
+country = "country name"
 report_signf = 'Yes'
 
 # Language selection
@@ -77,8 +78,9 @@ language = tolower(language)  # Standardize to lowercase
 country_ISO = 'ISO'  # ISO code for the country
 
 # Check if the specified ISO code exists in the reference dataset
-check_ISO = ifelse(country_ISO == 'ISO', 'CHE', country_ISO)
-ISO_existence = check_ISO %in% unique(read_dta('scripts/functions/risk_ref_data.dta')$ccode)
+if (country_ISO=="ISO") stop('Please set country_ISO to the 3-letter ISO code of your country.')
+CVD_ISO = country_ISO # in rare cases, CVD_ISO may be set to a similar country's ISO code if there is no CVD risk chart for the country
+ISO_existence = CVD_ISO %in% unique(read_dta('scripts/functions/risk_ref_data.dta')$ccode)
 if (!ISO_existence) stop('The supplied ISO code does not exist in the reference dataset for CVD risk calculation')
 
 ########################################
@@ -87,9 +89,9 @@ if (!ISO_existence) stop('The supplied ISO code does not exist in the reference 
 
 col_strat_variable = c('sex')  # Column stratifier
 row_strat_variables = c('agerange')  # Row stratifiers
-row_strat_variable_titles = c("Age group (years)")
+row_strat_variable_titles = c("Age Categories (Years)")
 # row_strat_variables = c('agerange','nationality')  # Row stratifiers (e.g., age range, nationality)
-# row_strat_variable_titles =c("Age group (years)","Nationality")  # Titles for row stratifiers
+# row_strat_variable_titles =c("Age Categories (Years)","Nationality")  # Titles for row stratifiers
 # row_strat_variables = c('governorate')  # Row stratifiers (e.g., age range, nationality)
 # row_strat_variable_titles =c("Governorate")  # Titles for row stratifiers
 vars_exempt_77_88 = c('')  # Variables exempt from missing code handling
