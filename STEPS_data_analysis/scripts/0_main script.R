@@ -101,8 +101,8 @@ vars_exempt_77_88 = c('')  # Variables exempt from missing code handling
 ########################################
 
 cores_detected = parallel::detectCores()
-analysis_cores = max(1, floor(cores_detected / 2))
-plan(multisession, workers = analysis_cores)
+#analysis_cores = max(1, floor(cores_detected / 2))
+plan(multisession, workers = 2)
 
 # Ensure write permissions for temp folder (Windows exception)
 if (.Platform$OS.type != "windows") Sys.chmod("temp", mode = "0777")
