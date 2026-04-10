@@ -267,7 +267,7 @@ indicator_matrix = indicator_matrix %>%
 
 if (!is.null(list_nonexist_dervars)) {
   indicator_matrix = indicator_matrix %>%
-    mutate(der_varsearch = search_vars(logic_denom = concat_var)) %>%
+    mutate(der_varsearch = search_vars(nonexist_vars = list_nonexist_dervars, logic_denom = concat_var)) %>%
     dplyr::filter(der_varsearch == FALSE)
 } else {
   indicator_matrix = indicator_matrix
