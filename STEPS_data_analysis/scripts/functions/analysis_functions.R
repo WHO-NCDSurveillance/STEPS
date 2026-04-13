@@ -677,7 +677,7 @@ flextab_function = function(index =1, table_label ='Men')
       }
 
       # Ensure preceding parts are multiples of 2 plus 2
-      if(length(rev_n_colnames)==1 & i !="Demographics")
+      if(length(rev_n_colnames)==1 & i !=demog_section_header)
       {
         for (i in 1:(times - 1)) {
           excess = parts[i] %% 2
@@ -688,7 +688,7 @@ flextab_function = function(index =1, table_label ='Men')
         }
       }
       # Ensure preceding parts are multiples of 3 plus 1
-      if((length(rev_n_colnames)>1 & i !="Demographics")|(number_columns>=20 & length(rev_n_colnames)>1))#(number_columns>=20 & length(rev_n_colnames)>1)
+      if((length(rev_n_colnames)>1 & i !=demog_section_header)|(number_columns>=20 & length(rev_n_colnames)>1))#(number_columns>=20 & length(rev_n_colnames)>1)
       {
         for (i in 1:(times - 1)) {
           excess = parts[i] %% 3
@@ -760,11 +760,11 @@ flextab_function = function(index =1, table_label ='Men')
       excl_colpos = grep(paste0(cols_exclude, collapse = '|'),names(extracted_table))[-1]
       extracted_table = extracted_table %>%dplyr::select(-all_of(cols_exclude[-1]))
       #exc column positions
-      if((all(is.na(subtitle2))|all(subtitle2=='')) & i != "Demographics")
+      if((all(is.na(subtitle2))|all(subtitle2=='')) & i != demog_section_header)
       {
         edited_inline_text = edited_inline_text[-excl_colpos]
 
-      } else if((all(is.na(subtitle2))|all(subtitle2=='')) & i == "Demographics")
+      } else if((all(is.na(subtitle2))|all(subtitle2=='')) & i == demog_section_header)
       {
         edited_inline_text = edited_inline_text
       }else{edited_inline_text = edited_inline_text[,-excl_colpos]}
