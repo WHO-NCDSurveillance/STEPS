@@ -66,6 +66,13 @@ previous_survey_year = 2017
 country = "country name"
 report_signf = 'Yes'
 
+########################################
+# Demographic section header
+# Change as appropriate based on language 
+# and translation
+########################################
+demog_section_header = 'Demographics'                 
+
 # Language selection
 language = c('ENGLISH','FRENCH','ARABIC','SPANISH','RUSSIAN','OTHER')[1]  # Default: English
 if (language == 'OTHER') language = 'SPECIFY'
