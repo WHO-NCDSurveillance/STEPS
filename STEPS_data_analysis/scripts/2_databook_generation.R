@@ -119,6 +119,7 @@ for (i in unique(indicator_matrix$section))
       ########################################
       for(k in subset_indicators)
       {
+        print(k)
         ##################################################
         ## Numeric indicators (mean / median)
         ##################################################
@@ -130,7 +131,7 @@ for (i in unique(indicator_matrix$section))
           ####################################
           ## Demographics indicators
           ####################################
-          if(i =="Demographics")
+          if(i ==demog_section_header)
           {
             # Apply denominator filter if needed
             if(denom_logic[which(subset_indicators %in%k)] =='all')
@@ -218,7 +219,7 @@ for (i in unique(indicator_matrix$section))
           ####################################
           ## Demographic categorical indicators
           ####################################
-          if(i =="Demographics")
+          if(i ==demog_section_header)
           {
             # Apply denominator condition
             if(denom_logic[which(subset_indicators %in%k)] =='all')
@@ -351,7 +352,7 @@ for (i in unique(indicator_matrix$section))
         if (combine_ind) {
           # Combine multiple indicators into the same output table
           # depending on stratification levels.
-          if (i == "Demographics") {
+          if (i == demog_section_header) {
             if (any(class(summary_table) != 'list')) {
               sublist_1[[k]] = summary_table %>% 
                                dplyr::select(all_of(c("eval(parse(text = strat_variable))", 'Men_a', 'Men_b')))
@@ -460,12 +461,12 @@ for (i in unique(indicator_matrix$section))
                                  "[;]"))
     } else{}
     #
-    subtitle1 = ifelse(is.na(subtitle1) & sub_formatrix$section!="Demographics",'',subtitle1)
+    subtitle1 = ifelse(is.na(subtitle1) & sub_formatrix$section!=demog_section_header,'',subtitle1)
     subtitle2 = ifelse(is.na(subtitle2),'',subtitle2)
     ########################################
     ## Special handling for demographic section
     ########################################
-    if(sub_formatrix$section=="Demographics")
+    if(sub_formatrix$section==demog_section_header)
     {
       if(all(is.na(subtitle1)))
       {
@@ -595,7 +596,7 @@ for (i in unique(indicator_matrix$section))
       if(range_levels==2){first_ln = 5}
       }
     # Special rule for Demographic section
-    if(i=="Demographics"){first_ln = 4:(length(names(table(data[,"agerange"])))+2)}
+    if(i==demog_section_header){first_ln = 4:(length(names(table(data[,"agerange"])))+2)}
     final_hlines = c(first_ln)
     #########################################################################
     ## Compute Additional Row Group Boundaries
@@ -646,7 +647,7 @@ for (i in unique(indicator_matrix$section))
       ## Identify Total Rows
       #######################################################################
       total_pos = grep('Total',extract_table[,1])
-      if(i=="Demographics"){total_pos = grep('Total',as.data.frame(extract_table)[,1])}
+      if(i==demog_section_header){total_pos = grep('Total',as.data.frame(extract_table)[,1])}
       #######################################################################
       ## Construct Column Labels for Table
       #######################################################################
@@ -676,7 +677,7 @@ for (i in unique(indicator_matrix$section))
       #######################################################################
       # For the "Demographics" section, the column headers are customized
       # depending on the type of variable (categorical vs continuous).
-      if(i=="Demographics"){
+      if(i==demog_section_header){
         # For categorical demographic variables, the table headers include 
         # repeated 'n' and '%' columns along with translated column titles.
         label_subtitle1=if (unique(strsplit(sub_formatrix$type,'[;]')[[1]])=='categorical')
@@ -700,7 +701,7 @@ for (i in unique(indicator_matrix$section))
       ## ---------------- Formatting Demographic Table ------------------------
       ###########################################################################
       
-      if(i=="Demographics")
+      if(i==demog_section_header)
       {
         if(language =='arabic')
         {
@@ -846,7 +847,7 @@ for (i in unique(indicator_matrix$section))
                                                                             other_language[5,language],'; n; ')),'[;]')[[1]],
                                paste0(' ',other_language[5,language]))
         # Special handling for Demographics: simpler header
-        if(i=="Demographics")
+        if(i==demog_section_header)
         {
           edited_inline_text = c(row_strat_variable_titles[1],'n',paste0(inline_text))
         }
