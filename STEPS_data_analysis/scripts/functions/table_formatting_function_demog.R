@@ -33,20 +33,23 @@ column_strat = ifelse(
   column_strat
 )
 
+# Levels of sex in English
+col_strat_var_levels_eng = names(table(data[,'demog_sex']))
+
 ############################################################
 ## EXTRACT COLUMN STRATIFICATION LEVEL NAMES
 ############################################################
 
 # If sex is part of the column stratification variables,
 # retrieve the level names from the dataset.
-if('sex' %in% col_strat_variable){
-  col_strat_var_levels = names(table(data[,'demog_sex']))
-}
+# if('sex' %in% col_strat_variable){
+#   col_strat_var_levels = names(table(data[,'demog_sex']))
+# }
 
 # Replace language-specific level labels with standardized
 # English labels ("Men" and "Women") to ensure consistency.
-col_strat_var_levels[col_strat_var_levels==other_language[1,2]]='Men'
-col_strat_var_levels[col_strat_var_levels==other_language[2,2]]='Women'
+#col_strat_var_levels[col_strat_var_levels==other_language[1,2]]='Men'
+#col_strat_var_levels[col_strat_var_levels==other_language[2,2]]='Women'
 
 
 ############################################################
@@ -95,7 +98,7 @@ if(column_strat =='all')
 {
   
   # Identify column names corresponding to requested stratification levels
-  incl_level_names = col_strat_var_levels[extracted_integers]
+  incl_level_names = col_strat_var_levels_eng[extracted_integers]
   # Filter columns in the table based on selected stratification levels
   pre_edited_table = pre_edited_table[,c(
     1,
@@ -157,7 +160,7 @@ if(column_strat =='all')
   # Remove all stratified columns and keep only total columns
   pre_edited_table =
     pre_edited_table[
-      ,-c(grep(paste0(c(col_strat_var_levels,'Men','Women'), collapse = '|'),
+      ,-c(grep(paste0(c(col_strat_var_levels_eng,'Men','Women'), collapse = '|'),
                names(pre_edited_table)))
     ]
   
@@ -222,7 +225,7 @@ if(column_strat =='all')
     pre_edited_table =
       pre_edited_table[
         c(1:3,tail(1:nrow(pre_edited_table),all_additional_levels+2)),
-        -c(grep(paste0(c(col_strat_var_levels,'Men','Women'), collapse = '|'),
+        -c(grep(paste0(c(col_strat_var_levels_eng,'Men','Women'), collapse = '|'),
                 names(pre_edited_table)))
       ]
     
@@ -231,7 +234,7 @@ if(column_strat =='all')
     pre_edited_table =
       pre_edited_table[
         c(1:3,nrow(pre_edited_table)),
-        -c(grep(paste0(c(col_strat_var_levels,'Men','Women'), collapse = '|'),
+        -c(grep(paste0(c(col_strat_var_levels_eng,'Men','Women'), collapse = '|'),
                 names(pre_edited_table)))
       ]
   }
