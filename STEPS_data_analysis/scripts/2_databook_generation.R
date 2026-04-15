@@ -22,7 +22,7 @@ for (i in unique(indicator_matrix$section))
   # Initialize a list that will store all output tables generated
   # for indicators within the section.
   output_table = list()
-
+  
   
   ########################################
   ## Loop through indicator descriptions
@@ -32,15 +32,15 @@ for (i in unique(indicator_matrix$section))
   {
     # Filter rows belonging to the current indicator group
     pre_sub_matrix = indicator_matrix %>% 
-                     dplyr::filter(indicator_short_desc == j)
+      dplyr::filter(indicator_short_desc == j)
     # Initialize sub-row iterator
-      sub_row = NULL
-      ########################################
-      ## Loop through sub-indicators
-      ########################################
-      for(sub_row in 1:nrow(pre_sub_matrix))
-      {
-        # Extract the specific row describing the current sub-indicator
+    sub_row = NULL
+    ########################################
+    ## Loop through sub-indicators
+    ########################################
+    for(sub_row in 1:nrow(pre_sub_matrix))
+    {
+      # Extract the specific row describing the current sub-indicator
       sub_matrix = pre_sub_matrix[sub_row,]
       # Extract indicator variable names separated by semicolons
       subset_indicators = do.call('c',
@@ -51,7 +51,7 @@ for (i in unique(indicator_matrix$section))
       # Extract denominator logic defining the population subset
       denom_logic = do.call('c',
                             strsplit(sub_matrix$pop_subset, "[;]"))
-
+      
       
       ########################################
       ## Defining survey design structure
@@ -102,7 +102,7 @@ for (i in unique(indicator_matrix$section))
       # Flag indicating whether multiple indicators should be displayed
       # in the same table
       combine_ind = length(similarity_ind)==1 & length(subset_indicators)>1
-     
+      
       ########################################
       ## Identify column stratification levels
       ########################################
@@ -113,7 +113,7 @@ for (i in unique(indicator_matrix$section))
       eval(parse(text=paste0('sublist_', 1:length(col_strat_var_levels),'= list()', sep='\n')))
       # Initialize list for total column tables
       total_tab = list()
- 
+      
       ########################################
       ## Loop through individual indicators
       ########################################
@@ -140,7 +140,7 @@ for (i in unique(indicator_matrix$section))
             }else{
               datum = data%>%dplyr::filter(eval(parse(text=paste0('(',denom_logic[which(subset_indicators %in%k)],')'))))
             }
-
+            
             # Variables used for demographic summaries
             list_demog_vars = c("agerange", setdiff(row_strat_variables,"agerange"))
             num_demog = NULL
@@ -152,10 +152,10 @@ for (i in unique(indicator_matrix$section))
             }
             # Replace missing stratification labels with "Total"
             summary_table = summary_table %>%
-                            mutate(`eval(parse(text = strat_variable))` = ifelse(is.na(`eval(parse(text = strat_variable))`),
-                                                                                 'Total',
-                                                                                 as.character(`eval(parse(text = strat_variable))`)))
-
+              mutate(`eval(parse(text = strat_variable))` = ifelse(is.na(`eval(parse(text = strat_variable))`),
+                                                                   'Total',
+                                                                   as.character(`eval(parse(text = strat_variable))`)))
+            
           } else{
             
             ####################################
@@ -175,14 +175,14 @@ for (i in unique(indicator_matrix$section))
             {
               s_position = grep(s, row_strat_variables)
               sub_label=row_strat_variable_titles[s_position]
-
+              
               res_table = analysis_numeric_fn(row_strat = s, col_strat = col_strat_variable)%>%
-                          as.data.frame()
+                as.data.frame()
               # Add row headers for stratification variables
               if(s_position!=1)
               {
                 res_table = rbind(c(sub_label, rep('',ncol(res_table)-1)),res_table)%>%
-                            as.data.frame()
+                  as.data.frame()
                 colnames(res_table) = all_tabcolnames
               } else{}
               int_summary_table[[s]]= res_table
@@ -190,7 +190,7 @@ for (i in unique(indicator_matrix$section))
             }
             # Combine stratified tables
             summary_table = do.call('rbind', int_summary_table) %>% 
-                            as.data.frame()
+              as.data.frame()
             ####################################
             ## Formatting output tables
             ####################################
@@ -245,8 +245,8 @@ for (i in unique(indicator_matrix$section))
             }
             # Replace NA stratification values with Total
             summary_table = summary_table %>%
-                            mutate(`eval(parse(text = strat_variable))` = ifelse(is.na(`eval(parse(text = strat_variable))`),
-                                                                                 'Total',as.character(`eval(parse(text = strat_variable))`)))
+              mutate(`eval(parse(text = strat_variable))` = ifelse(is.na(`eval(parse(text = strat_variable))`),
+                                                                   'Total',as.character(`eval(parse(text = strat_variable))`)))
             #Editing summary_table
             summ_table_names = sort(names(summary_table))
             if(sub_matrix$logic_condition_var=='c1'){
@@ -272,7 +272,7 @@ for (i in unique(indicator_matrix$section))
                                   ,'Total_Count', 
                                   grep('Percentage',grep('sex_',summ_table_names,v=T), v = T))
               summary_table = summary_table %>% dplyr::select(all_of(names_to_select)) %>% as.data.frame()
-
+              
               ####Editing summary_table
               eval(parse(text=paste0('summary_table$',
                                      grep('Percentage',
@@ -289,7 +289,7 @@ for (i in unique(indicator_matrix$section))
                                           grep('sex_',summ_table_names,v=T), v = T),
                                      '[as.numeric(summary_table$Total_Count)<',
                                      denom_limit,']="-"', sep = '\n')))
-
+              
               ########Calling custom sort functions
               summary_table = list(
                 summary_table %>%
@@ -302,8 +302,8 @@ for (i in unique(indicator_matrix$section))
                   dplyr::select(c("eval(parse(text = strat_variable))",'Total_Count', 
                                   custom_sort3(grep('Percentage',grep('sex_',summ_table_names,v=T), v = T)))))
             }
-
-
+            
+            
           }else{
             eval(parse(text=paste0('formula = ~I(',k, '=="',1,'")')))
             #denom_condition = denom_logic[which(subset_indicators %in%k)]
@@ -311,14 +311,14 @@ for (i in unique(indicator_matrix$section))
             # Stratified categorical analysis
             s = NULL
             int_summary_table = list()
-
+            
             for(s in na.omit(unique(c(row_strat_variables))))
             {
               s_position = grep(s, row_strat_variables)
               sub_label = row_strat_variable_titles[s_position]
-
+              
               res_table = analysis_categorical_fn(row_strat = s, col_strat = col_strat_variable)%>%
-                          as.data.frame()
+                as.data.frame()
               if(s_position!=1)
               {
                 res_table = rbind(c(sub_label, rep('',ncol(res_table)-1)),res_table)%>%as.data.frame()
@@ -355,11 +355,11 @@ for (i in unique(indicator_matrix$section))
           if (i == demog_section_header) {
             if (any(class(summary_table) != 'list')) {
               sublist_1[[k]] = summary_table %>% 
-                               dplyr::select(all_of(c("eval(parse(text = strat_variable))", 'Men_a', 'Men_b')))
+                dplyr::select(all_of(c("eval(parse(text = strat_variable))", 'Men_a', 'Men_b')))
               sublist_2[[k]] = summary_table %>% 
-                               dplyr::select(all_of(c("eval(parse(text = strat_variable))", 'Women_a', 'Women_b')))
+                dplyr::select(all_of(c("eval(parse(text = strat_variable))", 'Women_a', 'Women_b')))
               total_tab[[k]] = summary_table %>% 
-                               dplyr::select(all_of(c("eval(parse(text = strat_variable))", 'Total_a', 'Total_b')))
+                dplyr::select(all_of(c("eval(parse(text = strat_variable))", 'Total_a', 'Total_b')))
             } else {
               # When summary_table already contains multiple stratified tables 
               sublist_1[[k]] = summary_table[[1]]
@@ -367,10 +367,10 @@ for (i in unique(indicator_matrix$section))
               total_tab[[k]] = summary_table[[3]]
             }
           } else {
-              # Prepare list of column combinations for stratified tables
+            # Prepare list of column combinations for stratified tables
             all_colmames = c(sort(c(paste0(col_strat_var_levels,'_',c('a')),
                                     paste0(col_strat_var_levels,'_',c('b')),
-                                            paste0(col_strat_var_levels,'_',c('ci')))),
+                                    paste0(col_strat_var_levels,'_',c('ci')))),
                              'Total_a','Total_b','Total_ci')
             ###
             col_list = list()
@@ -386,13 +386,13 @@ for (i in unique(indicator_matrix$section))
                                    '[[k]] = summary_table %>% dplyr::select(all_of(c(col_list[["',
                                    col_strat_var_levels,'"]])))', sep='\n')))
             total_tab[[k]] = summary_table %>% 
-                             dplyr::select(all_of(c(colnames(summary_table)[1], 'Total_a', 'Total_b', 'Total_ci')))
+              dplyr::select(all_of(c(colnames(summary_table)[1], 'Total_a', 'Total_b', 'Total_ci')))
           }
         } else {
           # Store individual indicator table
           output_table[[paste0(j, '__', k)]] = summary_table
         }
-
+        
       }# end indicator loop
       
       ########################################
@@ -401,18 +401,18 @@ for (i in unique(indicator_matrix$section))
       if(combine_ind)
       {
         # Merge subtables for each column stratification level
-          eval(parse(text=paste0('merged_sublist_', 
-                                 1:length(col_strat_var_levels),
-                                 ' = reduce(sublist_',1:length(col_strat_var_levels),
-                                 ', full_join, by = "',colnames(as.data.frame(sublist_1[[1]]))[1],'")', 
-                                 sep='\n')))
+        eval(parse(text=paste0('merged_sublist_', 
+                               1:length(col_strat_var_levels),
+                               ' = reduce(sublist_',1:length(col_strat_var_levels),
+                               ', full_join, by = "',colnames(as.data.frame(sublist_1[[1]]))[1],'")', 
+                               sep='\n')))
         # Merge total tables
-          merged_total_tab = reduce(total_tab, full_join, by = colnames(as.data.frame(sublist_1[[1]]))[1])
-          # Store merged result
-          output_table[[paste0(j,'__',k)]] = eval(parse(text=paste0('list(',
-                                                                    paste0('merged_sublist_', 1:length(col_strat_var_levels), collapse = ','),
-                                                                    ', merged_total_tab)')))
-
+        merged_total_tab = reduce(total_tab, full_join, by = colnames(as.data.frame(sublist_1[[1]]))[1])
+        # Store merged result
+        output_table[[paste0(j,'__',k)]] = eval(parse(text=paste0('list(',
+                                                                  paste0('merged_sublist_', 1:length(col_strat_var_levels), collapse = ','),
+                                                                  ', merged_total_tab)')))
+        
       } else{}
     }# end sub-indicator loop
   }# end indicator group loop
@@ -430,17 +430,17 @@ for (i in unique(indicator_matrix$section))
   {
     # Initialize Word document
     doc = officer::read_docx()
-
+    
     #
     tab_length = length(grep('_a',names(output_table[[g]][[1]]), v=T))
     if(tab_length < 10)
     {
-    matching_indicator = gsub("\\d{1}$", "", do.call('c',strsplit(g, "[__]"))[[3]])
+      matching_indicator = gsub("\\d{1}$", "", do.call('c',strsplit(g, "[__]"))[[3]])
     }else{matching_indicator = gsub("\\d{1,2}$", "", do.call('c',strsplit(g, "[__]"))[[3]])}
     # Retrieve indicator description from matrix
     sub_formatrix = indicator_matrix[grep(paste0('\\b',matching_indicator,'\\b'), 
                                           tolower(indicator_matrix$indicator)),] 
-
+    
     indicator = sub_formatrix$indicator
     indicator_short_desc = unique(sub_formatrix$indicator_short_desc)
     description = sub_formatrix$description
@@ -455,10 +455,10 @@ for (i in unique(indicator_matrix$section))
     subtitle1 = do.call('c',strsplit(sub_formatrix$subtitle1, "[;]"))
     if(length(sub_formatrix$subtitle2)>0)
     {
-    subtitle2 = do.call('c',
-                        strsplit(do.call('c',
-                                         strsplit(as.character(sub_formatrix$subtitle2), "[:]")),
-                                 "[;]"))
+      subtitle2 = do.call('c',
+                          strsplit(do.call('c',
+                                           strsplit(as.character(sub_formatrix$subtitle2), "[:]")),
+                                   "[;]"))
     } else{}
     #
     subtitle1 = ifelse(is.na(subtitle1) & sub_formatrix$section!=demog_section_header,'',subtitle1)
@@ -473,7 +473,7 @@ for (i in unique(indicator_matrix$section))
         subtitle1 = eval(parse(text=paste0('names(table(data$demog_',sub_formatrix$logic_condition_var,'))')))
       } else{subtitle1 = do.call('c',strsplit(as.character(sub_formatrix$subtitle1), "[;]"))}
     } else{}
-
+    
     ##
     column_strat = tolower(sub_formatrix$column_strat)
     ##
@@ -493,11 +493,11 @@ for (i in unique(indicator_matrix$section))
       def_indicator = as.data.frame(
         rev(rbind(cbind(indicator_short_desc,
                         paste0(other_language[6,language],': ',description)),
-                                          cbind(indicator_short_desc,
-                                                paste0(other_language[7,language],':\n',
-                                                                            instrument_questions))) %>%
+                  cbind(indicator_short_desc,
+                        paste0(other_language[7,language],':\n',
+                               instrument_questions))) %>%
               as.data.frame())
-        ) %>% 
+      ) %>% 
         flextable() %>% autofit() %>% 
         delete_part(part = "header")%>%# remove default header
         merge_at(j=2)%>% # merge definition column
@@ -507,15 +507,15 @@ for (i in unique(indicator_matrix$section))
         bold(j = 2) %>% 
         fontsize(size = 9 ,part = "all") %>% 
         border_remove()
-
+      
     }else{
       # For all other languages, standard left-to-right formatting is used.
       def_indicator = as.data.frame(
-                      rbind(cbind(indicator_short_desc,
-                                  paste0(other_language[6,language],': ',description)),
-                                          cbind(indicator_short_desc,
-                                                paste0(other_language[7,language],':\n',
-                                                       instrument_questions)))) %>%
+        rbind(cbind(indicator_short_desc,
+                    paste0(other_language[6,language],': ',description)),
+              cbind(indicator_short_desc,
+                    paste0(other_language[7,language],':\n',
+                           instrument_questions)))) %>%
         flextable() %>% autofit() %>% 
         delete_part(part = "header")%>%
         merge_at(j=1)%>% # merge indicator column
@@ -549,9 +549,9 @@ for (i in unique(indicator_matrix$section))
     if(any(!(indicator_short_desc %in% prev_short_desc) | indicator_position==1))
     {
       doc = doc %>% 
-            body_add_flextable(width(def_indicator, 
-                                     width = dim(def_indicator)$widths*6.4/(flextable_dim(def_indicator)$widths)))%>%
-            body_add('\n', style = "Normal")
+        body_add_flextable(width(def_indicator, 
+                                 width = dim(def_indicator)$widths*6.4/(flextable_dim(def_indicator)$widths)))%>%
+        body_add('\n', style = "Normal")
     }else{}
     #########################################################################
     ## Extracting Indicator Table for Formatting
@@ -594,7 +594,7 @@ for (i in unique(indicator_matrix$section))
     } else{
       first_ln = 5:(all_hlines[1]+3)
       if(range_levels==2){first_ln = 5}
-      }
+    }
     # Special rule for Demographic section
     if(i==demog_section_header){first_ln = 4:(length(names(table(data[,"agerange"])))+2)}
     final_hlines = c(first_ln)
@@ -617,7 +617,7 @@ for (i in unique(indicator_matrix$section))
         next_no = next_no+1
       }
     }
-
+    
     #########################################################################
     ## Define Table Border Styles
     #########################################################################
@@ -653,7 +653,7 @@ for (i in unique(indicator_matrix$section))
       #######################################################################
       inline_text = if (unique(strsplit(sub_formatrix$type,'[;]')[[1]])=='categorical'){
         paste0('% ',do.call('c',strsplit(subtitle1, "[;]")))
-
+        
       }else{do.call('c',strsplit(subtitle1, "[;]"))}
       #######################################################################
       ## Define Header Structure
@@ -665,12 +665,12 @@ for (i in unique(indicator_matrix$section))
                             inline_text[1],other_language[5,language],'n',
                             inline_text[2],other_language[5,language],'n',inline_text[3],
                             other_language[5,language])
-
+        
       } else{
         label_subtitle1 = c(row_strat_variable_titles[1],
                             rep(c("n",inline_text,other_language[5,language]),
                                 (ncol(extract_table)-1)/3))
-
+        
       }
       #######################################################################
       ## Special Formatting for Demographic Tables
@@ -683,11 +683,11 @@ for (i in unique(indicator_matrix$section))
         label_subtitle1=if (unique(strsplit(sub_formatrix$type,'[;]')[[1]])=='categorical')
         {c(other_language[8,language],# Header title for the demographic category
            'n','%','n','%','n','%')# Column labels for counts and percentages
-          } else{
-            # For continuous variables, headers include 'n' and mean/95 CIs or median/IQR
+        } else{
+          # For continuous variables, headers include 'n' and mean/95 CIs or median/IQR
           (c(other_language[8,language],'n',other_language[9,language],
              'n',other_language[9,language],'n',other_language[9,language]))}}
-
+      
       ###########################################################################
       ## ---------------- Prepare Indicator Table ------------------------------
       ###########################################################################
@@ -712,20 +712,20 @@ for (i in unique(indicator_matrix$section))
                                      rep(other_language[3,language],2)),
                                    label_subtitle1,# Column labels
                                    as.matrix(extract_table))%>%# Data rows
-                             as.data.frame() %>%rev() # Reverse for RTL
-        vline_num = c(2,4)# Vertical line positions for formatting
+            as.data.frame() %>%rev() # Reverse for RTL
+          vline_num = c(2,4)# Vertical line positions for formatting
         }else{
           # Standard LTR formatting
           pre_edited_table =  rbind(rep(table_title,7),
-                c('',rep(other_language[1,language],2),
-                  rep(other_language[2,language],2),
-                  rep(other_language[3,language],2)),
-                label_subtitle1,# Column labels
-                as.matrix(extract_table)) %>%# Data rows
+                                    c('',rep(other_language[1,language],2),
+                                      rep(other_language[2,language],2),
+                                      rep(other_language[3,language],2)),
+                                    label_subtitle1,# Column labels
+                                    as.matrix(extract_table)) %>%# Data rows
             as.data.frame()
           vline_num = c(3,5)
         }
-
+        
         # Call external function to apply detailed Demographic table formatting
         source('scripts/functions/table_formatting_function_demog.R')
         
@@ -733,16 +733,16 @@ for (i in unique(indicator_matrix$section))
         if(indicator_short_desc %in% next_short_desc)
         {
           doc = doc %>% 
-                body_add_flextable(width(edited_table, 
-                                         width = dim(edited_table)$widths*6.5/(flextable_dim(edited_table)$widths)))%>%
-                body_add('\n', style = "Normal")
+            body_add_flextable(width(edited_table, 
+                                     width = dim(edited_table)$widths*6.5/(flextable_dim(edited_table)$widths)))%>%
+            body_add('\n', style = "Normal")
         }else{
           # Add a page break if it's the last indicator in this group
           doc = doc %>% 
-                    body_add_flextable(width(edited_table, 
-                                             width = dim(edited_table)$widths*6.5/(flextable_dim(edited_table)$widths))) %>% 
-                    body_add_break()}
-
+            body_add_flextable(width(edited_table, 
+                                     width = dim(edited_table)$widths*6.5/(flextable_dim(edited_table)$widths))) %>% 
+            body_add_break()}
+        
       } else{
         #########################################################################
         ## Non-Demographic Table Formatting and Column Splitting
@@ -761,8 +761,8 @@ for (i in unique(indicator_matrix$section))
           split_tab <- extract_table[, col_range]# Subset the table
           sub_edited_inline_text <- label_subtitle1[col_range]# Subset headers
           # Determine stratification labels for subtable
-          col_strat_var_levels = names(table(data[,col_strat_variable]))
-
+          col_strat_var_levels = names(table(data[,'demog_c1']))
+          
           sub_labels <- c('',rep(c(col_strat_var_levels,
                                    other_language[4,language]), each = 3))[col_range]
           #########
@@ -770,9 +770,9 @@ for (i in unique(indicator_matrix$section))
           # Replace median title placeholder if needed
           if(length(median_title)==1){
             sub_edited_inline_text = gsub(other_language[5,language],
-                                                                    other_language[10,language],
-                                                                    sub_edited_inline_text)
-            }
+                                          other_language[10,language],
+                                          sub_edited_inline_text)
+          }
           # Determine vertical lines for column borders
           sub_ext_ncols = ncol(split_tab)%/%3
           vertical_lines = (4+c(0, seq(3,999,3)))[1:(sub_ext_ncols-1)]
@@ -782,40 +782,40 @@ for (i in unique(indicator_matrix$section))
             pre_sub_edited_table =  rbind(rep(table_title,ncol(split_tab)),
                                           sub_labels,
                                           sub_edited_inline_text,as.matrix(split_tab))%>%
-                                    as.data.frame()%>%rev()
+              as.data.frame()%>%rev()
             vline_num = ncol(split_tab) - vertical_lines
           }else{
             pre_sub_edited_table =  rbind(rep(table_title,ncol(split_tab)),
                                           sub_labels,
                                           sub_edited_inline_text,as.matrix(split_tab))%>%
-                                    as.data.frame()
+              as.data.frame()
             vline_num = vertical_lines
           }
-
+          
           # Apply formatting using external function
           source('scripts/functions/table_formatting_function_nondemog.R')
           # Store formatted subtable
           frame_split_tables[[lt]] = sub_edited_table
           inc_num=lt
         }
-
-          # Filter out any NULL subtables
-      filtered_sub_framelist = Filter(function(x) !is.null(x), frame_split_tables)
-      # Add subtables to Word document sequentially
-      if(indicator_short_desc %in% next_short_desc)
-      {
-      eval(parse(text=paste0('doc = doc %>% body_add_flextable(width(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']],
+        
+        # Filter out any NULL subtables
+        filtered_sub_framelist = Filter(function(x) !is.null(x), frame_split_tables)
+        # Add subtables to Word document sequentially
+        if(indicator_short_desc %in% next_short_desc)
+        {
+          eval(parse(text=paste0('doc = doc %>% body_add_flextable(width(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']],
           width = dim(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']])$widths*6.5/(flextable_dim(filtered_sub_framelist',
-          '[[',1:length(filtered_sub_framelist),']])$widths)))%>%
+                                 '[[',1:length(filtered_sub_framelist),']])$widths)))%>%
           body_add("\n", style = "Normal")', sep='\n')))
-      } else{
-        eval(parse(text=paste0('doc = doc %>% body_add_flextable(width(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']],
+        } else{
+          eval(parse(text=paste0('doc = doc %>% body_add_flextable(width(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']],
           width = dim(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']])$widths*6.5/(flextable_dim(filtered_sub_framelist',
-                               '[[',1:length(filtered_sub_framelist),']])$widths)))%>%
+                                 '[[',1:length(filtered_sub_framelist),']])$widths)))%>%
           body_add("\n", style = "Normal")', sep='\n')))
-        doc = doc %>% body_add_break()
-      }
-
+          doc = doc %>% body_add_break()
+        }
+        
       }
       ###########################################################################
       ## ---------------- Handling Output Tables as Lists ----------------------
@@ -851,18 +851,18 @@ for (i in unique(indicator_matrix$section))
         {
           edited_inline_text = c(row_strat_variable_titles[1],'n',paste0(inline_text))
         }
-
+        
       } else{
         # If subtitle2 is present, we use a more complex 3-row header
         row_merge = 3
         inline_text = if (unique(strsplit(sub_formatrix$type,'[;]')[[1]])=='categorical'){
           paste0('% ',do.call('c',strsplit(subtitle2, "[;]")))
-
+          
         }else{do.call('c',strsplit(subtitle2, "[;]"))}
         # Calculate how many times to replicate subtitle1 across columns
         notimes = eval(parse(text = paste0('c(',
                                            paste0('length(do.call("c",strsplit(strsplit(sub_formatrix$subtitle2, "[:]")[[1]][',
-                                                       1:length(subtitle1),'], "[;]")))', collapse = ','),
+                                                  1:length(subtitle1),'], "[;]")))', collapse = ','),
                                            ')')))
         # Construct a two-row header for the flextable
         edited_inline_text = rbind(c('',rep(subtitle1,notimes*3)),# First row: subtitle1 replicated
@@ -871,15 +871,15 @@ for (i in unique(indicator_matrix$section))
                                                      collapse=paste0('; ',other_language[5,language],'; n; ')),'[;]')[[1]],
                                      paste0(' ',other_language[5,language])))
       }
-
+      
       # ---------------- Create Flextable Objects for Each Stratified Column ----------------
-      col_strat_var_levels = names(table(data[,col_strat_variable]))
+      col_strat_var_levels = names(table(data[,'demog_c1']))
       # Dynamically generate flextable objects for each stratification level + total column
       eval(parse(text = paste0('flex_output',1:(length(col_strat_var_levels)+1), 
                                ' = flextab_function(index =',1:(length(col_strat_var_levels)+1),
                                ',table_label ="',c(col_strat_var_levels,other_language[4,language]),'")', 
                                sep = '\n')))
-
+      
       # ---------------- Determine Column Stratification Levels ----------------
       extracted_integers = unique(as.integer(unlist(str_extract_all(column_strat, "\\d+"))))
       collevel = paste0('collevel',paste0(extracted_integers, collapse = '_'))
@@ -893,7 +893,7 @@ for (i in unique(indicator_matrix$section))
       } else if (column_strat=='total_col'){
         (length(col_strat_var_levels))+1 # Only total column
       } else{}
-
+      
       #
       levels_to_report = as.numeric(as.character(levels_to_report))
       # ---------------- Determine Next Indicator for Table Grouping ----------------
@@ -906,31 +906,32 @@ for (i in unique(indicator_matrix$section))
       # ---------------- Insert Flextables into Word Document ----------------
       if(indicator_short_desc %in% next_short_desc)
       {
-        # If next indicator is in same group, insert tables sequentially without page break        out_levels = NULL
+        # If next indicator is in same group, insert tables sequentially without page break        
+        out_levels = NULL
         for(out_levels in levels_to_report)
         {
           sub_out_levels = output_length[out_levels]
           subnote = NULL
           for(subnote in 1:sub_out_levels)
           {
-          eval(parse(text=paste0('doc = doc %>% body_add_flextable(width(flex_output',out_levels,'[[',subnote,']],
+            eval(parse(text=paste0('doc = doc %>% body_add_flextable(width(flex_output',out_levels,'[[',subnote,']],
           width = dim(flex_output',out_levels,'[[',subnote,']])$widths*6.5/(flextable_dim(flex_output',
                                    out_levels,'[[',subnote,']])$widths)))%>%
           body_add("\n", style = "Normal")', sep='\n')))
             ###
             if(out_levels <(length(col_strat_var_levels)+1))
             {
-
+              
             } else{
-
+              
               doc = doc %>% body_add_break()
             }
-
+            
           }
         }
-
+        
       } else{
-
+        
         out_levels = NULL
         # If next indicator is different, add page break after inserting tables
         for(out_levels in levels_to_report)
@@ -947,20 +948,20 @@ for (i in unique(indicator_matrix$section))
         }
         doc = doc %>% body_add_break()
       }
-
+      
     } else{}
     # ---------------- Write Individual Indicator Document ----------------
     section_position = grep(i, unique(indicator_matrix$section))
     print(doc, target =paste0('temp/Part',section_position,'_Indicator',ind_no,'.docx'))
     ind_no = ind_no+1
   }
-
+  
   # ---------------- Consolidate Individual Indicators into Section Document ----------------
   section_header = unique(section_matrix$section)[1]
   title_text = ftext(section_header) %>% fpar()
   docx = officer::read_docx()%>%
-         body_add(title_text, style = "heading 1")
-
+    body_add(title_text, style = "heading 1")
+  
   # Append all individual indicator documents
   p=NULL
   for(p in 1:length(names(output_table))){
@@ -994,7 +995,7 @@ databook = databook %>%
 
 i=NULL
 for(i in 1:(length(unique(indicator_matrix$section)))) {
-
+  
   # ----------------------------------------------------------------------
   # Define the file path for the current section document
   # Each section was previously saved as: temp/Part{i}.docx
@@ -1007,7 +1008,7 @@ for(i in 1:(length(unique(indicator_matrix$section)))) {
   # ----------------------------------------------------------------------
   databook <- databook %>%
     body_add_docx(path, pos = "after")  # Insert the document content
-
+  
   # ----------------------------------------------------------------------
   # Insert a page break after each section so that the next section
   # starts on a new page. This improves readability of the final report.
