@@ -22,18 +22,19 @@ has_full = length(grep('_full',tolower(column_strat),v=T))>0
 
 # Remove "_full" from column_strat for downstream matching
 column_strat = ifelse(length(grep('_full',tolower(column_strat),v=T))>0, gsub('_full','',column_strat),column_strat)
-
+# Levels of sex in English
+col_strat_var_levels_eng = names(table(data[,'demog_sex']))
 # -----------------------------------------------------------
 # Identify stratification levels for the column variable
 # -----------------------------------------------------------
 
 # If 'sex' is a column stratifier, retrieve levels from the dataset
-if('sex' %in% col_strat_variable){col_strat_var_levels = names(table(data[,'demog_sex']))}
+#if('sex' %in% col_strat_variable){col_strat_var_levels = names(table(data[,'demog_sex']))}
 
 # Map translated language values back to standard labels
 # Example: French "Homme" → "Men"
-col_strat_var_levels[col_strat_var_levels==other_language[1,2]]='Men'
-col_strat_var_levels[col_strat_var_levels==other_language[2,2]]='Women'
+#col_strat_var_levels[col_strat_var_levels==other_language[1,2]]='Men'
+#col_strat_var_levels[col_strat_var_levels==other_language[2,2]]='Women'
 
 # -----------------------------------------------------------
 # CASE 1: Entire table (no column filtering)
@@ -57,7 +58,7 @@ if(column_strat =='all')
 }else if(column_strat == collevel)
 {
   # Determine which column levels should be included
-  incl_level_names = col_strat_var_levels[extracted_integers]
+  incl_level_names = col_strat_var_levels_eng[extracted_integers]
   
   # Keep only columns corresponding to selected stratification levels
   pre_sub_edited_table <- pre_sub_edited_table[,c(1,grep(paste0(incl_level_names, collapse = '|'),names(pre_sub_edited_table)))]
@@ -102,7 +103,7 @@ if(column_strat =='all')
 }else if(column_strat == 'total_col')
 {
   # Remove all columns corresponding to stratification levels
-  pre_sub_edited_table = pre_sub_edited_table[,-c(grep(paste0(col_strat_var_levels, collapse = '|'),names(pre_sub_edited_table)))]
+  pre_sub_edited_table = pre_sub_edited_table[,-c(grep(paste0(col_strat_var_levels_eng, collapse = '|'),names(pre_sub_edited_table)))]
   
   # Apply formatting
   sub_edited_table = pre_sub_edited_table%>%flextable() %>% autofit() %>% delete_part(part = "header") %>%
@@ -146,12 +147,12 @@ if(column_strat =='all')
     all_additional_levels = eval(parse(text = paste0('sum(c(',paste0('length(names(table(analysis_data$',row_strat_variables[-1],')))', collapse = ','),'))')))
     
     # Subset rows and remove column stratification columns
-    pre_sub_edited_table = pre_sub_edited_table[c(1:3,tail(1:nrow(pre_sub_edited_table),all_additional_levels+2)),-c(grep(paste0(col_strat_var_levels, collapse = '|'),names(pre_sub_edited_table)))]
+    pre_sub_edited_table = pre_sub_edited_table[c(1:3,tail(1:nrow(pre_sub_edited_table),all_additional_levels+2)),-c(grep(paste0(col_strat_var_levels_eng, collapse = '|'),names(pre_sub_edited_table)))]
     
   }else{
     
     # Simpler case when only one row stratifier exists
-    pre_sub_edited_table = pre_sub_edited_table[c(1:3,nrow(pre_sub_edited_table)),-c(grep(paste0(col_strat_var_levels, collapse = '|'),names(pre_sub_edited_table)))]
+    pre_sub_edited_table = pre_sub_edited_table[c(1:3,nrow(pre_sub_edited_table)),-c(grep(paste0(col_strat_var_levels_eng, collapse = '|'),names(pre_sub_edited_table)))]
   }
   
   # Apply formatting
