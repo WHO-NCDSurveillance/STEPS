@@ -17,8 +17,8 @@ fpc_var_check = ifelse(length(fpc_var_check)==0, FALSE, fpc_var_check)
 ####### Generating minimum and maximum age
 data = data %>% dplyr::filter(valid == 1) %>% 
        mutate(minage = min(age, na.rm = T), # Minimum age in valid rows
-         maxage = max(age, na.rm = T),
-         sex = factor(c1, levels = 1:2, labels = c('Men', 'Women'))) # Maximum age in valid rows
+         maxage = max(age, na.rm = T), # Maximum age in valid rows
+         sex = factor(c1, levels = 1:2, labels = c('Men', 'Women'))) 
 
    
 ########################################
