@@ -922,7 +922,6 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
   # Construct section title with step number
   section_title = c(unique(section_matrix$section),'','','')
   
-  
   # Initialise containers
   section_results = NULL
   ind = NULL
@@ -949,7 +948,7 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
     
     # Indicator description
     ind_desc = do.call('c',strsplit(sub_matrix$factsheet_desc, "[;]"))
-    
+    ind_desc <- trimws(ind_desc)
     ###-------------------------------------------------------
     ### Defining survey design structure
     ###-------------------------------------------------------
@@ -2185,7 +2184,6 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
   # Create formatted section title for output table
   section_title = c(unique(section_matrix$section),'','','')
   
-  
   ##########################################################
   ## INITIALIZE OUTPUT OBJECTS
   ##########################################################
@@ -2219,7 +2217,7 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
     
     # Extract indicator descriptions used in factsheet
     ind_desc = do.call('c',strsplit(sub_matrix$factsheet_desc, "[;]"))
-    
+    ind_desc <- trimws(ind_desc)
     
     ########################################################
     ## DEFINE SURVEY DESIGN
