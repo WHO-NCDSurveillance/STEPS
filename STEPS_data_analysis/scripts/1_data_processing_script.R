@@ -17,9 +17,10 @@ fpc_var_check = ifelse(length(fpc_var_check)==0, FALSE, fpc_var_check)
 ####### Generating minimum and maximum age
 data = data %>% dplyr::filter(valid == 1) %>% 
        mutate(minage = min(age, na.rm = T), # Minimum age in valid rows
-         maxage = max(age, na.rm = T)) # Maximum age in valid rows
+         maxage = max(age, na.rm = T),
+         sex = factor(c1, levels = 1:2, labels = c('Men', 'Women'))) # Maximum age in valid rows
 
-
+   
 ########################################
 #### Variable groups
 ########################################
@@ -266,8 +267,8 @@ indicator_matrix = indicator_matrix %>%
   )
 
 if (!is.null(list_nonexist_dervars)) {
-  indicator_matrix = indicator_matrix %>%
-    mutate(der_varsearch = search_vars(nonexist_vars = list_nonexist_dervars, logic_denom = concat_var)) %>%
+  indicator_matrix = indicator_matrix %>% rowwise %>%
+    mutate(der_varsearch = search_vars(nonexist_vars = list_nonexist_dervars,logic_denom = concat_var)) %>%
     dplyr::filter(der_varsearch == FALSE)
 } else {
   indicator_matrix = indicator_matrix
@@ -384,7 +385,7 @@ for (i in existing_vars_dataset) {
 data = data %>%
   as.data.frame() %>%
   mutate(
-    sex = factor(c1, levels = 1:2, labels = c('Men', 'Women')),
+    #sex = factor(c1, levels = 1:2, labels = c('Men', 'Women')),
     demog_sex = sex,
     agerange = factor(agerange, levels = names(table(data[,'agerange'])), labels = names(table(data[,'agerange'])))
   )
