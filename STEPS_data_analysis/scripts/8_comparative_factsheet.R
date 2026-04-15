@@ -57,6 +57,13 @@ if(nrow(comparative_fact_sheet_matrix)>0)
     " dplyr::select(row_numbers))$row_numbers"
   )))
   
+  #
+  if(language == 'french')
+  {
+    factsheet_table = factsheet_table %>% as.matrix
+    factsheet_table = gsub('[.]',',',factsheet_table)
+    factsheet_table = factsheet_table %>% as.data.frame()
+  } else{}
   
   ##########################################################
   ## FINAL TABLE CLEANING
@@ -73,7 +80,7 @@ if(nrow(comparative_fact_sheet_matrix)>0)
   ##########################################################
   ## FORMAT TABLE USING FLEXTABLE
   ##########################################################
-  
+  if(language =='arabic'){j_cols = 1:3} else{j_cols = 2:4}
   # Convert the results table into a formatted flextable
   flex_fact_sheet =
     factsheet_table %>%
@@ -93,13 +100,13 @@ if(nrow(comparative_fact_sheet_matrix)>0)
     bg(bg="white",i=1,part="header") %>%
     theme_box() %>%
     # Center numeric columns
-    align(align = "center", j = 2:4, part = "all") %>%
+    align(align = "center", j = j_cols, part = "all") %>%
     # Reduce font size slightly for compact layout
     fontsize(size = 9 ,part = "all") %>%
     # Merge section header rows across all columns
     merge_h_range(i=extract_rows, j1=1,j2=4) %>%
     # Adjust column widths
-    width(j = 2:4, 4.3, unit = "in") %>%
+    width(j = j_cols, 4.3, unit = "in") %>%
     # Apply header background color
     bg(bg="#339966",i=1,part="header") %>%
     # Apply background color to section rows
