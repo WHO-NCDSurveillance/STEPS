@@ -67,16 +67,12 @@ country = "country name"
 report_signf = 'Yes'
 
 ########################################
-# Section headers for Demographics,
-# Summary of Combined Risk Factors, and
-# Cardiovascular disease risk
+# Section header for Demographics
 # Change as appropriate based on language 
 # and translation (should reflect what
 # is presented in the matrix)
 ########################################
-demog_section_header = 'Información demográfica' # Demographics
-combn_risk_section_header = 'Resumen de factores de riesgo combinados' # Summary of Combined Risk Factors
-cvd_section_header = 'Riesgo de enfermedad cardiovascular' # Cardiovascular disease risk
+demog_section_header = 'Demographics' # Demographics
                
 # Language selection
 language = c('ENGLISH','FRENCH','ARABIC','SPANISH','RUSSIAN','OTHER')[1]  # Default: English
