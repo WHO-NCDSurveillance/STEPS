@@ -61,7 +61,8 @@ indicator_results <- do.call(
   rbind,
   lapply(unique(infographic_matrix$section), gen_numbers_fn)) %>%
   mutate(col2 = as.numeric(col2))
-         
+indicator_results <- unique(indicator_results)
+
 # indicator_results = do.call('rbind',
 #                             future_lapply(unique(infographic_matrix$section),
 #                                           gen_numbers_fn))%>%
