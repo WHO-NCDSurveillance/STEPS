@@ -765,7 +765,7 @@ for (i in unique(indicator_matrix$section))
           col_strat_var_levels = other_language[1:2,language]
           
           sub_labels <- c('',rep(c(col_strat_var_levels,
-                                   other_language[4,language]), each = 3))[col_range]
+                                   other_language[3,language]), each = 3))[col_range]
           #########
           total_pos = grep(other_language[4,language],split_tab[,1])
           # Replace median title placeholder if needed
