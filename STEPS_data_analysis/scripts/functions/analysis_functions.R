@@ -920,13 +920,8 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
   numeric_step = as.numeric(str_extract(no_wt_step, "\\d+"))
   
   # Construct section title with step number
-  section_title = c(paste0(other_language[13,language],' ',numeric_step,' ',unique(section_matrix$section)),'','','')
+  section_title = c(unique(section_matrix$section),'','','')
   
-  # For certain sections remove the "Step" prefix
-  if(sect==combn_risk_section_header|sect==cvd_section_header)
-  {
-    section_title = c(unique(section_matrix$section),'','','')
-  }
   
   # Initialise containers
   section_results = NULL
@@ -2188,17 +2183,7 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
   numeric_step = as.numeric(str_extract(wt_step, "\\d+"))
   
   # Create formatted section title for output table
-  section_title = c(
-    paste0(other_language[13,language],' ',numeric_step,' ',unique(section_matrix$section)),
-    '','',''
-  )
-  
-  # Certain sections do not include step numbers
-  if(sect==combn_risk_section_header |
-     sect==cvd_section_header)
-  {
-    section_title = c(unique(section_matrix$section),'','','')
-  }
+  section_title = c(unique(section_matrix$section),'','','')
   
   
   ##########################################################
