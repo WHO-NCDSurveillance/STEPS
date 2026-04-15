@@ -35,21 +35,30 @@ if(nrow(fact_sheet_matrix)>0)
 ###
   factsheet_table = factsheet_table %>% 
                     dplyr::select(-row_numbers)
+  #
+  if(language == 'french')
+  {
+    factsheet_table = factsheet_table %>% as.matrix
+    factsheet_table = gsub('[.]',',',factsheet_table)
+    factsheet_table = factsheet_table %>% as.data.frame()
+  } else{}
 
 ###
 #-----------------------------------------------------------
 # Create formatted flextable for Word output
 #-----------------------------------------------------------
+if(language =='arabic'){j_cols = 1:3} else{j_cols = 2:4}
+#
 flex_fact_sheet = factsheet_table%>% 
                   flextable() %>% autofit() %>%
   flextable::style(pr_t=fp_text(font.size=10,font.family='Source Sans Pro'), part = 'all')%>%
   bold(i = c(1,extract_rows))%>%
   bg(bg="white",i=1,part="header")%>%  
   theme_box()%>% 
-  align(align = "center", j = 2:4, part = "all") %>%
+  align(align = "center", j = j_cols, part = "all") %>%
   fontsize(size = 9 ,part = "all")%>%
   merge_h_range(i=extract_rows, j1=1,j2=4)%>%
-  width(j = 2:4, 4.3, unit = "in")%>% 
+  width(j = j_cols, 4.3, unit = "in")%>% 
   bg(bg="#339966",i=1,part="header")%>%
   bg(bg="#C9DDF3",i=extract_rows,part="body")%>%
   color(color = "white", part = 'header')%>%
