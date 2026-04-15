@@ -761,7 +761,8 @@ for (i in unique(indicator_matrix$section))
           split_tab <- extract_table[, col_range]# Subset the table
           sub_edited_inline_text <- label_subtitle1[col_range]# Subset headers
           # Determine stratification labels for subtable
-          col_strat_var_levels = names(table(data[,'demog_c1']))
+          #col_strat_var_levels = names(table(data[,'demog_c1']))
+          col_strat_var_levels = other_language[1:2,language]
           
           sub_labels <- c('',rep(c(col_strat_var_levels,
                                    other_language[4,language]), each = 3))[col_range]
@@ -873,11 +874,13 @@ for (i in unique(indicator_matrix$section))
       }
       
       # ---------------- Create Flextable Objects for Each Stratified Column ----------------
-      col_strat_var_levels = names(table(data[,'demog_c1']))
+      #col_strat_var_levels = names(table(data[,'demog_c1']))
+      col_strat_var_levels = other_language[1:2,language]
+      
       # Dynamically generate flextable objects for each stratification level + total column
       eval(parse(text = paste0('flex_output',1:(length(col_strat_var_levels)+1), 
                                ' = flextab_function(index =',1:(length(col_strat_var_levels)+1),
-                               ',table_label ="',c(col_strat_var_levels,other_language[4,language]),'")', 
+                               ',table_label ="',c(col_strat_var_levels,other_language[3,language]),'")', 
                                sep = '\n')))
       
       # ---------------- Determine Column Stratification Levels ----------------
