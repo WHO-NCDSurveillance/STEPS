@@ -120,7 +120,7 @@ if (.Platform$OS.type != "windows") Sys.chmod("temp", mode = "0777")
 # Denominator limit
 ########################################
 
-denom_limit = 50  # Minimum sample size for estimates
+denom_limit = 100  # Minimum sample size for estimates
 
 ########################################
 # Analysis Scripts: Usage Instructions
