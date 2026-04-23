@@ -452,7 +452,7 @@ for (i in unique(indicator_matrix$section))
     ########################################
     ## Subtitle handling
     ########################################
-    subtitle1 = do.call('c',strsplit(sub_formatrix$subtitle1, "[;]"))
+    subtitle1 = do.call('c',strsplit(as.character(sub_formatrix$subtitle1), "[;]"))
     if(length(sub_formatrix$subtitle2)>0)
     {
       subtitle2 = do.call('c',
