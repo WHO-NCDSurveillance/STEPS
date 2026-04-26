@@ -20,7 +20,7 @@ data = data %>% dplyr::filter(valid == 1) %>%
          maxage = max(age, na.rm = T), # Maximum age in valid rows
          sex = factor(c1, levels = 1:2, labels = c('Men', 'Women'))) 
 
-   
+
 ########################################
 #### Variable groups
 ########################################
@@ -112,7 +112,8 @@ outofrange_logic = reduced_xml %>%
   dplyr::filter(!is.na(constraint)) %>%
   rowwise %>%
   dplyr::mutate(constraint = gsub('\\}|\\$','',constraint),
-                constraint = gsub('\\.',paste0('data$',name),constraint),
+                #constraint = gsub('\\.',paste0('data$',name),constraint),
+                constraint = gsub("(?<!\\d)\\.(?!\\d)", paste0("data$", name), constraint, perl = TRUE),
                 constraint = gsub('=','==',constraint),
                 constraint = gsub('<==','<=',constraint),
                 constraint = gsub('>==','>=',constraint),
@@ -258,6 +259,17 @@ list_nonexist_dervars = do.call('c', strsplit(
   "[;]"
 ))
 
+# Extract list of generated derived variables (for processing report)
+
+list_gen_dervars = na.omit(
+  do.call('c', strsplit(
+    (dervar_matrix %>%
+       as.data.frame() %>%
+       dplyr::filter(all_exist == TRUE) %>%
+       dplyr::select(derived_vars))$derived_vars,
+    "[;]"
+)))
+
 #### Exclude indicators with non-existent primary/derived variables ####
 indicator_matrix = indicator_matrix %>%
   mutate(
@@ -268,7 +280,7 @@ indicator_matrix = indicator_matrix %>%
 
 if (!is.null(list_nonexist_dervars)) {
   indicator_matrix = indicator_matrix %>% rowwise %>%
-    mutate(der_varsearch = search_vars(nonexist_vars = list_nonexist_dervars,logic_denom = concat_var)) %>%
+    mutate(der_varsearch = search_vars(nonexist_vars = list_nonexist_dervars, logic_denom = concat_var)) %>%
     dplyr::filter(der_varsearch == FALSE)
 } else {
   indicator_matrix = indicator_matrix
@@ -493,8 +505,8 @@ if (dir.exists('temp')) {
 dir.create('temp', recursive = TRUE)
 
 # Clear outputs and report files
-unlink(paste0(getwd(), '/outputs/*'))
-file.remove(paste0(getwd(), '/report outputs/combined_report.docx'))
+#unlink(paste0(getwd(), '/outputs/*'))
+#file.remove(paste0(getwd(), '/report outputs/combined_report.docx'))
 
 ##################
 #################Generating data processing report
@@ -512,14 +524,13 @@ resp_77_88  = ifelse(length(all_vars_with_err_codes)>0,
                      paste0("The following variables have had don't know or refused codes (e.g. 666, 77, 777, 88, 99) set to missing: ",
                             paste0(all_vars_with_err_codes,collapse = ',')),"No variables have had don't know or refusal values set to missing in the dataset.")  
 
-sec_derivarion  = ifelse(length(list_nonexist_dervars)>0, 
+sec_derivarion  = ifelse(length(list_gen_dervars)>0, 
                          paste0('The following secondary variables were derived from primary variables in the dataset: ',
-                                paste0(list_nonexist_dervars,collapse = ',')),'No additional variables were derived from primary variables in the dataset.') 
+                                paste0(list_gen_dervars,collapse = ',')),'No additional variables were derived from primary variables in the dataset.') 
 
 data_processing_report = cbind(Item = c('Completeness of grouped variables','Variables in xls form vs dataset','Variables with values set to NA',
                                         'Derived variables'),
                                Description = c(non_exisiting_group_vars,vars_in_xml_not_dataset,resp_77_88,sec_derivarion))
-
 
 
 flex_processing_report = data_processing_report %>% as.data.frame() %>% flextable()%>%
