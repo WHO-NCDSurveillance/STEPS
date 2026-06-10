@@ -954,7 +954,7 @@ for (i in unique(indicator_matrix$section))
       
     } else{}
     # ---------------- Write Individual Indicator Document ----------------
-    section_position = grep(i, unique(indicator_matrix$section))
+    section_position = match(i, unique(indicator_matrix$section))
     print(doc, target =paste0('temp/Part',section_position,'_Indicator',ind_no,'.docx'))
     ind_no = ind_no+1
   }
@@ -1038,3 +1038,4 @@ print(databook,
                       survey_year, '_Databook_', 
                       format(Sys.time(), "%d-%b-%y_%H-%M-%S"), 
                       '.docx'))
+
