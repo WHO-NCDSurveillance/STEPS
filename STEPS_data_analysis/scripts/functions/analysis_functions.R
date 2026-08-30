@@ -46,6 +46,7 @@ clean_field = function(field, remove_idx) {
 
 demog_numeric = function(strat_variable = 'agerange')
 {
+  s_position = grep(strat_variable, row_strat_variables)[1]
   # Create a summary table by grouping data based on the specified stratification variable and sex
   summary_table = datum %>%
     # Group by the stratification variable and sex, and calculate counts and means
@@ -69,7 +70,7 @@ demog_numeric = function(strat_variable = 'agerange')
         summarise(count = n(), # Overall count of observations by sex
                   mean_var = round(mean(eval(parse(text = k)), na.rm = TRUE),1)) %>% # Overall mean by sex
         pivot_wider(names_from = sex, values_from = c(count, mean_var)) %>%
-        mutate(agerange = 'Total') %>% # Add a row for total counts
+        mutate(eval(parse(text = paste0(strat_variable, ' = "','Total','"')))) %>% # Add a row for total counts
         add_column(datum %>% summarise(Total_Count = n(),  # Overall total count
                                        Total_mean=round(mean(eval(parse(text = k)), na.rm=T),1))))# Overall mean
 
@@ -90,15 +91,17 @@ demog_numeric = function(strat_variable = 'agerange')
     mean_var_Women = replace(mean_var_Women,count_Women<denom_limit,'-'),
     Total_mean = replace(Total_mean,Total_Count<denom_limit,'-')
   )
-  # Adjust summary table if the stratification variable is not 'agerange'
-  if(strat_variable != 'agerange')
+  ###
+  
+  # Adjust summary table if the stratification variable is not the first
+  if(s_position != 1)
   {
-    strat_position = grep(strat_variable,row_strat_variables)
+    #strat_position = grep(strat_variable,row_strat_variables)
     # Exclude rows with NA in the stratification variable column
     summary_table = summary_table %>% 
                     dplyr::filter(!is.na(`eval(parse(text = strat_variable))`)) ###Excluding the totals row
     # Add a title row for the stratification variable
-    summary_table = rbind(c(row_strat_variable_titles[strat_position], 
+    summary_table = rbind(c(row_strat_variable_titles[s_position], 
                             rep('',ncol(summary_table)-1)),summary_table %>% 
                             as.matrix())%>%as.data.frame()
   } else{}
@@ -114,9 +117,17 @@ demog_numeric = function(strat_variable = 'agerange')
 # Counts and percentages are calculated by sex and stratification group.
 demog_cat = function (strat_variable = 'agerange')
 {
+  s_position = grep(strat_variable, row_strat_variables)[1]
   # Create a count table by filtering and grouping data
-  count_table = datum %>% 
-                dplyr::filter(!is.na(eval(parse(text = k))) & !is.na(agerange))%>%# Filter out rows with NA values in the specified variable and 'agerange'
+  if(strat_variable != '')
+  {
+  count_table = datum %>% dplyr::filter(!is.na(eval(parse(text = k))) & !is.na(eval(parse(text = strat_variable))))
+  }else{
+    count_table = datum %>% dplyr::filter(!is.na(eval(parse(text = k))))
+  }
+  
+  
+  count_table = count_table %>%# Filter out rows with NA values in the specified variable and 'agerange'
     group_by(eval(parse(text=strat_variable)), eval(parse(text=k)), sex, .drop = FALSE) %>%# Group data by stratification variable, the categorical variable (k), and sex
     summarise(n = n()) %>%# Summarize data to get counts
     rename(variable = `eval(parse(text = k))`) %>%# Rename the column for the categorical variable to 'variable'
@@ -161,14 +172,15 @@ demog_cat = function (strat_variable = 'agerange')
 
   ###########
   # Adjust the count_table if the stratification variable is not 'agerange' or empty
-  if(strat_variable != 'agerange' & strat_variable!='')
+  #strat_position = grep(strat_variable,row_strat_variables)
+  
+  if(s_position != 1)
   {
-    strat_position = grep(strat_variable,row_strat_variables)
     # Filter out rows with NA values in the stratification variable column
     count_table = count_table %>% 
                   dplyr::filter(!is.na(`eval(parse(text = strat_variable))`)) ###Excluding the any row with NAs
     # Add a title row for the stratification variable and convert to a data frame
-    count_table = rbind(c(row_strat_variable_titles[strat_position], 
+    count_table = rbind(c(row_strat_variable_titles[s_position], 
                           rep('',ncol(count_table)-1)),count_table %>% 
                           as.matrix())%>%as.data.frame()
   } else{count_table = count_table %>% as.matrix()%>%as.data.frame()}    # If the stratification variable is 'agerange' or empty, just convert the table to a data frame
@@ -190,6 +202,8 @@ demog_cat = function (strat_variable = 'agerange')
 
 analysis_numeric_fn = function(row_strat = 'agerange', col_strat = 'sex')
 {
+  #s_position = grep(row_strat, row_strat_variables)
+  
   # Filtering and processing data based on condition
 if (denom_condition == 'all') {
   # If denominator condition is 'all', include all data with non-NA values
@@ -203,6 +217,8 @@ if (denom_condition == 'all') {
   # If no rows in the data, set survey data to have zero counts for the variable
   if(nrow(datum)==0)
   {
+    datum = analysis_data %>%
+      dplyr::filter(!!rlang::parse_expr(denom_condition))
     svy_datum = svy_data
     svy_datum$variables[,k]=0
   }
@@ -222,6 +238,8 @@ if (denom_condition == 'all') {
   # If no rows in the data, set survey data to have zero counts for the variable
   if(nrow(datum)==0)
   {
+    datum = analysis_data %>%
+      dplyr::filter(!!rlang::parse_expr(denom_condition))
     svy_datum = svy_data
     svy_datum$variables[,k]=0
   }
@@ -433,6 +451,7 @@ return(summary_table)
 
 analysis_categorical_fn = function(row_strat = 'agerange', col_strat = 'sex')
 {
+  s_position = grep(row_strat, row_strat_variables)
   # Convert the row stratification variable to a factor, ensuring consistent levels and labels
   data[,row_strat] = factor(data[,row_strat], 
                             levels = names(table(data[,row_strat])), 
@@ -448,6 +467,8 @@ analysis_categorical_fn = function(row_strat = 'agerange', col_strat = 'sex')
     # Handle cases where no rows match the filter criteria
     if(nrow(datum)==0)
     {
+      datum = analysis_data %>%
+        dplyr::filter(!!rlang::parse_expr(denom_condition))
       svy_datum = svy_data
       svy_datum$variables[,k]=0# Set the key variable to 0 if no data matches
     }
@@ -464,6 +485,8 @@ analysis_categorical_fn = function(row_strat = 'agerange', col_strat = 'sex')
     # Handle cases where no rows match the filter criteria
     if(nrow(datum)==0)
     {
+      datum = analysis_data %>%
+        dplyr::filter(!!rlang::parse_expr(denom_condition))
       svy_datum = svy_data
       svy_datum$variables[,k]=0# Set the key variable to 0 if no data matches
     }
@@ -922,6 +945,7 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
   # Construct section title with step number
   section_title = c(unique(section_matrix$section),'','','')
   
+  
   # Initialise containers
   section_results = NULL
   ind = NULL
@@ -948,7 +972,7 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
     
     # Indicator description
     ind_desc = do.call('c',strsplit(sub_matrix$factsheet_desc, "[;]"))
-    ind_desc <- trimws(ind_desc)
+    
     ###-------------------------------------------------------
     ### Defining survey design structure
     ###-------------------------------------------------------
@@ -1066,8 +1090,23 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
                              formatC(round(as.numeric(conf_interval[1]),1),format = "f", digits = 1), ' - ',
                              formatC(round(as.numeric(conf_interval[2]),1),format = "f", digits = 1),')')
           
+          ###
+          test =
+            svyttest(
+              as.formula(paste0(ind_level,
+                                " ~ sex")),
+              design = svy_datum
+            )
+          
+          p.value = as.numeric(test$p.value)
+          #
+          #Significance mark
+          sig_mark = if_else(!is.na(p.value) & p.value < 0.05, '*', '')
           #####
-          delim_char = '\n('
+          #delim_char = '\n('
+          delim_char1 = paste0('\n(')
+          delim_char2 = paste0(sig_mark,'\n(')
+          
           mult_n = 1
           
         } else if(type_indicators[grep(ind_level,subset_indicators)] == 'categorical'){
@@ -1090,23 +1129,74 @@ factsheet_section_fn = function(sect = unique(fact_sheet_matrix$section)[8])
           
           ##
           # Format total estimate with CI
+          total_CI = paste0(formatC(round(100*as.numeric(attr(total_est_ciprop, "ci")[1]),1),format = "f", digits = 1), ' - ',
+                            formatC(round(100*as.numeric(attr(total_est_ciprop, "ci")[2]),1),format = "f", digits = 1))
+          #
+          total_CI = if_else(grepl('NaN',total_CI,fixed = TRUE),'N/A',total_CI)
+          #
           total_est = paste0(formatC(round(100*as.vector(total_est_ciprop),1),format = "f", digits = 1),'%\n(',
-                             formatC(round(100*as.numeric(attr(total_est_ciprop, "ci")[1]),1),format = "f", digits = 1), ' - ',
-                             formatC(round(100*as.numeric(attr(total_est_ciprop, "ci")[2]),1),format = "f", digits = 1),')')
+                             total_CI,')')
           
+          # Formatting total_est based on the denominator value
+          total_est = if_else(n_participants[['Total']] < denom_limit, '-', total_est)
+          
+          ########Chi-square testing
+          tab =
+            svytable(
+              as.formula(paste0("~", ind_level,
+                                " + sex")),
+              design = svy_datum
+            )
+          
+          if (nrow(tab) < 2 || ncol(tab) < 2  ||   
+              sum(rowSums(tab) > 0) < 2 ||
+              sum(colSums(tab) > 0) < 2) {
+            p.value = NA_real_
+          } else {
+            
+            test =
+              svychisq(
+                as.formula(paste0("~", ind_level,
+                                  " + sex")),
+                design = svy_datum,
+                statistic = "Chisq",
+                simulate.p.value = TRUE
+              )
+            
+            p.value = test$p.value
+          }
+          
+          #Significance mark
+          sig_mark = if_else(!is.na(p.value) & p.value < 0.05, '*', '')
           ##
-          delim_char = '%\n('
+          delim_char1 = paste0('%\n(')
+          delim_char2 = paste0('%',sig_mark,'\n(')
+          
           mult_n = 100
         }
         
-        ########Combining estimates by sex
-        males_est = paste0(formatC(round(mult_n*as.numeric(men_women_est_ciprop['Men',2]),1),format = "f", digits = 1),delim_char,
-                           formatC(round(mult_n*as.numeric(men_women_est_ciprop['Men',3]),1),format = "f", digits = 1), ' - ',
-                           formatC(round(mult_n*as.numeric(men_women_est_ciprop['Men',4]),1),format = "f", digits = 1),')')
         
-        females_est = paste0(formatC(round(mult_n*as.numeric(men_women_est_ciprop['Women',2]),1),format = "f", digits = 1),delim_char,
-                             formatC(round(mult_n*as.numeric(men_women_est_ciprop['Women',3]),1),format = "f", digits = 1), ' - ',
-                             formatC(round(mult_n*as.numeric(men_women_est_ciprop['Women',4]),1),format = "f", digits = 1),')')
+        ########Combining estimates by sex
+        # Format total estimate with CI
+        males_CI = paste0(formatC(round(mult_n*as.numeric(men_women_est_ciprop['Men',3]),1),format = "f", digits = 1), ' - ',
+                          formatC(round(mult_n*as.numeric(men_women_est_ciprop['Men',4]),1),format = "f", digits = 1))
+        
+        females_CI = paste0(formatC(round(mult_n*as.numeric(men_women_est_ciprop['Women',3]),1),format = "f", digits = 1), ' - ',
+                          formatC(round(mult_n*as.numeric(men_women_est_ciprop['Women',4]),1),format = "f", digits = 1))
+        #
+        males_CI = if_else(grepl('NaN',males_CI,fixed = TRUE),'N/A',males_CI)
+        females_CI = if_else(grepl('NaN',females_CI,fixed = TRUE),'N/A',females_CI)
+        
+        #
+        males_est = paste0(formatC(round(mult_n*as.numeric(men_women_est_ciprop['Men',2]),1),format = "f", digits = 1),delim_char1,
+                           males_CI,')')
+        
+        females_est = paste0(formatC(round(mult_n*as.numeric(men_women_est_ciprop['Women',2]),1),format = "f", digits = 1),delim_char2,
+                             females_CI,')')
+        
+        # Formatting males_est and females_est based on the denominator values
+        males_est = if_else(n_participants[['Men']] < denom_limit, '-', males_est)
+        females_est = if_else(n_participants[['Women']] < denom_limit, '-', females_est)
         
         # Combine indicator description and estimates
         combined_results = c(full_ind_desc, total_est,males_est,females_est)
@@ -1211,9 +1301,59 @@ slope_females_chdmi = risk_ref_data %>%
 ## LLM wrapper function to connect to Groq servers and 
 ## plug into the LLMs to generate narrative text
 ##########################################################
-llm_wrapper_connect = function(prompt_text, model = "llama-3.3-70b-versatile", max_tokens = 8192) {
-  # API key
-  api_key = Sys.getenv("API_KEY")
+##Model selection
+# API key
+api_key = Sys.getenv("API_KEY")
+
+resp = GET(
+  "https://api.groq.com/openai/v1/models",
+  add_headers(
+    Authorization = paste("Bearer", api_key)
+  )
+)
+
+extract_active_models = fromJSON(
+  content(resp, "text", encoding = "UTF-8")
+)$data$id
+
+active_models = extract_active_models[
+  !grepl(
+    "embed|audio|tts|whisper|vision|image|moderation",
+    extract_active_models,
+    ignore.case = TRUE
+  )
+]
+
+# Preferred models, in order of suitability
+model_priority = c(
+  "openai/gpt-oss-120b",
+  "llama-3.3-70b-versatile",
+  "openai/gpt-oss-20b"
+)
+
+# Select the best preferred model currently available
+available_preferred = model_priority[
+  model_priority %in% active_models
+]
+
+#
+if (length(available_preferred) > 0) {
+  selected_model = available_preferred[1]
+} else {
+  # Remove models unsuitable for narrative generation
+  generative_models = active_models[
+    !grepl(
+      "guard|safeguard|whisper|orpheus",
+      active_models,
+      ignore.case = TRUE
+    )
+  ]
+  # Fallback
+  selected_model = generative_models[1]
+}
+
+#
+llm_wrapper_connect = function(prompt_text, model = selected_model, max_tokens = 8194) {
 
   # Ensuring UTF-8 encoding to avoid warning
   prompt_text = enc2utf8(prompt_text)
@@ -1376,7 +1516,7 @@ rev_compute_wide_tab = function(indicator, svy_datum, strat = NULL) {
   }
 
   # Keep only relevant columns
-  df = df %>% select(stratifier, category, svy_year, estimate, ci_low, ci_high)
+  df = df %>% dplyr::select(stratifier, category, svy_year, estimate, ci_low, ci_high)
 
   # Pivot to wide format by survey year
   df_wide = df %>%
@@ -2012,7 +2152,7 @@ chart_function = function(indicator_group = unique(sec_report_matrix$grp_tab_tit
                     (flag == FALSE & (category == 'Total')))%>%
     mutate(across(matches("^\\d{4}$"), as.numeric),
            change = as.numeric(change),
-           max_value = pmax(!!!select(., matches("^\\d{4}$")), na.rm = TRUE),
+           max_value = pmax(!!!dplyr::select(., matches("^\\d{4}$")), na.rm = TRUE),
            num_category = recode(category, "Total" = 1, "Men" = 2, "Women" = 3),
            category_level = paste0(ind_subtitle, ": ", num_category),
            category_label = paste0(ind_subtitle, ": ", category)
@@ -2033,10 +2173,10 @@ chart_function = function(indicator_group = unique(sec_report_matrix$grp_tab_tit
                              labels = unique(category)))
   
   # === Prepare Plot Data ===
-  main_plot_data = select(test_data, category, matches("^\\d{4}$"), change)
+  main_plot_data = dplyr::select(test_data, category, matches("^\\d{4}$"), change)
   
   test_df_long = main_plot_data %>%
-    select(-change) %>%
+    dplyr::select(-change) %>%
     pivot_longer(-category)
   
   # === Plot 1: Trend Plot ===
@@ -2108,8 +2248,8 @@ chart_function = function(indicator_group = unique(sec_report_matrix$grp_tab_tit
   #p1 = p1 + coord_cartesian(clip = "off")
   p_whole = p1 + p_gap +
     plot_layout(design = c(
-      area(l = 0, r = 43, t = 0, b = 1),
-      area(l = 44, r = 52, t = 0, b = 1)
+      patchwork::area(l = 0, r = 43, t = 0, b = 1),
+      patchwork::area(l = 44, r = 52, t = 0, b = 1)
     )) +
     plot_annotation(
       title = mod_title,
@@ -2160,7 +2300,7 @@ infog_search_vars = function(ind_var = 'selected', ind_group) {
 # - performs significance testing between survey years
 # - formats results for inclusion in the factsheet table
 
-comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix$section)[1])
+comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix$section)[1], sex_val = NULL)
 {
   
   ##########################################################
@@ -2183,6 +2323,7 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
   
   # Create formatted section title for output table
   section_title = c(unique(section_matrix$section),'','','')
+  
   
   ##########################################################
   ## INITIALIZE OUTPUT OBJECTS
@@ -2217,7 +2358,7 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
     
     # Extract indicator descriptions used in factsheet
     ind_desc = do.call('c',strsplit(sub_matrix$factsheet_desc, "[;]"))
-    ind_desc <- trimws(ind_desc)
+    
     
     ########################################################
     ## DEFINE SURVEY DESIGN
@@ -2300,6 +2441,14 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
         )
       }
       
+      ######################################################
+      ## APPLY sex_val parameter input
+      ######################################################
+      if(!is.null(sex_val))
+      {
+        datum = datum %>% dplyr::filter(sex == sex_val)
+        svy_datum = subset(svy_datum, sex == sex_val)
+      } else{}
       
       ######################################################
       ## COMPUTE SURVEY ESTIMATES
@@ -2319,37 +2468,52 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
         eval(parse(text = paste0('formula = ~', ind_level)))
         
         # Compute survey means and confidence intervals
-        svyr_est_ciprop =
-          svyby(
-            formula,
-            by = ~svy_year,
-            design = svy_datum,
-            FUN = svymean,
-            method = "lo",
-            vartype = 'ci'
-          ) %>%
-          mutate(ci_l = ifelse(ci_l<0,0,ci_l))
-        
-        
-        ####################################################
-        ## MEDIAN AND IQR CALCULATION
-        ####################################################
-        
-        median_compute = unique(type_indicators)=='median'
-        
-        if(median_compute==TRUE)
-        {
+        if (nrow(svy_datum$variables) == 0 ||
+            sum(!is.na(svy_datum$variables[[ind_level]])) == 0) {
+          
+          # No usable observations: return NA values
+          svyr_est_ciprop = data.frame(
+            svy_year = sort(unique(combined_dataset$svy_year)),
+            value = NA_real_,
+            ci_l = NA_real_,
+            ci_u = NA_real_
+          )
+          
+          colnames(svyr_est_ciprop)[2] = ind_level
+          
+        } else {
+          
+          # Compute survey means and confidence intervals
           svyr_est_ciprop =
             svyby(
               formula,
               by = ~svy_year,
               design = svy_datum,
-              FUN = svyquantile,
-              quantiles = c(.5,.25,.75),
-              method = "lo"
-            )[,1:4]
+              FUN = svymean,
+              method = "lo",
+              vartype = "ci"
+            ) %>%
+            mutate(ci_l = ifelse(ci_l < 0, 0, ci_l))
+          
+          ####################################################
+          ## MEDIAN AND IQR CALCULATION
+          ####################################################
+          
+          median_compute = unique(type_indicators)=='median'
+          
+          if(median_compute==TRUE)
+          {
+            svyr_est_ciprop =
+              svyby(
+                formula,
+                by = ~svy_year,
+                design = svy_datum,
+                FUN = svyquantile,
+                quantiles = c(.5,.25,.75),
+                method = "lo"
+              )[,1:4]
+          }
         }
-        
         
         ####################################################
         ## T-TEST BETWEEN SURVEY YEARS
@@ -2381,15 +2545,32 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
         eval(parse(text=paste0(
           'formula = ~I(',ind_level, '=="',1,'")')))
         
-        svyr_est_ciprop =
-          svyby(
-            formula,
-            by = ~svy_year,
-            design = svy_datum,
-            FUN = svyciprop,
-            method = "lo",
-            vartype = 'ci'
+        if (nrow(svy_datum$variables) == 0 ||
+            sum(!is.na(svy_datum$variables[[ind_level]])) == 0) {
+          
+          # No usable observations: return NA values
+          svyr_est_ciprop = data.frame(
+            svy_year = sort(unique(combined_dataset$svy_year)),
+            value = NA_real_,
+            ci_l = NA_real_,
+            ci_u = NA_real_
           )
+          
+          colnames(svyr_est_ciprop)[2] = ind_level
+          
+        } else {
+          
+          # Compute survey %s and confidence intervals
+          svyr_est_ciprop =
+            svyby(
+              formula,
+              by = ~svy_year,
+              design = svy_datum,
+              FUN = svyciprop,
+              method = "lo",
+              vartype = 'ci'
+            )
+        }     
         
         delim_char = '%\n('
         mult_n = 100
@@ -2410,7 +2591,9 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
             design = svy_datum
           )
         
-        if (nrow(tab) < 2 || ncol(tab) < 2) {
+        if (nrow(tab) < 2 || ncol(tab) < 2 ||   
+            sum(rowSums(tab) > 0) < 2 ||
+            sum(colSums(tab) > 0) < 2) {
           p.value = NA_real_
         } else {
           
@@ -2524,3 +2707,204 @@ comp_factsheet_section_fn = function(sect = unique(comparative_fact_sheet_matrix
   return(section_results)
 }
 
+
+###Function to format outputs from comp_factsheet_section_fn
+comp_factsheet_formatting = function(fct_table = factsheet_table, fact_label = other_language[11,language])
+{
+  # Assign column names to the final table
+  colnames(fct_table) = c(
+    fact_label,
+    survey_yrs[1],
+    survey_yrs[2],
+    other_language[12,language]
+  )
+  
+  # Convert table to matrix for easier manipulation
+  fct_table = as.matrix(fct_table)
+  
+  # Remove numbering prefixes (e.g., "1. ", "2. ") from indicator labels
+  fct_table[,1] = gsub("^\\d+\\.\\s*", "", fct_table[,1])
+  
+  
+  ##########################################################
+  ## IDENTIFY SECTION HEADER ROWS
+  ##########################################################
+  
+  # Convert to dataframe and create row index variable
+  fct_table = fct_table %>%
+    as.data.frame() %>%
+    mutate(row_numbers = 1:n())
+  
+  # Remove default row names
+  rownames(fct_table) = NULL
+  
+  # Identify rows where the second survey year column is empty.
+  # These correspond to section headers in the factsheet.
+  eval(parse(text = paste0(
+    "extract_rows = (fct_table %>%",
+    " dplyr::filter(`",survey_yrs[2],"`=='') %>%",
+    " dplyr::select(row_numbers))$row_numbers"
+  )))
+  
+  #
+  if(language == 'french')
+  {
+    fct_table = fct_table %>% as.matrix
+    fct_table = gsub('[.]',',',fct_table)
+    fct_table = fct_table %>% as.data.frame()
+  } else{}
+  
+  ##########################################################
+  ## FINAL TABLE CLEANING
+  ##########################################################
+  
+  # Remove temporary row_numbers column
+  fct_table = fct_table %>%
+    dplyr::select(-row_numbers)
+  
+  # change * footnote markers to † since * is used to indicate 
+  # significant differences in comparison fact sheet
+  fct_table[, 1] <- gsub("\\*", "†", fct_table[, 1])
+  
+  ##########################################################
+  ## FORMAT TABLE USING FLEXTABLE
+  ##########################################################
+  if(language =='arabic'){j_cols = 1:3} else{j_cols = 2:4}
+  # Convert the results table into a formatted flextable
+  flex_factsheet =
+    fct_table %>%
+    flextable() %>%
+    autofit() %>%
+    
+    # Apply consistent font style
+    flextable::style(
+      pr_t = fp_text(font.size=10,
+                     font.family='Source Sans Pro'),
+      part = 'all'
+    ) %>%
+    
+    # Bold section headers
+    bold(i = c(1,extract_rows)) %>%
+    # Header styling
+    bg(bg="white",i=1,part="header") %>%
+    theme_box() %>%
+    # Center numeric columns
+    align(align = "center", j = j_cols, part = "all") %>%
+    # Reduce font size slightly for compact layout
+    fontsize(size = 9 ,part = "all") %>%
+    # Merge section header rows across all columns
+    merge_h_range(i=extract_rows, j1=1,j2=4) %>%
+    # Adjust column widths
+    width(j = j_cols, 4.3, unit = "in") %>%
+    # Apply header background color
+    bg(bg="#339966",i=1,part="header") %>%
+    # Apply background color to section rows
+    bg(bg="#C9DDF3",i=extract_rows,part="body") %>%
+    # Set header text color
+    color(color = "white", part = 'header') %>%
+    # Reduce cell padding
+    padding(padding = 0, part = "all") %>%
+    # Allow table pagination in Word
+    paginate()
+  
+  
+  return(flex_factsheet)
+}
+
+
+
+# # Assign column names to the final table
+# colnames(factsheet_table) = c(
+#   other_language[11,language],
+#   survey_yrs[1],
+#   survey_yrs[2],
+#   other_language[12,language]
+# )
+# 
+# # Convert table to matrix for easier manipulation
+# factsheet_table = as.matrix(factsheet_table)
+# 
+# # Remove numbering prefixes (e.g., "1. ", "2. ") from indicator labels
+# factsheet_table[,1] = gsub("^\\d+\\.\\s*", "", factsheet_table[,1])
+# 
+# 
+# ##########################################################
+# ## IDENTIFY SECTION HEADER ROWS
+# ##########################################################
+# 
+# # Convert to dataframe and create row index variable
+# factsheet_table = factsheet_table %>%
+#   as.data.frame() %>%
+#   mutate(row_numbers = 1:n())
+# 
+# # Remove default row names
+# rownames(factsheet_table) = NULL
+# 
+# # Identify rows where the second survey year column is empty.
+# # These correspond to section headers in the factsheet.
+# eval(parse(text = paste0(
+#   "extract_rows = (factsheet_table %>%",
+#   " dplyr::filter(`",survey_yrs[2],"`=='') %>%",
+#   " dplyr::select(row_numbers))$row_numbers"
+# )))
+# 
+# #
+# if(language == 'french')
+# {
+#   factsheet_table = factsheet_table %>% as.matrix
+#   factsheet_table = gsub('[.]',',',factsheet_table)
+#   factsheet_table = factsheet_table %>% as.data.frame()
+# } else{}
+# 
+# ##########################################################
+# ## FINAL TABLE CLEANING
+# ##########################################################
+# 
+# # Remove temporary row_numbers column
+# factsheet_table = factsheet_table %>%
+#   dplyr::select(-row_numbers)
+# 
+# # change * footnote markers to † since * is used to indicate 
+# # significant differences in comparison fact sheet
+# factsheet_table[, 1] <- gsub("\\*", "†", factsheet_table[, 1])
+# 
+# ##########################################################
+# ## FORMAT TABLE USING FLEXTABLE
+# ##########################################################
+# if(language =='arabic'){j_cols = 1:3} else{j_cols = 2:4}
+# # Convert the results table into a formatted flextable
+# flex_fact_sheet =
+#   factsheet_table %>%
+#   flextable() %>%
+#   autofit() %>%
+#   
+#   # Apply consistent font style
+#   flextable::style(
+#     pr_t = fp_text(font.size=10,
+#                    font.family='Source Sans Pro'),
+#     part = 'all'
+#   ) %>%
+#   
+#   # Bold section headers
+#   bold(i = c(1,extract_rows)) %>%
+#   # Header styling
+#   bg(bg="white",i=1,part="header") %>%
+#   theme_box() %>%
+#   # Center numeric columns
+#   align(align = "center", j = j_cols, part = "all") %>%
+#   # Reduce font size slightly for compact layout
+#   fontsize(size = 9 ,part = "all") %>%
+#   # Merge section header rows across all columns
+#   merge_h_range(i=extract_rows, j1=1,j2=4) %>%
+#   # Adjust column widths
+#   width(j = j_cols, 4.3, unit = "in") %>%
+#   # Apply header background color
+#   bg(bg="#339966",i=1,part="header") %>%
+#   # Apply background color to section rows
+#   bg(bg="#C9DDF3",i=extract_rows,part="body") %>%
+#   # Set header text color
+#   color(color = "white", part = 'header') %>%
+#   # Reduce cell padding
+#   padding(padding = 0, part = "all") %>%
+#   # Allow table pagination in Word
+#   paginate()

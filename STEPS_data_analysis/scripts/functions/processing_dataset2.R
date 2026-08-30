@@ -4,10 +4,28 @@
 
 # Read the country-specific dataset used for comparison
 raw_dataset2 = read.xlsx(paste0('data_input/',country_ISO,'_data_for_comparison.xlsx'))
-
 # Convert all column names to lowercase to ensure consistency
 colnames(raw_dataset2) = tolower(colnames(raw_dataset2))
+#
+if ("c1" %in% names(raw_dataset2)) {
+  raw_dataset2 <- raw_dataset2 %>%
+    dplyr::mutate(
+      sex = factor(c1, levels = 1:2, labels = c("Men", "Women"))
+    )
+}
 
+if ("age" %in% names(raw_dataset2)) {
+  raw_dataset2 <- raw_dataset2 %>%
+    dplyr::mutate(
+      minage = min(age, na.rm = TRUE),  # Minimum age
+      maxage = max(age, na.rm = TRUE)   # Maximum age
+    )
+}
+
+if ("valid" %in% names(raw_dataset2)) {
+  raw_dataset2 <- raw_dataset2 %>%
+    dplyr::filter(valid == 1)
+}
 
 ############################################################
 ## GENERATE MINIMUM AND MAXIMUM AGE VARIABLES
