@@ -22,101 +22,39 @@ if(nrow(comparative_fact_sheet_matrix)>0)
            comp_factsheet_section_fn)
   )
   
-  # Assign column names to the final table
-  colnames(factsheet_table) = c(
-    other_language[11,language],
-    survey_yrs[1],
-    survey_yrs[2],
-    other_language[12,language]
+  ##Factsheet table for men
+  factsheet_table_men = do.call(
+    'rbind',
+    lapply(
+      unique(comparative_fact_sheet_matrix$section),
+      function(x) comp_factsheet_section_fn(
+        sect = x,
+        sex_val = 'Men'
+      )
+    )
   )
   
-  # Convert table to matrix for easier manipulation
-  factsheet_table = as.matrix(factsheet_table)
+  ##Factsheet table for women
+  factsheet_table_women = do.call(
+    'rbind',
+    lapply(
+      unique(comparative_fact_sheet_matrix$section),
+      function(x) comp_factsheet_section_fn(
+        sect = x,
+        sex_val = 'Women'
+      )
+    )
+  )
   
-  # Remove numbering prefixes (e.g., "1. ", "2. ") from indicator labels
-  factsheet_table[,1] = gsub("^\\d+\\.\\s*", "", factsheet_table[,1])
-  
-  
-  ##########################################################
-  ## IDENTIFY SECTION HEADER ROWS
-  ##########################################################
-  
-  # Convert to dataframe and create row index variable
-  factsheet_table = factsheet_table %>%
-    as.data.frame() %>%
-    mutate(row_numbers = 1:n())
-  
-  # Remove default row names
-  rownames(factsheet_table) = NULL
-  
-  # Identify rows where the second survey year column is empty.
-  # These correspond to section headers in the factsheet.
-  eval(parse(text = paste0(
-    "extract_rows = (factsheet_table %>%",
-    " dplyr::filter(`",survey_yrs[2],"`=='') %>%",
-    " dplyr::select(row_numbers))$row_numbers"
-  )))
-  
-  #
-  if(language == 'french')
-  {
-    factsheet_table = factsheet_table %>% as.matrix
-    factsheet_table = gsub('[.]',',',factsheet_table)
-    factsheet_table = factsheet_table %>% as.data.frame()
-  } else{}
-  
-  ##########################################################
-  ## FINAL TABLE CLEANING
-  ##########################################################
-  
-  # Remove temporary row_numbers column
-  factsheet_table = factsheet_table %>%
-    dplyr::select(-row_numbers)
-  
-  # change * footnote markers to † since * is used to indicate 
-  # significant differences in comparison fact sheet
-  factsheet_table[, 1] <- gsub("\\*", "†", factsheet_table[, 1])
-  
-  ##########################################################
-  ## FORMAT TABLE USING FLEXTABLE
-  ##########################################################
-  if(language =='arabic'){j_cols = 1:3} else{j_cols = 2:4}
-  # Convert the results table into a formatted flextable
-  flex_fact_sheet =
-    factsheet_table %>%
-    flextable() %>%
-    autofit() %>%
-    
-    # Apply consistent font style
-    flextable::style(
-      pr_t = fp_text(font.size=10,
-                     font.family='Source Sans Pro'),
-      part = 'all'
-    ) %>%
-    
-    # Bold section headers
-    bold(i = c(1,extract_rows)) %>%
-    # Header styling
-    bg(bg="white",i=1,part="header") %>%
-    theme_box() %>%
-    # Center numeric columns
-    align(align = "center", j = j_cols, part = "all") %>%
-    # Reduce font size slightly for compact layout
-    fontsize(size = 9 ,part = "all") %>%
-    # Merge section header rows across all columns
-    merge_h_range(i=extract_rows, j1=1,j2=4) %>%
-    # Adjust column widths
-    width(j = j_cols, 4.3, unit = "in") %>%
-    # Apply header background color
-    bg(bg="#339966",i=1,part="header") %>%
-    # Apply background color to section rows
-    bg(bg="#C9DDF3",i=extract_rows,part="body") %>%
-    # Set header text color
-    color(color = "white", part = 'header') %>%
-    # Reduce cell padding
-    padding(padding = 0, part = "all") %>%
-    # Allow table pagination in Word
-    paginate()
+  ##Calling the formatting flextable function
+  #Overall
+  flex_fact_sheet = comp_factsheet_formatting()
+  #Males
+  flex_fact_sheet_men = comp_factsheet_formatting(fct_table = factsheet_table_men, 
+                                                  fact_label = other_language[13,language])
+  #Females
+  flex_fact_sheet_women = comp_factsheet_formatting(fct_table = factsheet_table_women, 
+                                                    fact_label = other_language[14,language])
   
   
   ##########################################################
@@ -127,12 +65,22 @@ if(nrow(comparative_fact_sheet_matrix)>0)
   doc = officer::read_docx(
     paste0(getwd(),'/templates/comparative_factsheet_template.docx')
   )
+  #
+  doc_by_sex = officer::read_docx(
+    paste0(getwd(),'/templates/comparative_factsheet_template.docx')
+  )
   
   # Replace placeholder text in the template with
   # the actual survey year and country name
   final_sample_size <- nrow(data)
   age_range <- paste0(min(data$age, na.rm = TRUE), "–", max(data$age, na.rm = TRUE))
   doc <- doc %>%
+    body_replace_all_text(old_value = "survey_year",new_value = as.character(survey_year),only_at_cursor = FALSE) %>%
+    body_replace_all_text(old_value = "country_name",new_value = as.character(country),only_at_cursor = FALSE) %>%
+    body_replace_all_text(old_value = "final_sample_size", new_value = as.character(final_sample_size), only_at_cursor = FALSE) %>%
+    body_replace_all_text(old_value = "age_range", new_value = as.character(age_range), only_at_cursor = FALSE)
+  #
+  doc_by_sex <- doc_by_sex %>%
     body_replace_all_text(old_value = "survey_year",new_value = as.character(survey_year),only_at_cursor = FALSE) %>%
     body_replace_all_text(old_value = "country_name",new_value = as.character(country),only_at_cursor = FALSE) %>%
     body_replace_all_text(old_value = "final_sample_size", new_value = as.character(final_sample_size), only_at_cursor = FALSE) %>%
@@ -155,6 +103,26 @@ if(nrow(comparative_fact_sheet_matrix)>0)
       pos = "on",
       align = 'left'
     )
+  #
+  doc_by_sex = doc_by_sex %>%
+    cursor_bookmark(id  = "bmk1") %>%
+    body_add_flextable(
+      width(
+        flex_fact_sheet_men,
+        width = dim(flex_fact_sheet_men)$widths *
+          7.25 / (flextable_dim(flex_fact_sheet_men)$widths)
+      ),
+      pos = "on",
+      align = 'left'
+    ) %>%    
+    body_add_break()%>% 
+    body_add_flextable(
+    width(
+      flex_fact_sheet_women,
+      width = dim(flex_fact_sheet_women)$widths *
+        7.25 / (flextable_dim(flex_fact_sheet_women)$widths)
+    )
+  )
   
   
   ##########################################################
@@ -168,7 +136,19 @@ if(nrow(comparative_fact_sheet_matrix)>0)
       'outputs/',
       country_ISO,'-',
       survey_year,
-      '_Comparative_Factsheet_',
+      '_Comparative_Fact_Sheet_',
+      format(Sys.time(), "%d-%b-%y_%H-%M-%S"),
+      '.docx'
+    )
+  )
+  #
+  print(
+    doc_by_sex,
+    target = paste0(
+      'outputs/',
+      country_ISO,'-',
+      survey_year,
+      '_Comparative_Fact_Sheet_by_sex_',
       format(Sys.time(), "%d-%b-%y_%H-%M-%S"),
       '.docx'
     )
@@ -177,4 +157,9 @@ if(nrow(comparative_fact_sheet_matrix)>0)
 }else{
   # Do nothing if no factsheet indicators are available
 }
+
+
+
+
+
 

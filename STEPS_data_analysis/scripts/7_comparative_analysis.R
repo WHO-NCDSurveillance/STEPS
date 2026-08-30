@@ -228,17 +228,129 @@ for(i in unique(comp_indicator_results$section_title))
     ## CREATE PROMPTS FOR NARRATIVE GENERATION
     ########################################################
     
+    #
     prompt1 = paste0(
-      "Tables (in CSV format):\n", csv_text, "\n",
-      "Now write a concise narrative summary for this section for ",
-      country,' in ',language,
-      ". Include p-values when significant changes occur (p<0.05)."
+      "Task:\n",
+      "Write a report-ready narrative summary for ", country,
+      " in ", language, ". The narrative should synthesise the findings across all tables, ",
+      "identify the most important messages, and explain what the results show rather than simply listing numbers.\n\n",
+      
+      "Instructions:\n",
+      "1. Critically review all tables before writing. Identify the most important findings, patterns, ",
+      "differences, and trends, and prioritise these in the narrative. Do not describe every number or table unnecessarily.\n",
+      
+      "2. Highlight statistically significant differences only when p < 0.05. Do not describe non-significant ",
+      "differences as meaningful or suggest that an association exists when statistical evidence is lacking.\n",
+      
+      "3. Where an overall comparison across stratifiers is available, report and interpret it before discussing ",
+      "specific subgroup comparisons.\n",
+      
+      "4. For statistically significant results, report the relevant p-value to four decimal places and include ",
+      "95% confidence intervals where available. Ensure that confidence intervals are clearly linked to the corresponding estimates.\n",
+      
+      "5. Use the numbers to explain the magnitude and direction of findings. Where appropriate, describe which ",
+      "groups had higher or lower estimates, the extent of the change, and which findings are most notable.\n",
+      
+      "6. Go beyond numerical repetition. Translate the statistical results into clear, meaningful messages that help ",
+      "the reader understand what the findings indicate. Where the tables support a clear pattern, describe that pattern explicitly.\n",
+      
+      "7. Distinguish clearly between descriptive differences and statistically significant differences. Do not imply ",
+      "explanations, or conclusions that are not supported by the data.\n",
+      
+      "8. Where several tables or indicators address the same underlying concept, synthesise them into one coherent ",
+      "interpretation rather than repeating similar findings. If related indicators are available, focus on the indicator ",
+      "that provides the clearest and most informative message unless the additional indicator adds materially different information.\n",
+      
+      "9. Prioritise findings according to their importance to the reader. Focus on results that show substantial ",
+      "changes, important inequalities, notable patterns, or findings that materially contribute to understanding ",
+      "the section. Minor or redundant numerical differences should be omitted.\n",
+      
+      "10. Ensure that the narrative has a logical flow: overall finding → important differences → key subgroup findings ",
+      "→ interpretation and implications supported by the data.\n",
+      
+      "11. Do not simply reproduce table values in sequence. Integrate related findings into sentences and paragraphs ",
+      "so that the narrative reads as an analytical interpretation rather than a description of the tables.\n",
+      
+      "12. Do not start a sentence with a number. Integrate percentages, estimates, counts, confidence intervals, ",
+      "and p-values naturally within sentences.\n",
+      
+      "13. Use precise statistical language. Avoid words such as 'significant' unless the difference meets the ",
+      "specified p < 0.05 threshold. Use 'higher', 'lower', 'increased', 'decreased', or 'differed' where appropriate.\n",
+      
+      "14. Do not overstate findings. Avoid causal language such as 'led to', 'caused', or 'resulted in' unless the ",
+      "study design and tables explicitly support a causal interpretation.\n",
+      
+      "15. Keep the narrative concise but sufficiently detailed to be informative for a formal report. Avoid repetition ",
+      "of the same finding, unnecessary methodological explanation, and commentary that does not add interpretation.\n",
+      
+      "16. End the section with the main takeaway or key message emerging from the results, where appropriate. ",
+      "The reader should be able to understand the principal finding without referring back to the tables.\n",
+      
+      "17. Before finalising, check that all reported numbers, percentages, confidence intervals, and p-values exactly ",
+      "match the supplied tables. Do not calculate, infer, or invent values that are not supported by the tables.\n",
+      
+      "18. Write the final narrative directly in ", language,
+      ". Do not provide an introduction, explanation of your approach, bullet-point summary, or commentary about the task. \n",
+      'If p-value = 0.0000 then you need to rewrite it as <0.0001 in the narrative.\n',
+      "Do not bold, underline, or otherwise format the text. Produce polished, report-ready prose only.",
+      "Do not show 95% CIs that are neither interpretable nor plausible"
     )
     
-    prompt2 = paste0(
-      "Tables (in CSV format):\n", csv_text, "\n",
-      "Now write a concise narrative summary for this section for ",
-      country,' in ',language,"."
+    # Simplified prompt when significance reporting is disabled
+    prompt2 <- paste0(
+      "Task:\n",
+      "Write a report-ready narrative summary for ", country,
+      " in ", language, ". The narrative should synthesise the findings across all tables, ",
+      "identify the most important messages, and explain what the results show rather than simply listing numbers.\n\n",
+      
+      "Instructions:\n",
+      "1. Critically review all tables before writing. Identify the most important findings, patterns, ",
+      "differences, and trends, and prioritise these in the narrative. Do not describe every number or table unnecessarily.\n",
+      
+      "2. Where an overall comparison across stratifiers is available, report and interpret it before discussing ",
+      "specific subgroup comparisons.\n",
+      
+      "3. Use the numbers to explain the magnitude and direction of findings. Where appropriate, describe which ",
+      "groups had higher or lower estimates, the extent of the change, and which findings are most notable.\n",
+      
+      "4. Go beyond numerical repetition. Translate the statistical results into clear, meaningful messages that help ",
+      "the reader understand what the findings indicate. Where the tables support a clear pattern, describe that pattern explicitly.\n",
+      
+      "5. Do not imply ",
+      "explanations, or conclusions that are not supported by the data.\n",
+      
+      "6. Where several tables or indicators address the same underlying concept, synthesise them into one coherent ",
+      "interpretation rather than repeating similar findings. If related indicators are available, focus on the indicator ",
+      "that provides the clearest and most informative message unless the additional indicator adds materially different information.\n",
+      
+      "7. Prioritise findings according to their importance to the reader. Focus on results that show substantial ",
+      "changes, important inequalities, notable patterns, or findings that materially contribute to understanding ",
+      "the section. Minor or redundant numerical differences should be omitted.\n",
+      
+      "8. Ensure that the narrative has a logical flow: overall finding → important differences → key subgroup findings ",
+      "→ interpretation and implications supported by the data.\n",
+      
+      "9. Do not simply reproduce table values in sequence. Integrate related findings into sentences and paragraphs ",
+      "so that the narrative reads as an analytical interpretation rather than a description of the tables.\n",
+      
+      "10. Do not start a sentence with a number. Integrate percentages, estimates, counts, confidence intervals, ",
+      "and p-values naturally within sentences.\n",
+      
+      "11. Do not overstate findings. Avoid causal language such as 'led to', 'caused', or 'resulted in' unless the ",
+      "study design and tables explicitly support a causal interpretation.\n",
+      
+      "12. Keep the narrative concise but sufficiently detailed to be informative for a formal report. Avoid repetition ",
+      "of the same finding, unnecessary methodological explanation, and commentary that does not add interpretation.\n",
+      
+      "13. End the section with the main takeaway or key message emerging from the results, where appropriate. ",
+      "The reader should be able to understand the principal finding without referring back to the tables.\n",
+      
+      "14. Before finalising, check that all reported numbers and percentages exactly ",
+      "match the supplied tables. Do not calculate, infer, or invent values that are not supported by the tables.\n",
+      
+      "15. Write the final narrative directly in ", language,
+      ". Do not provide an introduction, explanation of your approach, bullet-point summary, or commentary about the task. \n",
+      "Do not bold, underline, or otherwise format the text. Produce polished, report-ready prose only."
     )
     
     if(report_signf == 'No'){
@@ -374,3 +486,4 @@ for(i in unique(comp_indicator_results$section_title))
     )
   )
 }
+

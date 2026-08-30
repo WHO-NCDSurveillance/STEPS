@@ -54,8 +54,8 @@ translated_header_fn()
 # Initialize loop variables
 i = NULL
 sect_no = 1
-all_references = NULL
-
+#all_references = NULL
+all_background_texts = NULL
 # -----------------------------------------------------------
 # Loop through each report section to generate narrative reports
 # -----------------------------------------------------------
@@ -82,27 +82,9 @@ for(i in unique(reporting_matrix$section_title))
            country, ": ", bacground_text,
            ". Just provide the output without any notes, explanations, introductions, or extra words. Insert 
            academic style references within the text, but do not list them."))
-  
-  ##---------------------------------------------------------
-  ## Generate reference list from background text
-  ##---------------------------------------------------------
-  
-  # Ask LLM to extract full reference details in APA format
-  list_reference = llm_wrapper_connect(
-    paste0(
-      "From the following text, generate a clean list of full references with all publication details (authors, year, title, journal, volume, pages). ",
-      "Output only the references, one per line, in APA format.\n\n",
-      adj_background_text
-    )
-  )  
-  
-  # Split references by line breaks
-  reference_list = unlist(strsplit(list_reference, "\n\n"))
-  reference_list = unlist(strsplit(reference_list, "\n"))
-  
-  # Remove extra whitespace
-  reference_list = trimws(reference_list)
-  
+  #
+  all_background_texts = c(all_background_texts,adj_background_text)
+
   ##---------------------------------------------------------
   ## Adjust survey measures text to include country name
   ##---------------------------------------------------------
@@ -125,9 +107,9 @@ for(i in unique(reporting_matrix$section_title))
     translated_survey_measures = llm_translate(adj_survey_measures)
     
     # Translate references
-    refs = paste(capture.output(write.csv(reference_list, row.names=FALSE)), collapse="\n")
-    translated_ref = llm_translate(refs)
-    translated_ref = unlist(strsplit(translated_ref, "\n"))[-1]
+    # refs = paste(capture.output(write.csv(reference_list, row.names=FALSE)), collapse="\n")
+    # translated_ref = llm_translate(refs)
+    # translated_ref = unlist(strsplit(translated_ref, "\n"))[-1]
     
     ## Translate section header
     translated_section_header = llm_translate(i)
@@ -138,7 +120,7 @@ for(i in unique(reporting_matrix$section_title))
     translated_background_text = adj_background_text
     translated_survey_measures = adj_survey_measures
     translated_section_header = i
-    translated_ref = reference_list
+    #translated_ref = reference_list
   }
   
   ###-------------------------------------------------------
@@ -223,40 +205,149 @@ for(i in unique(reporting_matrix$section_title))
     
     #
     sample_narration = na.omit(unique(sub_sec_report_matrix$text_example)[1])
-    
-    # Prompt template when significance reporting is required
-    prompt1 <- paste0(
+    #
+    prompt1 = paste0(
       "You are provided with the following tables:\n\n",
       all_tables_text, "\n\n",
       "Below is an example of how a similar section was written:\n\n",
       sample_narration, "\n\n",
+      
       "Task:\n",
-      "Write a concise narrative summary for this section for ", country, " in ", language, ".\n\n",
+      "Write a report-ready narrative summary for this section for ", country,
+      " in ", language, ". The narrative should synthesise the findings across all tables, ",
+      "identify the most important messages, and explain what the results show rather than simply listing numbers.\n\n",
+      
       "Instructions:\n",
-      "1. Follow the same structure, tone, and format as the example narration.\n",
-      "2. Interpret all tables and describe the main findings clearly.\n",
-      "3. Highlight only statistically significant differences (p < 0.05).\n",
-      "4. Report p-values to four decimal places.\n",
-      "5. Report overall differences across stratifiers.\n",
-      "6. Include 95% confidence intervals for each estimate.\n",
-      "7. Keep the summary concise and non-repetitive.\n",
-      "8. Maintain meaningful narrative flow.\n",
-      "9. Do not start a sentence with a number.\n",
-      "10. If related indicators exist, interpret only one.\n",
-      "11. Interpret overall estimate before subgroup results.\n",
-      "Write the final narrative directly."
+      "1. Use the example narration as a guide for structure, tone, level of detail, and reporting style, ",
+      "but do not copy its wording unless appropriate.\n",
+      
+      "2. Critically review all tables before writing. Identify the most important findings, patterns, ",
+      "differences, and trends, and prioritise these in the narrative. Do not describe every number or table unnecessarily.\n",
+      
+      "3. Begin with the overall estimate or population-level finding before presenting subgroup or stratified results. ",
+      "Use subgroup findings to explain, qualify, or add context to the overall result.\n",
+      
+      "4. Highlight statistically significant differences only when p < 0.05. Do not describe non-significant ",
+      "differences as meaningful or suggest that an association exists when statistical evidence is lacking.\n",
+      
+      "5. Where an overall comparison across stratifiers is available, report and interpret it before discussing ",
+      "specific subgroup comparisons.\n",
+      
+      "6. For statistically significant comparisons, report the relevant p-value to four decimal places and include ",
+      "95% confidence intervals where available. Ensure that confidence intervals are clearly linked to the corresponding estimates.\n",
+      
+      "7. Use the numbers to explain the magnitude and direction of findings. Where appropriate, describe which ",
+      "groups had higher or lower estimates, the extent of the difference, and which findings are most notable.\n",
+      
+      "8. Go beyond numerical repetition. Translate the statistical results into clear, meaningful messages that help ",
+      "the reader understand what the findings indicate. Where the tables support a clear pattern, describe that pattern explicitly.\n",
+      
+      "9. Distinguish clearly between descriptive differences and statistically significant differences. Do not imply ",
+      "causality, explanations, or conclusions that are not supported by the data.\n",
+      
+      "10. Where several tables or indicators address the same underlying concept, synthesise them into one coherent ",
+      "interpretation rather than repeating similar findings. If related indicators are available, focus on the indicator ",
+      "that provides the clearest and most informative message unless the additional indicator adds materially different information.\n",
+      
+      "11. Prioritise findings according to their importance to the reader. Focus on results that show substantial ",
+      "differences, important inequalities, notable patterns, or findings that materially contribute to understanding ",
+      "the section. Minor or redundant numerical differences should be omitted.\n",
+      
+      "12. Ensure that the narrative has a logical flow: overall finding → important differences → key subgroup findings ",
+      "→ interpretation and implications supported by the data.\n",
+      
+      "13. Do not simply reproduce table values in sequence. Integrate related findings into sentences and paragraphs ",
+      "so that the narrative reads as an analytical interpretation rather than a description of the tables.\n",
+      
+      "14. Do not start a sentence with a number. Integrate percentages, estimates, counts, confidence intervals, ",
+      "and p-values naturally within sentences.\n",
+      
+      "15. Use precise statistical language. Avoid words such as 'significant' unless the difference meets the ",
+      "specified p < 0.05 threshold. Use 'higher', 'lower', 'increased', 'decreased', or 'differed' where appropriate.\n",
+      
+      "16. Do not overstate findings. Avoid causal language such as 'led to', 'caused', or 'resulted in' unless the ",
+      "study design and tables explicitly support a causal interpretation.\n",
+      
+      "17. Keep the narrative concise but sufficiently detailed to be informative for a formal report. Avoid repetition ",
+      "of the same finding, unnecessary methodological explanation, and commentary that does not add interpretation.\n",
+      
+      "18. End the section with the main takeaway or key message emerging from the results, where appropriate. ",
+      "The reader should be able to understand the principal finding without referring back to the tables.\n",
+      
+      "19. Before finalising, check that all reported numbers, percentages, confidence intervals, and p-values exactly ",
+      "match the supplied tables. Do not calculate, infer, or invent values that are not supported by the tables.\n",
+      
+      "20. Write the final narrative directly in ", language,
+      ". Do not provide an introduction, explanation of your approach, bullet-point summary, or commentary about the task. \n",
+      "Note - The reported p-values are based on tests of overall differences across variable levels (e.g., chi-square tests for categorical variables and t-tests for comparisons of continuous variables). Interpret these p-values 
+       according to the test provided and do not imply that they represent a test of a specific level or subgroup.\n",
+      'If p-value = 0.0000 then you need to rewrite it as <0.0001 in the narrative.\n',
+      "Do not bold, underline, or otherwise format the text. Produce polished, report-ready prose only.",
+      "Do not show 95% CIs that are neither interpretable nor plausible"
     )
     
     # Simplified prompt when significance reporting is disabled
-    prompt2 <- paste0(
+    prompt2 = paste0(
       "You are provided with the following tables:\n\n",
       all_tables_text, "\n\n",
-      "Task:\n",
-      "Write a concise narrative summary for this section for ", country, " in ", language, ".\n\n",
+      "Write a report-ready narrative summary for this section for ", country,
+      " in ", language, ". The narrative should synthesise the findings across all tables, ",
+      "identify the most important messages, and explain what the results show rather than simply listing numbers.\n\n",
+      
       "Instructions:\n",
-      "Interpret all tables and summarize key findings clearly.\n",
-      "Keep the narrative concise and meaningful.\n",
-      "Do not start a sentence with a number."
+      "1. Critically review all tables before writing. Identify the most important findings, patterns, ",
+      "differences, and trends, and prioritise these in the narrative. Do not describe every number or table unnecessarily.\n",
+      
+      "2. Begin with the overall estimate or population-level finding before presenting subgroup or stratified results. ",
+      "Use subgroup findings to explain, qualify, or add context to the overall result.\n",
+      
+      "3. Where an overall comparison across stratifiers is available, report and interpret it before discussing ",
+      "specific subgroup comparisons.\n",
+      
+      "4. Use the numbers to explain the magnitude and direction of findings. Where appropriate, describe which ",
+      "groups had higher or lower estimates, the extent of the difference, and which findings are most notable.\n",
+      
+      "5. Go beyond numerical repetition. Translate the statistical results into clear, meaningful messages that help ",
+      "the reader understand what the findings indicate. Where the tables support a clear pattern, describe that pattern explicitly.\n",
+      
+      "6. Distinguish clearly between descriptive differences. Do not imply ",
+      "causality, explanations, or conclusions that are not supported by the data.\n",
+      
+      "7. Where several tables or indicators address the same underlying concept, synthesise them into one coherent ",
+      "interpretation rather than repeating similar findings. If related indicators are available, focus on the indicator ",
+      "that provides the clearest and most informative message unless the additional indicator adds materially different information.\n",
+      
+      "8. Prioritise findings according to their importance to the reader. Focus on results that show substantial ",
+      "differences, important inequalities, notable patterns, or findings that materially contribute to understanding ",
+      "the section. Minor or redundant numerical differences should be omitted.\n",
+      
+      "9. Ensure that the narrative has a logical flow: overall finding → important differences → key subgroup findings ",
+      "→ interpretation and implications supported by the data.\n",
+      
+      "10. Do not simply reproduce table values in sequence. Integrate related findings into sentences and paragraphs ",
+      "so that the narrative reads as an analytical interpretation rather than a description of the tables.\n",
+      
+      "11. Do not start a sentence with a number. Integrate percentages, estimates, and counts ",
+      " naturally within sentences.\n",
+      
+      "12. Use precise language. Use 'higher', 'lower', 'increased', 'decreased', or 'differed' where appropriate.\n",
+      
+      "13. Do not overstate findings. Avoid causal language such as 'led to', 'caused', or 'resulted in' unless the ",
+      "study design and tables explicitly support a causal interpretation.\n",
+      
+      "14. Keep the narrative concise but sufficiently detailed to be informative for a formal report. Avoid repetition ",
+      "of the same finding, unnecessary methodological explanation, and commentary that does not add interpretation.\n",
+      
+      "15. End the section with the main takeaway or key message emerging from the results, where appropriate. ",
+      "The reader should be able to understand the principal finding without referring back to the tables.\n",
+      
+      "16. Before finalising, check that all reported numbers and percentages exactly ",
+      "match the supplied tables. Do not calculate, infer, or invent values that are not supported by the tables.\n",
+      
+      "17. Write the final narrative directly in ", language,
+      "Do not provide an introduction, explanation of your approach, bullet-point summary, or commentary about the task. ",
+      "Do not bold, underline, or otherwise format the text. Produce polished, report-ready prose only."
+      
     )
     
     ### Select appropriate prompt
@@ -277,7 +368,19 @@ for(i in unique(reporting_matrix$section_title))
     
     #
     sec_doc = sec_doc %>% body_add_par(tanslated_sub_header, style = "heading 3")
-    sec_doc = sec_doc %>% body_add_par(complete_narrative, style = "JustifiedNormal")
+    #
+    paragraphs = strsplit(complete_narrative, "\\n\\n")[[1]]
+    #
+    for (paragraph in paragraphs) {
+
+      sec_doc = sec_doc %>%
+        body_add_par(
+          value = trimws(paragraph),
+          style = "JustifiedNormal"
+        ) %>% body_add_par('\n')
+    }
+
+    
   }
   
   # Save section document
@@ -286,7 +389,7 @@ for(i in unique(reporting_matrix$section_title))
   sect_no=sect_no+1
   
   # Append references
-  all_references = c(all_references, translated_ref)
+  #all_references = c(all_references, translated_ref)
 }
 
 #####
@@ -316,16 +419,79 @@ for(i in all_section_reports) {
 
 combined_report = combined_report %>%  
   body_add_par(translated_ref_list,   style = "heading 1")
+#
+##---------------------------------------------------------
+## Generate reference list from background text
+##---------------------------------------------------------
 
-####
+# Ask LLM to extract full reference details in APA format
+adj_list_reference = llm_wrapper_connect(
+  paste0(
+    "Review the following text and identify the publications, reports, surveys, ",
+    "or other authoritative sources that are relevant to the information presented. ",
+    "Generate a clean reference list for the sources that are relevant to the text.\n\n",
+    
+    "For each reference, provide the bibliographic information available or identifiable, ",
+    "including authors or organisation, year, title, journal or publisher, volume, issue, ",
+    "pages, and DOI or URL where applicable.\n\n",
+    
+    "OUTPUT REQUIREMENTS:\n",
+    "- Output ONLY the reference list.\n",
+    "- Provide one reference per line.\n",
+    "- Use APA-style formatting.\n",
+    "- Output references as plain text only.\n",
+    "- Do NOT use Markdown formatting.\n",
+    "- Do NOT use asterisks (*) or double asterisks (**).\n",
+    "- Do NOT use underscores for formatting.\n",
+    "- Do NOT use HTML or XML tags.\n",
+    "- Do NOT bold, italicise, or underline any text.\n",
+    "- Do NOT include headings, bullets, numbering, explanations, or commentary.\n",
+    "- Do NOT include statements such as 'I cannot provide', 'insufficient information', ",
+    "'please provide more information', or similar messages.\n\n",
+    
+    "ACCURACY REQUIREMENTS:\n",
+    "- Select references that are directly relevant to the claims in the text.\n",
+    "- Do not include unrelated references.\n",
+    "- Do not invent references or bibliographic details.\n",
+    "- Do not invent DOIs or URLs.\n",
+    "- If some bibliographic details are unavailable, provide the reference using the ",
+    "information that can be reliably identified rather than returning an explanation.\n",
+    "- Remove duplicate references.\n
+       - Provide url links where feasible.\n",
+    
+    "TEXT TO REVIEW:\n\n",
+    paste0(all_background_texts, collapse = '.')
+  )
+)
+
+# Split references by line breaks
+reference_list = unlist(strsplit(adj_list_reference, "\n\n"))
+reference_list = unlist(strsplit(reference_list, "\n"))
+
+# Remove extra whitespace
+reference_list = trimws(reference_list)
+#
+if(language!='english')
+{
+  # Translate references
+  refs = paste(capture.output(write.csv(reference_list, row.names=FALSE)), collapse="\n")
+  translated_ref = llm_translate(refs)
+  translated_ref = unlist(strsplit(reference_list, "\n"))[-1]
+  
+}else{
+  
+  # Use original English text
+  translated_ref = reference_list
+}
+
+#
 item = NULL
 
 # Add references as bullet points
-for (item in all_references) {
+for (item in translated_ref) {
   combined_report = combined_report %>% body_add_par(item, style = "bullet")
 }
 
 #######
 # Save final combined narrative report
 print(combined_report, target = paste0('outputs/', country_ISO, '-', survey_year, '_Combined_Narrative_Report_', format(Sys.time(), "%d-%b-%y_%H-%M-%S"), '.docx'))
-

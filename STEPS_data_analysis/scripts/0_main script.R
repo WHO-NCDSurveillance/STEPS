@@ -43,6 +43,7 @@ package.list = c(
   'future.apply','future','patchwork'
 )
 
+
 # Load each package
 invisible(lapply(package.list, function(pkg) library(pkg, character.only = TRUE)))
 
@@ -58,12 +59,12 @@ options(survey.adjust.domain.lonely = TRUE) # Adjust for lonely PSUs in domain a
 ########################################
 # Insert your API key below if you wish to generate a draft report or draft 
 # comparison analysis report (4th and 7th scripts). 
-Sys.setenv(API_KEY = "INSERT API HERE")
+Sys.setenv(API_KEY = "INSERT API KEY HERE")
 
 # Survey and report settings
-survey_year = 2024
+survey_year = 2026
 previous_survey_year = 2017
-country = "country name"
+country = "COUNTRY NAME"
 report_signf = 'Yes'
 
 ########################################
@@ -73,7 +74,7 @@ report_signf = 'Yes'
 # is presented in the matrix)
 ########################################
 demog_section_header = 'Demographics' # Demographics
-               
+
 # Language selection
 language = c('ENGLISH','FRENCH','ARABIC','SPANISH','RUSSIAN','OTHER')[1]  # Default: English
 if (language == 'OTHER') language = 'SPECIFY'
@@ -89,6 +90,7 @@ country_ISO = 'ISO'  # ISO code for the country
 if (country_ISO=="ISO") stop('Please set country_ISO to the 3-letter ISO code of your country.')
 CVD_ISO = country_ISO # in rare cases, CVD_ISO may be set to a similar country's ISO code if there is no CVD risk chart for the country
 ISO_existence = CVD_ISO %in% unique(read_dta('scripts/functions/risk_ref_data.dta')$ccode)
+#
 if (!ISO_existence) stop('The supplied ISO code does not exist in the reference dataset for CVD risk calculation')
 
 ########################################
@@ -96,25 +98,24 @@ if (!ISO_existence) stop('The supplied ISO code does not exist in the reference 
 ########################################
 
 col_strat_variable = c('sex')  # Column stratifier
-row_strat_variables = c('agerange')  # Row stratifiers
-row_strat_variable_titles = c("Age Categories (Years)")
-# row_strat_variables = c('agerange','nationality')  # Row stratifiers (e.g., age range, nationality)
-# row_strat_variable_titles =c("Age Categories (Years)","Nationality")  # Titles for row stratifiers
-# row_strat_variables = c('governorate')  # Row stratifiers (e.g., age range, nationality)
-# row_strat_variable_titles =c("Governorate")  # Titles for row stratifiers
+row_strat_variables = c('agerange')  # Row stratifiers (e.g., age range, nationality)
+row_strat_variable_titles =c("Age group (years)")  # Titles for row stratifiers
+#row_strat_variables = c('agerange','province')  # Row stratifiers (e.g., age range, nationality)
+#row_strat_variable_titles =c("Age group (years)","Province")  # Titles for row stratifiers
+#
 vars_exempt_77_88 = c('')  # Variables exempt from missing code handling
 
 ########################################
 # Parallel computation setup
 ########################################
 
-cores_detected = parallel::detectCores()
-analysis_cores = max(1, floor(cores_detected / 2))
-n_workers = ifelse(analysis_cores==1,1,2)                 
-plan(multisession, workers = n_workers)
+#cores_detected = parallel::detectCores()
+#analysis_cores = max(1, floor(cores_detected / 2))
+#n_workers = ifelse(analysis_cores==1,1,2)                 
+#plan(multisession, workers = n_workers)
 
 # Ensure write permissions for temp folder (Windows exception)
-if (.Platform$OS.type != "windows") Sys.chmod("temp", mode = "0777")
+#if (.Platform$OS.type != "windows") Sys.chmod("temp", mode = "0777")
 
 ########################################
 # Denominator limit
@@ -137,9 +138,10 @@ denom_limit = 100  # Minimum sample size for estimates
 ########################################
 # Step 1: Process data for the current survey (REQUIRED)
 ########################################
-# This script prepares the analytical dataset for the current survey.
+# These scripts prepare the analytical dataset for the current survey.
 # It must be run before generating any single-survey outputs.
-source("scripts/1_data_processing_script.R", local = TRUE)
+source("scripts/1a_matrix_validation.R", local = TRUE)
+source("scripts/1b_data_processing_script.R", local = TRUE)
 
 ########################################
 # Step 2: Generate single-survey outputs

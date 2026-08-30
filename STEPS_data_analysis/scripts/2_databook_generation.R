@@ -131,7 +131,7 @@ for (i in unique(indicator_matrix$section))
           ####################################
           ## Demographics indicators
           ####################################
-          if(i ==demog_section_header)
+          if(i == demog_section_header)
           {
             # Apply denominator filter if needed
             if(denom_logic[which(subset_indicators %in%k)] =='all')
@@ -142,7 +142,9 @@ for (i in unique(indicator_matrix$section))
             }
             
             # Variables used for demographic summaries
-            list_demog_vars = c("agerange", setdiff(row_strat_variables,"agerange"))
+            #list_demog_vars = c("agerange", setdiff(row_strat_variables,"agerange"))
+            list_demog_vars = row_strat_variables
+            
             num_demog = NULL
             summary_table = NULL
             # Generate numeric summaries for each demographic variable
@@ -219,7 +221,7 @@ for (i in unique(indicator_matrix$section))
           ####################################
           ## Demographic categorical indicators
           ####################################
-          if(i ==demog_section_header)
+          if(i == demog_section_header)
           {
             # Apply denominator condition
             if(denom_logic[which(subset_indicators %in%k)] =='all')
@@ -232,17 +234,23 @@ for (i in unique(indicator_matrix$section))
             ####################################
             ## Generate demographic summary tables
             ####################################
-            list_demog_vars = c("agerange",'', setdiff(row_strat_variables,"agerange")) 
+            list_demog_vars = c(row_strat_variables[1],'', 
+                                setdiff(row_strat_variables,row_strat_variables[1])) 
+            #list_demog_vars = row_strat_variables
+            
             num_demog = NULL
-            summary_table = NULL
+            #summary_table = data.frame()
             ##
-            summary_table = demog_cat()
+            summary_table = demog_cat(strat_variable = list_demog_vars[1])
             ###
-            for(num_demog in list_demog_vars[-1]) #
+            if(length(list_demog_vars)>1)
+            {
+            for(num_demog in list_demog_vars[-1]) #list_demog_vars[-1]
             {
               summary_table = full_join(summary_table %>% mutate_all(as.character),
                                         demog_cat(num_demog)%>% mutate_all(as.character))
             }
+            }else{}
             # Replace NA stratification values with Total
             summary_table = summary_table %>%
               mutate(`eval(parse(text = strat_variable))` = ifelse(is.na(`eval(parse(text = strat_variable))`),
@@ -452,7 +460,7 @@ for (i in unique(indicator_matrix$section))
     ########################################
     ## Subtitle handling
     ########################################
-    subtitle1 = do.call('c',strsplit(as.character(sub_formatrix$subtitle1), "[;]"))
+    subtitle1 = do.call('c',strsplit(sub_formatrix$subtitle1, "[;]"))
     if(length(sub_formatrix$subtitle2)>0)
     {
       subtitle2 = do.call('c',
@@ -564,9 +572,16 @@ for (i in unique(indicator_matrix$section))
     ## Determining Stratification Structure
     #########################################################################
     
-    # Identify number of age group levels used in the table.
-    #range_levels = length(names(table(data[,unique(sub_formatrix$agevar)])))
-    range_levels = length(names(table(analysis_data[,unique(sub_formatrix$agevar)]))) ## ADDED
+    # Identify number of levels for row_strat_variables[1] used in the table.
+    range_levels = if (row_strat_variables[1] == "agerange") {
+      data %>%
+        summarise(n = n_distinct(.data[[unique(sub_formatrix$agevar)]], na.rm = TRUE)) %>%
+        pull(n)
+    } else {
+      analysis_data %>%
+        summarise(n = n_distinct(.data[[row_strat_variables[1]]], na.rm = TRUE)) %>%
+        pull(n)
+    }
     # Initialize vector for storing row group boundaries.
     all_hlines = c()
     # Determine number of levels in row stratification variables.
@@ -575,7 +590,7 @@ for (i in unique(indicator_matrix$section))
       length_strat = length(row_strat_variables)
       sub_var_levels = eval(parse(text=paste0('c(',
                                               paste0('length(names(table(analysis_data[,"', ## ADDED - changed "data" to "analysis_data"
-                                                     unique(sub_formatrix$agevar),'"])))', collapse = ','),
+                                                     row_strat_variables[1],'"])))', collapse = ','),
                                               ')')))
       all_hlines = c(all_hlines,sub_var_levels)
     } else{NA}
@@ -596,7 +611,7 @@ for (i in unique(indicator_matrix$section))
       if(range_levels==2){first_ln = 5}
     }
     # Special rule for Demographic section
-    if(i==demog_section_header){first_ln = 4:(length(names(table(data[,"agerange"])))+2)}
+    if(i==demog_section_header){first_ln = 4:(length(names(table(data[,row_strat_variables[1]])))+2)}
     final_hlines = c(first_ln)
     #########################################################################
     ## Compute Additional Row Group Boundaries
@@ -617,6 +632,51 @@ for (i in unique(indicator_matrix$section))
         next_no = next_no+1
       }
     }
+    ##
+    adj_final_hlines = final_hlines
+    ### Add horizontal lines for additional stratification variables
+    if (length(row_strat_variables) > 1) {
+      for (n in row_strat_variables[-1]) {
+        
+        last_no = tail(adj_final_hlines, 1)
+        n_level_strat = length(na.omit(levels(data[[n]])))
+        position_strat = which(row_strat_variables == n)
+        
+        # Determine the starting position based on the stratifier's position
+        n_col_lines = last_no + ifelse(position_strat > 2, 3, 4)
+        
+        # Add horizontal lines for each level of the stratifier
+        new_lines = unique(n_col_lines:(n_col_lines + n_level_strat - 2))
+        adj_final_hlines = c(adj_final_hlines, new_lines)
+      }
+      
+      # Update the final horizontal line positions
+      final_hlines = adj_final_hlines
+    }
+ 
+    
+    # adj_final_hlines = final_hlines
+    #   
+    # ###Adding lines for other stratifiers
+    # if (length(row_strat_variables) > 1) {
+    # # Adding horizontal lines for each additional stratification variable
+    #   for (n in row_strat_variables[-1]) {
+    #     length_final_hlines = length(adj_final_hlines)
+    #     last_no = adj_final_hlines[length_final_hlines]
+    #     #
+    #     n_level_strat = length(na.omit(levels(data[[n]])))
+    #     position_strat = which(row_strat_variables %in% n)
+    #     if (position_strat > 2)
+    #     {
+    #     n_col_lines = last_no + 3
+    #     } else {n_col_lines = last_no + 4}
+    #     
+    #     full_line_set = unique(n_col_lines:(n_col_lines+n_level_strat-2))
+    #     adj_final_hlines = c(adj_final_hlines, full_line_set)
+    #   }
+    #   # Update the final horizontal line positions
+    #   final_hlines = adj_final_hlines
+    # }
     
     #########################################################################
     ## Define Table Border Styles
@@ -635,7 +695,20 @@ for (i in unique(indicator_matrix$section))
       #######################################################################
       ## Language-Specific Number Formatting
       #######################################################################
-      
+      # Cleaning tables "-" to 95% of "0.0 - 0.0" 
+      extract_table = extract_table %>%
+        mutate(
+          across(
+            where(is.character),
+            ~ replace(
+              .x,
+              .x %in% c("0.0 - 0.0", 
+                        "0.0 - NaN", "NaN - 0.0", "NaN - NaN",
+                        "0.0 - Inf", "Inf - 0.0", "Inf - Inf"),
+              "-"
+            )
+          )
+        )
       # Replace decimal points with commas for French reports.
       if(language == 'french')
       {
@@ -765,7 +838,7 @@ for (i in unique(indicator_matrix$section))
           col_strat_var_levels = other_language[1:2,language]
           
           sub_labels <- c('',rep(c(col_strat_var_levels,
-                                   other_language[3,language]), each = 3))[col_range]
+                                   other_language[4,language]), each = 3))[col_range]
           #########
           total_pos = grep(other_language[4,language],split_tab[,1])
           # Replace median title placeholder if needed
@@ -829,7 +902,19 @@ for (i in unique(indicator_matrix$section))
       #########################################################################
       ## Handling Indicators Where extract_table is a List of Tables
       #########################################################################
-      
+      # Cleaning tables "-" to 95% of "0.0 - 0.0" 
+      extract_table = map(
+        extract_table,
+        ~ .x %>%
+          mutate(
+            across(
+              where(is.character),
+              ~ if_else(.x %in% c("0.0 - 0.0", 
+                                  "0.0 - NaN", "NaN - 0.0", "NaN - NaN",
+                                  "0.0 - Inf", "Inf - 0.0", "Inf - Inf"), "-", .x)
+            )
+          )
+      )
       # Some indicators return a list of tables (e.g., stratified by a column)
       # rather than a single data frame. This branch handles those cases.
       
@@ -954,7 +1039,7 @@ for (i in unique(indicator_matrix$section))
       
     } else{}
     # ---------------- Write Individual Indicator Document ----------------
-    section_position = match(i, unique(indicator_matrix$section))
+    section_position <- match(i, unique(indicator_matrix$section))
     print(doc, target =paste0('temp/Part',section_position,'_Indicator',ind_no,'.docx'))
     ind_no = ind_no+1
   }
@@ -1038,4 +1123,3 @@ print(databook,
                       survey_year, '_Databook_', 
                       format(Sys.time(), "%d-%b-%y_%H-%M-%S"), 
                       '.docx'))
-
