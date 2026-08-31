@@ -1980,7 +1980,7 @@ compute_pvalue = function(ind_level, indicator, svy_datum, strat_col = NULL, str
 #          p-values, significance, and attach reporting metadata.
 
 analyse_indicator = function(ind_level, type_indicators, subset_indicators, svy_datum, sect,section_title, grp_tab_title,
-                             ind_subtitle,arrange_num,sub_section_text,background_text) {
+                             ind_subtitle,arrange_num,sub_section_text,background_text,estimate_type) {
   indicator = compute_indicator(ind_level, type_indicators, subset_indicators, svy_datum)
 
   # Stratified results
@@ -2020,7 +2020,8 @@ analyse_indicator = function(ind_level, type_indicators, subset_indicators, svy_
       ind_subtitle = ind_subtitle,
       arrange_num = arrange_num,
       sub_section_text = sub_section_text,
-      background_text = background_text
+      background_text = background_text,
+      estimate_type = estimate_type
     ) %>%
     dplyr::select(sect, grp_tab_title, ind_subtitle, stratifier, category, everything())
 }
@@ -2050,6 +2051,9 @@ comp_numbers = function(sect) {
     sub_section_text = sub_matrix$sub_section_text
     section_title = sub_matrix$section_title
     background_text = sub_matrix$background
+    var_type = strsplit(sub_matrix$type, ";")[[1]][1]
+    estimate_type = if_else(var_type == 'categorical','Percentage',var_type)
+    
 
     if (!all(is.na(tab_subtitle2))) tab_subtitle1 = tab_subtitle2
     ###
@@ -2090,7 +2094,7 @@ comp_numbers = function(sect) {
         }
 
         comb_rslts = analyse_indicator(ind_level, type_indicators, subset_indicators, svy_datum,
-                                       sect,section_title, grp_tab_title, ind_subtitle,arrange_num,sub_section_text,background_text)
+                                       sect,section_title, grp_tab_title, ind_subtitle,arrange_num,sub_section_text,background_text,estimate_type)
         #Denominator computation
         total_n = nrow(svy_datum$variables %>% 
                          dplyr::filter(svy_year == sort(unique(svy_year)[1])))
