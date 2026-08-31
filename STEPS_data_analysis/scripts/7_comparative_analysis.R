@@ -233,6 +233,8 @@ for(i in unique(comp_indicator_results$section_title))
     ########################################################
     
     #
+    # Prompt with statistical significance reporting
+    
     prompt1 <- paste0(
       "Based on the following tables:\n\n",
       csv_text,
@@ -247,11 +249,18 @@ for(i in unique(comp_indicator_results$section_title))
       "tables and use the most important statistics to support the main messages. Do not attempt ",
       "to describe every result, category, or table.\n\n",
       
+      "IMPORTANT INFORMATION ABOUT STATISTICAL TESTING:\n",
+      "Where p-values are presented, they test whether there has been a statistically significant ",
+      "change or difference between the survey rounds. The p-value relates to the comparison between ",
+      "survey rounds and should NOT be interpreted as testing differences between individual population ",
+      "subgroups or specific levels of a variable. When reporting a statistically significant result, ",
+      "clearly describe it as evidence of a change between survey rounds.\n\n",
+      
       "KEY PRINCIPLES:\n",
       
       "1. Focus on the most important findings. Select the results that provide the clearest ",
       "and most useful picture of the issue, including headline prevalence estimates, substantial ",
-      "differences between groups, important inequalities, notable trends, or particularly large ",
+      "changes between survey rounds, important inequalities, notable patterns, or particularly large ",
       "or concerning findings.\n",
       
       "2. Summarise key numbers rather than reproducing tables. Include the most important ",
@@ -265,51 +274,55 @@ for(i in unique(comp_indicator_results$section_title))
       "amount and importance of the information available. Do not force every table to contribute ",
       "a finding if it does not add an important message.\n",
       
-      "5. Where an overall estimate is available, present the headline finding first before ",
-      "describing important differences across population groups.\n",
+      "5. Where estimates are available for multiple survey rounds, clearly present the direction ",
+      "and magnitude of the change between survey rounds, focusing on the most important changes.\n",
       
-      "6. Where statistically significant overall differences across categories are available, ",
-      "report and interpret the overall test before discussing subgroup patterns. Remember that ",
-      "an overall p-value tests variation across the levels of a variable and does not identify ",
-      "a specific individual category as statistically different.\n",
+      "6. Interpret p-values specifically as tests of change between survey rounds. A statistically ",
+      "significant p-value indicates evidence that the estimate changed between the survey rounds; ",
+      "it does NOT indicate that a particular subgroup or category is individually statistically different.\n",
       
-      "7. Highlight statistically significant differences only when p < 0.05. Do not describe ",
-      "non-significant differences as statistically meaningful or imply evidence of an association ",
-      "when the statistical evidence does not support this.\n",
+      "7. Highlight statistically significant changes only when p < 0.05. Do not describe changes ",
+      "between survey rounds as statistically significant when p >= 0.05. Non-significant differences ",
+      "may be described descriptively where useful, but should not be presented as evidence of a ",
+      "statistically supported change.\n",
       
-      "8. For important statistically significant findings, report the relevant p-value and ",
-      "95% confidence interval where these add useful information. Report p-values to four decimal ",
+      "8. For important statistically significant changes, report the relevant p-value and ",
+      "95% confidence intervals where these add useful information. Report p-values to four decimal ",
       "places. If p = 0.0000 in the table, report it as p < 0.0001.\n",
       
       "9. Use confidence intervals selectively. Include them when they help communicate the ",
       "precision of an important estimate, but do not show 95% confidence intervals that are ",
       "not interpretable, plausible, or informative.\n",
       
-      "10. Explain the magnitude and direction of important findings. Clearly indicate which ",
-      "groups have higher or lower estimates and quantify meaningful differences using the key ",
-      "numbers from the tables.\n",
+      "10. Explain the magnitude and direction of important findings. Clearly quantify whether ",
+      "estimates increased, decreased, or remained broadly similar between survey rounds, using ",
+      "the key numbers from the tables.\n",
       
-      "11. Where several indicators describe the same underlying issue, synthesise them into ",
+      "11. Where subgroup results are presented, describe important subgroup patterns separately ",
+      "from the statistical test of change between survey rounds. Do not use the survey-round ",
+      "p-value to claim that differences between subgroups are statistically significant.\n",
+      
+      "12. Where several indicators describe the same underlying issue, synthesise them into ",
       "one clear message rather than repeating similar statistics. Prioritise the indicator that ",
       "provides the strongest and clearest evidence.\n",
       
-      "12. Translate statistics into clear messages. The output should explain what the numbers ",
+      "13. Translate statistics into clear messages. The output should explain what the numbers ",
       "show, rather than simply listing percentages in the order in which they appear in the tables.\n",
       
-      "13. Distinguish between descriptive patterns and statistically supported differences. ",
-      "Do not overinterpret small numerical differences.\n",
+      "14. Distinguish clearly between descriptive patterns and statistically supported changes ",
+      "between survey rounds. Do not overinterpret small numerical differences.\n",
       
-      "14. Do not imply causes, explanations, or consequences that cannot be supported by the ",
+      "15. Do not imply causes, explanations, or consequences that cannot be supported by the ",
       "supplied data. Avoid causal language such as 'caused', 'led to', or 'resulted in'.\n",
       
-      "15. Keep the writing concise and suitable for a factsheet. Prefer short, clear paragraphs ",
+      "16. Keep the writing concise and suitable for a factsheet. Prefer short, clear paragraphs ",
       "and direct language. Avoid lengthy methodological explanations, unnecessary detail, ",
       "repetition, and technical jargon.\n",
       
-      "16. Do not start a sentence with a number. Integrate statistics naturally into sentences.\n",
+      "17. Do not start a sentence with a number. Integrate statistics naturally into sentences.\n",
       
-      "17. End with a clear overall takeaway that summarises the principal message emerging ",
-      "from the findings.\n",
+      "18. End with a clear overall takeaway that summarises the principal message emerging ",
+      "from the findings, particularly the most important changes between survey rounds.\n",
       
       "ACCURACY CHECK:\n",
       "Before finalising, verify that every reported number, percentage, confidence interval, ",
@@ -322,6 +335,7 @@ for(i in unique(comp_indicator_results$section_title))
       "of your approach, or commentary. Do not use bold, italics, underlining, Markdown, or any ",
       "other text formatting."
     )
+    
     
     
     # Simplified prompt when significance reporting is disabled
