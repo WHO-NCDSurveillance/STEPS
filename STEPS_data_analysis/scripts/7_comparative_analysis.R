@@ -100,7 +100,11 @@ for(i in unique(comp_indicator_results$section_title))
       "Adjust the following text, adding critical statistics in the background for ",
       country, ": ",
       bacground_text,
-      "Just provide the output without any notes, explanations, introductions, or extra words."
+      "\n OUTPUT REQUIREMENTS:\n",
+      "Write the final text directly in ", language, ". Produce concise, polished, factsheet-ready ",
+      "prose only. Do not provide an introduction to the task, headings, bullet points, explanations ",
+      "of your approach, or commentary. Do not use bold, italics, underlining, Markdown, or any ",
+      "other text formatting."
     )
   )
   
@@ -229,129 +233,172 @@ for(i in unique(comp_indicator_results$section_title))
     ########################################################
     
     #
-    prompt1 = paste0(
-      "Task:\n",
-      "Write a report-ready narrative summary for ", country,
-      " in ", language, ". The narrative should synthesise the findings across all tables, ",
-      "identify the most important messages, and explain what the results show rather than simply listing numbers.\n\n",
+    prompt1 <- paste0(
+      "Based on the following tables:\n\n",
+      csv_text,
+      "\n\n",
       
-      "Instructions:\n",
-      "1. Critically review all tables before writing. Identify the most important findings, patterns, ",
-      "differences, and trends, and prioritise these in the narrative. Do not describe every number or table unnecessarily.\n",
+      "TASK:\n",
+      "Write a concise, factsheet-ready summary of the findings for ", country,
+      " in ", language, ". The purpose of this text is to communicate the most important ",
+      "numbers, findings, and takeaways clearly and quickly to a non-technical reader.\n\n",
       
-      "2. Highlight statistically significant differences only when p < 0.05. Do not describe non-significant ",
-      "differences as meaningful or suggest that an association exists when statistical evidence is lacking.\n",
+      "The summary should be selective and number-led. Identify the key findings across all ",
+      "tables and use the most important statistics to support the main messages. Do not attempt ",
+      "to describe every result, category, or table.\n\n",
       
-      "3. Where an overall comparison across stratifiers is available, report and interpret it before discussing ",
-      "specific subgroup comparisons.\n",
+      "KEY PRINCIPLES:\n",
       
-      "4. For statistically significant results, report the relevant p-value to four decimal places and include ",
-      "95% confidence intervals where available. Ensure that confidence intervals are clearly linked to the corresponding estimates.\n",
+      "1. Focus on the most important findings. Select the results that provide the clearest ",
+      "and most useful picture of the issue, including headline prevalence estimates, substantial ",
+      "differences between groups, important inequalities, notable trends, or particularly large ",
+      "or concerning findings.\n",
       
-      "5. Use the numbers to explain the magnitude and direction of findings. Where appropriate, describe which ",
-      "groups had higher or lower estimates, the extent of the change, and which findings are most notable.\n",
+      "2. Summarise key numbers rather than reproducing tables. Include the most important ",
+      "percentages, estimates, counts, or other statistics needed to support each main message, ",
+      "but omit minor, repetitive, or less informative numbers.\n",
       
-      "6. Go beyond numerical repetition. Translate the statistical results into clear, meaningful messages that help ",
-      "the reader understand what the findings indicate. Where the tables support a clear pattern, describe that pattern explicitly.\n",
+      "3. Make the main takeaway clear. The reader should quickly understand what the most ",
+      "important finding is and why it matters from the numbers presented.\n",
       
-      "7. Distinguish clearly between descriptive differences and statistically significant differences. Do not imply ",
-      "explanations, or conclusions that are not supported by the data.\n",
+      "4. Prioritise approximately 2 to 5 key messages across the tables, depending on the ",
+      "amount and importance of the information available. Do not force every table to contribute ",
+      "a finding if it does not add an important message.\n",
       
-      "8. Where several tables or indicators address the same underlying concept, synthesise them into one coherent ",
-      "interpretation rather than repeating similar findings. If related indicators are available, focus on the indicator ",
-      "that provides the clearest and most informative message unless the additional indicator adds materially different information.\n",
+      "5. Where an overall estimate is available, present the headline finding first before ",
+      "describing important differences across population groups.\n",
       
-      "9. Prioritise findings according to their importance to the reader. Focus on results that show substantial ",
-      "changes, important inequalities, notable patterns, or findings that materially contribute to understanding ",
-      "the section. Minor or redundant numerical differences should be omitted.\n",
+      "6. Where statistically significant overall differences across categories are available, ",
+      "report and interpret the overall test before discussing subgroup patterns. Remember that ",
+      "an overall p-value tests variation across the levels of a variable and does not identify ",
+      "a specific individual category as statistically different.\n",
       
-      "10. Ensure that the narrative has a logical flow: overall finding → important differences → key subgroup findings ",
-      "→ interpretation and implications supported by the data.\n",
+      "7. Highlight statistically significant differences only when p < 0.05. Do not describe ",
+      "non-significant differences as statistically meaningful or imply evidence of an association ",
+      "when the statistical evidence does not support this.\n",
       
-      "11. Do not simply reproduce table values in sequence. Integrate related findings into sentences and paragraphs ",
-      "so that the narrative reads as an analytical interpretation rather than a description of the tables.\n",
+      "8. For important statistically significant findings, report the relevant p-value and ",
+      "95% confidence interval where these add useful information. Report p-values to four decimal ",
+      "places. If p = 0.0000 in the table, report it as p < 0.0001.\n",
       
-      "12. Do not start a sentence with a number. Integrate percentages, estimates, counts, confidence intervals, ",
-      "and p-values naturally within sentences.\n",
+      "9. Use confidence intervals selectively. Include them when they help communicate the ",
+      "precision of an important estimate, but do not show 95% confidence intervals that are ",
+      "not interpretable, plausible, or informative.\n",
       
-      "13. Use precise statistical language. Avoid words such as 'significant' unless the difference meets the ",
-      "specified p < 0.05 threshold. Use 'higher', 'lower', 'increased', 'decreased', or 'differed' where appropriate.\n",
+      "10. Explain the magnitude and direction of important findings. Clearly indicate which ",
+      "groups have higher or lower estimates and quantify meaningful differences using the key ",
+      "numbers from the tables.\n",
       
-      "14. Do not overstate findings. Avoid causal language such as 'led to', 'caused', or 'resulted in' unless the ",
-      "study design and tables explicitly support a causal interpretation.\n",
+      "11. Where several indicators describe the same underlying issue, synthesise them into ",
+      "one clear message rather than repeating similar statistics. Prioritise the indicator that ",
+      "provides the strongest and clearest evidence.\n",
       
-      "15. Keep the narrative concise but sufficiently detailed to be informative for a formal report. Avoid repetition ",
-      "of the same finding, unnecessary methodological explanation, and commentary that does not add interpretation.\n",
+      "12. Translate statistics into clear messages. The output should explain what the numbers ",
+      "show, rather than simply listing percentages in the order in which they appear in the tables.\n",
       
-      "16. End the section with the main takeaway or key message emerging from the results, where appropriate. ",
-      "The reader should be able to understand the principal finding without referring back to the tables.\n",
+      "13. Distinguish between descriptive patterns and statistically supported differences. ",
+      "Do not overinterpret small numerical differences.\n",
       
-      "17. Before finalising, check that all reported numbers, percentages, confidence intervals, and p-values exactly ",
-      "match the supplied tables. Do not calculate, infer, or invent values that are not supported by the tables.\n",
+      "14. Do not imply causes, explanations, or consequences that cannot be supported by the ",
+      "supplied data. Avoid causal language such as 'caused', 'led to', or 'resulted in'.\n",
       
-      "18. Write the final narrative directly in ", language,
-      ". Do not provide an introduction, explanation of your approach, bullet-point summary, or commentary about the task. \n",
-      'If p-value = 0.0000 then you need to rewrite it as <0.0001 in the narrative.\n',
-      "Do not bold, underline, or otherwise format the text. Produce polished, report-ready prose only.",
-      "Do not show 95% CIs that are neither interpretable nor plausible"
+      "15. Keep the writing concise and suitable for a factsheet. Prefer short, clear paragraphs ",
+      "and direct language. Avoid lengthy methodological explanations, unnecessary detail, ",
+      "repetition, and technical jargon.\n",
+      
+      "16. Do not start a sentence with a number. Integrate statistics naturally into sentences.\n",
+      
+      "17. End with a clear overall takeaway that summarises the principal message emerging ",
+      "from the findings.\n",
+      
+      "ACCURACY CHECK:\n",
+      "Before finalising, verify that every reported number, percentage, confidence interval, ",
+      "and p-value exactly matches the supplied tables. Do not calculate, infer, estimate, ",
+      "or invent values that are not explicitly supported by the tables.\n\n",
+      
+      "OUTPUT REQUIREMENTS:\n",
+      "Write the final text directly in ", language, ". Produce concise, polished, factsheet-ready ",
+      "prose only. Do not provide an introduction to the task, headings, bullet points, explanations ",
+      "of your approach, or commentary. Do not use bold, italics, underlining, Markdown, or any ",
+      "other text formatting."
     )
+    
     
     # Simplified prompt when significance reporting is disabled
     prompt2 <- paste0(
-      "Task:\n",
-      "Write a report-ready narrative summary for ", country,
-      " in ", language, ". The narrative should synthesise the findings across all tables, ",
-      "identify the most important messages, and explain what the results show rather than simply listing numbers.\n\n",
+      "Based on the following tables:\n\n",
+      csv_text,
+      "\n\n",
       
-      "Instructions:\n",
-      "1. Critically review all tables before writing. Identify the most important findings, patterns, ",
-      "differences, and trends, and prioritise these in the narrative. Do not describe every number or table unnecessarily.\n",
+      "TASK:\n",
+      "Write a concise, factsheet-ready summary of the findings for ", country,
+      " in ", language, ". The purpose of this text is to communicate the most important ",
+      "numbers, findings, and takeaways clearly and quickly to a non-technical reader.\n\n",
       
-      "2. Where an overall comparison across stratifiers is available, report and interpret it before discussing ",
-      "specific subgroup comparisons.\n",
+      "The summary should be selective and number-led. Identify the key findings across all ",
+      "tables and use the most important statistics to support the main messages. Do not attempt ",
+      "to describe every result, category, or table.\n\n",
       
-      "3. Use the numbers to explain the magnitude and direction of findings. Where appropriate, describe which ",
-      "groups had higher or lower estimates, the extent of the change, and which findings are most notable.\n",
+      "KEY PRINCIPLES:\n",
       
-      "4. Go beyond numerical repetition. Translate the statistical results into clear, meaningful messages that help ",
-      "the reader understand what the findings indicate. Where the tables support a clear pattern, describe that pattern explicitly.\n",
+      "1. Focus on the most important findings. Select the results that provide the clearest ",
+      "and most useful picture of the issue, including headline prevalence estimates, substantial ",
+      "differences between groups, important inequalities, notable trends, or particularly important findings.\n",
       
-      "5. Do not imply ",
-      "explanations, or conclusions that are not supported by the data.\n",
+      "2. Summarise key numbers rather than reproducing tables. Include the most important ",
+      "percentages, estimates, counts, or other statistics needed to support each main message, ",
+      "but omit minor, repetitive, or less informative numbers.\n",
       
-      "6. Where several tables or indicators address the same underlying concept, synthesise them into one coherent ",
-      "interpretation rather than repeating similar findings. If related indicators are available, focus on the indicator ",
-      "that provides the clearest and most informative message unless the additional indicator adds materially different information.\n",
+      "3. Make the main takeaway clear. The reader should quickly understand what the most ",
+      "important finding is and what the numbers show.\n",
       
-      "7. Prioritise findings according to their importance to the reader. Focus on results that show substantial ",
-      "changes, important inequalities, notable patterns, or findings that materially contribute to understanding ",
-      "the section. Minor or redundant numerical differences should be omitted.\n",
+      "4. Prioritise approximately 2 to 5 key messages across the tables, depending on the ",
+      "amount and importance of the information available. Do not force every table to contribute ",
+      "a finding if it does not add an important message.\n",
       
-      "8. Ensure that the narrative has a logical flow: overall finding → important differences → key subgroup findings ",
-      "→ interpretation and implications supported by the data.\n",
+      "5. Where an overall estimate is available, present the headline finding first before ",
+      "describing important differences across population groups.\n",
       
-      "9. Do not simply reproduce table values in sequence. Integrate related findings into sentences and paragraphs ",
-      "so that the narrative reads as an analytical interpretation rather than a description of the tables.\n",
+      "6. Use the numbers to explain the magnitude and direction of important findings. Clearly ",
+      "indicate which groups have higher or lower estimates and quantify meaningful differences ",
+      "using the key numbers from the tables.\n",
       
-      "10. Do not start a sentence with a number. Integrate percentages, estimates, counts, confidence intervals, ",
-      "and p-values naturally within sentences.\n",
+      "7. Where several indicators describe the same underlying issue, synthesise them into ",
+      "one clear message rather than repeating similar statistics. Prioritise the indicator that ",
+      "provides the strongest and clearest message.\n",
       
-      "11. Do not overstate findings. Avoid causal language such as 'led to', 'caused', or 'resulted in' unless the ",
-      "study design and tables explicitly support a causal interpretation.\n",
+      "8. Translate statistics into clear messages. Explain what the numbers show rather than ",
+      "simply listing percentages or describing the tables in sequence.\n",
       
-      "12. Keep the narrative concise but sufficiently detailed to be informative for a formal report. Avoid repetition ",
-      "of the same finding, unnecessary methodological explanation, and commentary that does not add interpretation.\n",
+      "9. Prioritise substantial differences, important inequalities, clear patterns, and findings ",
+      "that materially improve understanding of the topic. Minor or redundant numerical differences ",
+      "should normally be omitted.\n",
       
-      "13. End the section with the main takeaway or key message emerging from the results, where appropriate. ",
-      "The reader should be able to understand the principal finding without referring back to the tables.\n",
+      "10. Do not imply causes, explanations, or consequences that cannot be supported by the ",
+      "supplied data. Avoid causal language such as 'caused', 'led to', or 'resulted in'.\n",
       
-      "14. Before finalising, check that all reported numbers and percentages exactly ",
-      "match the supplied tables. Do not calculate, infer, or invent values that are not supported by the tables.\n",
+      "11. Keep the writing concise and suitable for a factsheet. Prefer short, clear paragraphs ",
+      "and direct language. Avoid lengthy methodological explanations, unnecessary detail, ",
+      "repetition, and technical jargon.\n",
       
-      "15. Write the final narrative directly in ", language,
-      ". Do not provide an introduction, explanation of your approach, bullet-point summary, or commentary about the task. \n",
-      "Do not bold, underline, or otherwise format the text. Produce polished, report-ready prose only."
+      "12. Do not start a sentence with a number. Integrate statistics naturally into sentences.\n",
+      
+      "13. End with a clear overall takeaway that summarises the principal message emerging ",
+      "from the findings. The reader should be able to understand the main message without ",
+      "referring back to the tables.\n",
+      
+      "ACCURACY CHECK:\n",
+      "Before finalising, verify that every reported number, percentage, or other estimate ",
+      "exactly matches the supplied tables. Do not calculate, infer, estimate, or invent values ",
+      "that are not explicitly supported by the tables.\n\n",
+      
+      "OUTPUT REQUIREMENTS:\n",
+      "Write the final text directly in ", language, ". Produce concise, polished, factsheet-ready ",
+      "prose only. Do not provide an introduction to the task, headings, bullet points, explanations ",
+      "of your approach, or commentary. Do not use bold, italics, underlining, Markdown, or any ",
+      "other text formatting."
     )
+    
     
     if(report_signf == 'No'){
       prompt = prompt2
@@ -486,4 +533,7 @@ for(i in unique(comp_indicator_results$section_title))
     )
   )
 }
+
+
+
 
