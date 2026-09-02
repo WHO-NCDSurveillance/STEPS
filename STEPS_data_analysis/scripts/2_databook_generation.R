@@ -587,10 +587,24 @@ for (i in unique(indicator_matrix$section))
     # Determine number of levels in row stratification variables.
     strat_var_levels = if(any(!is.na(row_strat_variables)))
     {
+      ##
+      if('agerange' %in% row_strat_variables)
+      {
+        variable_age = unique(sub_formatrix$agevar)[1]
+      }else{
+        variable_age = 'agerange'
+      }
+      #First stratifier variable
+      if(row_strat_variables[1] == 'agerange'){
+        first_strat = variable_age
+      }else{
+        first_strat = row_strat_variables[1]
+      }
+      ##
       length_strat = length(row_strat_variables)
       sub_var_levels = eval(parse(text=paste0('c(',
                                               paste0('length(names(table(analysis_data[,"', ## ADDED - changed "data" to "analysis_data"
-                                                     row_strat_variables[1],'"])))', collapse = ','),
+                                                     first_strat,'"])))', collapse = ','),
                                               ')')))
       all_hlines = c(all_hlines,sub_var_levels)
     } else{NA}
@@ -653,7 +667,8 @@ for (i in unique(indicator_matrix$section))
       # Update the final horizontal line positions
       final_hlines = adj_final_hlines
     }
- 
+    #
+    if(range_levels == 1){final_hlines = final_hlines[final_hlines>4]}
     
     # adj_final_hlines = final_hlines
     #   
