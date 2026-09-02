@@ -898,9 +898,9 @@ flextab_function = function(index =1, table_label ='Men')
     
     #
     if(range_levels==1){
-      final_hlines = setdiff(1:nrow(pre_edited_table),
+      final_hlines = setdiff(1:nrow(pre_sub_edited_table),
                              c(strat_positions[-1],lines_above,
-                               nrow(pre_edited_table)))
+                               nrow(pre_sub_edited_table)))
     }
     
     ####
