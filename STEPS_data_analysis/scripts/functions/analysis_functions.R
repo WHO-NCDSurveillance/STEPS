@@ -865,11 +865,43 @@ flextab_function = function(index =1, table_label ='Men')
     if(language =='arabic')
     {
       pre_sub_edited_table =  rbind(rep(table_title,ncol(split_tab)),
-                                    rep(table_label,ncol(split_tab)),sub_edited_inline_text,as.matrix(split_tab)) %>%as.data.frame()%>%rev()
+                                    rep(table_label,ncol(split_tab)),sub_edited_inline_text,as.matrix(split_tab)) %>%
+                              as.data.frame()%>%rev()
     }else{
       pre_sub_edited_table =  rbind(rep(table_title,ncol(split_tab)),
-                                    rep(table_label,ncol(split_tab)),sub_edited_inline_text,as.matrix(split_tab)) %>%as.data.frame()
+                                    rep(table_label,ncol(split_tab)),sub_edited_inline_text,as.matrix(split_tab)) %>%
+                              as.data.frame()
     }
+    ####
+    ## Alternative approach to determining lines to colour white
+    #Positions of row stratifier titles
+    strat_positions = match(c(row_strat_variable_titles,unique('Total',other_language[5,language])), 
+                            pre_edited_table[,1])
+    lines_above = c(1:strat_positions[1], strat_positions[-1]-1)
+    #
+    final_hlines = setdiff(1:nrow(pre_edited_table), 
+                           c(strat_positions,lines_above, 
+                             nrow(pre_edited_table)))
+    
+    #
+    ##
+    range_levels = if (row_strat_variables[1] == "agerange") {
+      data %>%
+        summarise(n = n_distinct(.data[[unique(sub_formatrix$agevar)]], na.rm = TRUE)) %>%
+        pull(n)
+    } else {
+      analysis_data %>%
+        summarise(n = n_distinct(.data[[row_strat_variables[1]]], na.rm = TRUE)) %>%
+        pull(n)
+    }
+    
+    #
+    if(range_levels==1){
+      final_hlines = setdiff(1:nrow(pre_edited_table),
+                             c(strat_positions[-1],lines_above,
+                               nrow(pre_edited_table)))
+    }
+    
     ####
     sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
       flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
