@@ -9,7 +9,7 @@ k=NULL
 ## Loop through sections defined in the indicator matrix
 #########################################################################
 
-for (i in unique(indicator_matrix$section)[3])
+for (i in unique(indicator_matrix$section))
 {
   ########################################
   ## Section: Indicator Analysis Loop
