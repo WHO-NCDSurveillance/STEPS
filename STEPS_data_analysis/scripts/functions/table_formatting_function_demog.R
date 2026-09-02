@@ -113,20 +113,21 @@ if(column_strat =='all')
   if(length(row_strat_variables)>1)
   {
     # Calculate total additional levels from secondary row stratifiers
-    all_additional_levels = eval(parse(text = paste0(
-      'sum(c(',
-      paste0('length(names(table(analysis_data$',row_strat_variables[-1],')))', collapse = ','),
-      '))'
-    )))
+    # all_additional_levels = eval(parse(text = paste0(
+    #   'sum(c(',
+    #   paste0('length(names(table(analysis_data$',row_strat_variables[-1],')))', collapse = ','),
+    #   '))'
+    # )))
     
     # Retain header rows plus final aggregated rows
-    pre_edited_table =
-      pre_edited_table[c(1:3,tail(1:nrow(pre_edited_table),all_additional_levels+2)),]
+    # pre_edited_table =
+    #   pre_edited_table[c(1:3,tail(1:nrow(pre_edited_table),all_additional_levels+2)),]
+    pre_edited_table = pre_edited_table[c(1:3,pos_total_row),]
     
   }else{
     
     # Keep only main header rows and total row
-    pre_edited_table = pre_edited_table[c(1:3,nrow(pre_edited_table)),]
+    pre_edited_table = pre_edited_table[c(1:3,pos_total_row),]
   }
   
   
