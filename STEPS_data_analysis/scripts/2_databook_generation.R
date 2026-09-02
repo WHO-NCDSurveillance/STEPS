@@ -9,7 +9,7 @@ k=NULL
 ## Loop through sections defined in the indicator matrix
 #########################################################################
 
-for (i in unique(indicator_matrix$section))
+for (i in unique(indicator_matrix$section)[3])
 {
   ########################################
   ## Section: Indicator Analysis Loop
@@ -569,131 +569,6 @@ for (i in unique(indicator_matrix$section))
     extract_table = output_table[[g]]
     
     #########################################################################
-    ## Determining Stratification Structure
-    #########################################################################
-    
-    # Identify number of levels for row_strat_variables[1] used in the table.
-    range_levels = if (row_strat_variables[1] == "agerange") {
-      data %>%
-        summarise(n = n_distinct(.data[[unique(sub_formatrix$agevar)]], na.rm = TRUE)) %>%
-        pull(n)
-    } else {
-      analysis_data %>%
-        summarise(n = n_distinct(.data[[row_strat_variables[1]]], na.rm = TRUE)) %>%
-        pull(n)
-    }
-    # Initialize vector for storing row group boundaries.
-    all_hlines = c()
-    # Determine number of levels in row stratification variables.
-    strat_var_levels = if(any(!is.na(row_strat_variables)))
-    {
-      ##
-      if('agerange' %in% row_strat_variables)
-      {
-        variable_age = unique(sub_formatrix$agevar)[1]
-      }else{
-        variable_age = 'agerange'
-      }
-      #First stratifier variable
-      if(row_strat_variables[1] == 'agerange'){
-        first_strat = variable_age
-      }else{
-        first_strat = row_strat_variables[1]
-      }
-      ##
-      length_strat = length(row_strat_variables)
-      sub_var_levels = eval(parse(text=paste0('c(',
-                                              paste0('length(names(table(analysis_data[,"', ## ADDED - changed "data" to "analysis_data"
-                                                     first_strat,'"])))', collapse = ','),
-                                              ')')))
-      all_hlines = c(all_hlines,sub_var_levels)
-    } else{NA}
-    
-    #########################################################################
-    ## Determine Table Row Lines for Formatting
-    #########################################################################
-    
-    # These calculations determine row ranges used to highlight
-    # sections of the table or apply formatting rules.
-    ln = NULL
-    if(all(is.na(subtitle2))|all(subtitle2==''))
-    {
-      first_ln = 4:(all_hlines[1]+2)
-      if(range_levels==2){first_ln = 4}
-    } else{
-      first_ln = 5:(all_hlines[1]+3)
-      if(range_levels==2){first_ln = 5}
-    }
-    # Special rule for Demographic section
-    if(i==demog_section_header){first_ln = 4:(length(names(table(data[,row_strat_variables[1]])))+2)}
-    final_hlines = c(first_ln)
-    #########################################################################
-    ## Compute Additional Row Group Boundaries
-    #########################################################################
-    
-    next_no = 1
-    if(any(!is.na(row_strat_variables))) #
-    {
-      for(ln in all_hlines[-1])
-      {
-        if(next_no==1)
-        {
-          next_ln = (4+max(final_hlines)):(ln+max(final_hlines)+2)
-        } else {
-          next_ln = (3+max(final_hlines)):(ln+max(final_hlines)+1)
-        }
-        final_hlines = c(final_hlines, next_ln)
-        next_no = next_no+1
-      }
-    }
-    ##
-    adj_final_hlines = final_hlines
-    ### Add horizontal lines for additional stratification variables
-    if (length(row_strat_variables) > 1) {
-      for (n in row_strat_variables[-1]) {
-        
-        last_no = tail(adj_final_hlines, 1)
-        n_level_strat = length(na.omit(levels(data[[n]])))
-        position_strat = which(row_strat_variables == n)
-        
-        # Determine the starting position based on the stratifier's position
-        n_col_lines = last_no + ifelse(position_strat > 2, 3, 4)
-        
-        # Add horizontal lines for each level of the stratifier
-        new_lines = unique(n_col_lines:(n_col_lines + n_level_strat - 2))
-        adj_final_hlines = c(adj_final_hlines, new_lines)
-      }
-      
-      # Update the final horizontal line positions
-      final_hlines = adj_final_hlines
-    }
-    #
-    if(range_levels == 1){final_hlines = final_hlines[final_hlines>4]}
-    
-    # adj_final_hlines = final_hlines
-    #   
-    # ###Adding lines for other stratifiers
-    # if (length(row_strat_variables) > 1) {
-    # # Adding horizontal lines for each additional stratification variable
-    #   for (n in row_strat_variables[-1]) {
-    #     length_final_hlines = length(adj_final_hlines)
-    #     last_no = adj_final_hlines[length_final_hlines]
-    #     #
-    #     n_level_strat = length(na.omit(levels(data[[n]])))
-    #     position_strat = which(row_strat_variables %in% n)
-    #     if (position_strat > 2)
-    #     {
-    #     n_col_lines = last_no + 3
-    #     } else {n_col_lines = last_no + 4}
-    #     
-    #     full_line_set = unique(n_col_lines:(n_col_lines+n_level_strat-2))
-    #     adj_final_hlines = c(adj_final_hlines, full_line_set)
-    #   }
-    #   # Update the final horizontal line positions
-    #   final_hlines = adj_final_hlines
-    # }
-    
-    #########################################################################
     ## Define Table Border Styles
     #########################################################################
     
@@ -769,11 +644,11 @@ for (i in unique(indicator_matrix$section))
         # For categorical demographic variables, the table headers include 
         # repeated 'n' and '%' columns along with translated column titles.
         label_subtitle1=if (unique(strsplit(sub_formatrix$type,'[;]')[[1]])=='categorical')
-        {c(other_language[8,language],# Header title for the demographic category
+        {c(row_strat_variable_titles[1],# Header title for the demographic category
            'n','%','n','%','n','%')# Column labels for counts and percentages
         } else{
           # For continuous variables, headers include 'n' and mean/95 CIs or median/IQR
-          (c(other_language[8,language],'n',other_language[9,language],
+          (c(row_strat_variable_titles[1],'n',other_language[9,language],
              'n',other_language[9,language],'n',other_language[9,language]))}}
       
       ###########################################################################
