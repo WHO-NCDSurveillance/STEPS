@@ -13,8 +13,34 @@ extracted_integers = unique(as.integer(unlist(str_extract_all(column_strat, "\\d
 # Example:
 #   extracted_integers = c(1,2) → "collevel1_2"
 collevel = paste0('collevel',paste0(extracted_integers, collapse = '_'))
-pos_total_row = grep('Total', pre_sub_edited_table[,1])
+pos_total_row = total_pos+3
 
+## Alternative approach to determining lines to colour white
+#Positions of row stratifier titles
+strat_positions = match(c(row_strat_variable_titles,unique('Total',other_language[5,language])), 
+                        pre_sub_edited_table[,1])
+lines_above = c(1:strat_positions[1], strat_positions[-1]-1)
+##
+final_hlines = setdiff(1:nrow(pre_sub_edited_table), 
+                       c(strat_positions,lines_above, 
+                         nrow(pre_sub_edited_table)))
+##
+range_levels = if (row_strat_variables[1] == "agerange") {
+  data %>%
+    summarise(n = n_distinct(.data[[unique(sub_formatrix$agevar)]], na.rm = TRUE)) %>%
+    pull(n)
+} else {
+  analysis_data %>%
+    summarise(n = n_distinct(.data[[row_strat_variables[1]]], na.rm = TRUE)) %>%
+    pull(n)
+}
+
+#
+if(range_levels==1){
+  final_hlines = setdiff(1:nrow(pre_sub_edited_table),
+                         c(strat_positions[-1],lines_above,
+                           nrow(pre_sub_edited_table)))
+}
 # -----------------------------------------------------------
 # Check whether a "_full" option exists in the column stratifier
 # This determines whether full tables or summary rows are displayed
@@ -61,6 +87,130 @@ if(column_strat =='all')
   # Determine which column levels should be included
   incl_level_names = col_strat_var_levels_eng[extracted_integers]
   
+  # Keep only columns corresponding to selected stratification levels
+  pre_sub_edited_table <- pre_sub_edited_table[,c(1,grep(paste0(incl_level_names, collapse = '|'),names(pre_sub_edited_table)))]
+  
+  #
+  if(has_full)
+  {
+    # Identify rows for horizontal line formatting
+    #no_lines = 4:(nrow(pre_sub_edited_table)-2)
+    
+    #
+    sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
+      flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
+      bold(i = c(1:2,total_pos+3))%>% 
+      fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
+      theme_vanilla() %>% 
+      merge_h(i = 1:2) %>%
+      padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
+      align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")%>%
+      hline(i=final_hlines, border = white_border) #no_lines
+    
+  }else{
+    
+    # Subset table to show summary rows only
+    pre_sub_edited_table = pre_sub_edited_table[c(1:3,pos_total_row),]
+    
+    sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
+      flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
+      bold(i = c(1:2,4))%>% 
+      fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
+      theme_vanilla() %>% 
+      merge_h(i = 1:2) %>%
+      padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
+      align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")
+    
+  }
+  
+  # -----------------------------------------------------------
+  # CASE 3: Total column only (remove stratified columns)
+  # -----------------------------------------------------------
+}else if(column_strat == 'total_col')
+{
+  # Remove all columns corresponding to stratification levels
+  pre_sub_edited_table = pre_sub_edited_table[,-c(grep(paste0(col_strat_var_levels_eng, collapse = '|'),names(pre_sub_edited_table)))]
+  
+  # Apply formatting
+  sub_edited_table = pre_sub_edited_table%>%flextable() %>% autofit() %>% delete_part(part = "header") %>%
+    flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
+    bold(i = c(1:2,total_pos+3))%>% 
+    fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
+    theme_vanilla() %>% 
+    merge_h(i = 1:2) %>%
+    padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
+    align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  %>% 
+    hline(i=final_hlines, border = white_border)
+  
+  # -----------------------------------------------------------
+  # CASE 4: Total row only (overall row summary)
+  # -----------------------------------------------------------
+}else if(column_strat == 'total_row')
+{
+  # Keep only header rows and final total row
+  pre_sub_edited_table = pre_sub_edited_table[c(1:3,pos_total_row),]
+  
+  # Apply formatting
+  sub_edited_table = pre_sub_edited_table%>%flextable() %>% autofit() %>% delete_part(part = "header") %>%
+    flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
+    bold(i = c(1:2,4))%>% 
+    fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
+    theme_vanilla() %>% 
+    merge_h(i = 1:2) %>%
+    padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
+    align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body") 
+  
+  # -----------------------------------------------------------
+  # CASE 5: Total overall summary
+  # (remove column stratifiers and subset key rows)
+  # -----------------------------------------------------------
+} else if (column_strat == 'total_overall')
+{
+  
+  if(length(row_strat_variables)>1)
+  {
+    # Determine number of additional stratification levels
+    #all_additional_levels = eval(parse(text = paste0('sum(c(',paste0('length(names(table(analysis_data$',row_strat_variables[-1],')))', collapse = ','),'))')))
+    
+    # Subset rows and remove column stratification columns
+    #pre_sub_edited_table = pre_sub_edited_table[c(1:3,tail(1:nrow(pre_sub_edited_table),all_additional_levels+2)),-c(grep(paste0(col_strat_var_levels_eng, collapse = '|'),names(pre_sub_edited_table)))]
+    pre_sub_edited_table = pre_sub_edited_table[c(1:3,pos_total_row),-c(grep(paste0(col_strat_var_levels_eng, collapse = '|'),names(pre_sub_edited_table)))]
+    
+  }else{
+    
+    # Simpler case when only one row stratifier exists
+    #pre_sub_edited_table = pre_sub_edited_table[c(1:3,nrow(pre_sub_edited_table)),-c(grep(paste0(col_strat_var_levels_eng, collapse = '|'),names(pre_sub_edited_table)))]
+    pre_sub_edited_table = pre_sub_edited_table[c(1:3,pos_total_row),-c(grep(paste0(col_strat_var_levels_eng, collapse = '|'),names(pre_sub_edited_table)))]
+    
+  }
+  
+  # Apply formatting
+  sub_edited_table = pre_sub_edited_table%>%flextable() %>% autofit() %>% delete_part(part = "header") %>%
+    flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
+    bold(i = c(1:2,4))%>% 
+    fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
+    theme_vanilla() %>% 
+    merge_h(i = 1:2) %>%
+    padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
+    align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  
+  
+  # -----------------------------------------------------------
+  # DEFAULT CASE
+  # Apply standard table formatting when no specific rule applies
+  # -----------------------------------------------------------
+}else{
+  
+  sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
+    flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
+    bold(i = c(1:2,total_pos+3))%>% 
+    fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
+    theme_vanilla() %>% 
+    merge_h(i = 1:2) %>%
+    padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
+    align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  %>% 
+    vline(j=vline_num, border = std_border)%>%
+    hline(i=final_hlines, border = white_border)
+}
   # Keep only columns corresponding to selected stratification levels
   pre_sub_edited_table <- pre_sub_edited_table[,c(1,grep(paste0(incl_level_names, collapse = '|'),names(pre_sub_edited_table)))]
   
