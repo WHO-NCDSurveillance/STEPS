@@ -847,7 +847,11 @@ flextab_function = function(index =1, table_label ='Men')
       total_pos = grep('Total',split_tab[,1])+3
     } else{total_pos = grep('Total',split_tab[,1])+4}
     ###formatting the sub table
-    if(median_compute==TRUE){sub_edited_inline_text = gsub(other_language[10,language],sub_edited_inline_text)}
+    if(median_compute==TRUE){
+      sub_edited_inline_text = gsub(other_language[5,language],
+                                    other_language[10,language],
+                                    sub_edited_inline_text)
+      }
     #
     split_tab[,1][split_tab[,1]=='Total'] = other_language[4,language]
 
