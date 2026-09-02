@@ -16,6 +16,7 @@ extracted_integers = unique(as.integer(unlist(str_extract_all(column_strat, "\\d
 # Reconstruct the expected column stratification label (e.g., collevel1_2)
 # based on the extracted integer values.
 collevel = paste0('collevel',paste0(extracted_integers, collapse = '_'))
+pos_total_row = grep('Total', pre_edited_table[,1])
 
 ############################################################
 ## CHECK IF FULL STRATIFICATION IS REQUESTED
@@ -187,9 +188,9 @@ if(column_strat =='all')
   
 }else if(column_strat == 'total_row')
 {
-  
+  #pos_total_row = grep('Total', pre_edited_table[,1])
   # Keep only header rows and final total row
-  pre_edited_table = pre_edited_table[c(1:3,nrow(pre_edited_table)),]
+  pre_edited_table = pre_edited_table[c(1:3,pos_total_row),]
   
   edited_table = pre_edited_table %>%
     flextable() %>%
@@ -216,15 +217,21 @@ if(column_strat =='all')
   # Handle multiple row stratifiers
   if(length(row_strat_variables)>1)
   {
-    all_additional_levels = eval(parse(text = paste0(
-      'sum(c(',
-      paste0('length(names(table(analysis_data$',row_strat_variables[-1],')))', collapse = ','),
-      '))'
-    )))
+    # all_additional_levels = eval(parse(text = paste0(
+    #   'sum(c(',
+    #   paste0('length(names(table(analysis_data$',row_strat_variables[-1],')))', collapse = ','),
+    #   '))'
+    # )))
     
+    # pre_edited_table =
+    #   pre_edited_table[
+    #     c(1:3,tail(1:nrow(pre_edited_table),all_additional_levels+2)),
+    #     -c(grep(paste0(c(col_strat_var_levels_eng,'Men','Women'), collapse = '|'),
+    #             names(pre_edited_table)))
+    #   ]
     pre_edited_table =
       pre_edited_table[
-        c(1:3,tail(1:nrow(pre_edited_table),all_additional_levels+2)),
+        c(1:3,pos_total_row),
         -c(grep(paste0(c(col_strat_var_levels_eng,'Men','Women'), collapse = '|'),
                 names(pre_edited_table)))
       ]
@@ -233,7 +240,7 @@ if(column_strat =='all')
     
     pre_edited_table =
       pre_edited_table[
-        c(1:3,nrow(pre_edited_table)),
+        c(1:3,pos_total_row),
         -c(grep(paste0(c(col_strat_var_levels_eng,'Men','Women'), collapse = '|'),
                 names(pre_edited_table)))
       ]
