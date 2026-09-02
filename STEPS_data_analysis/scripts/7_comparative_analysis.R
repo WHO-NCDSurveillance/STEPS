@@ -12,7 +12,7 @@
 # - the column stratifier
 # - row stratifiers
 # - a combined sex-age stratifier
-comp_stratifiers = c(col_strat_variable, row_strat_variables, "sex_age")
+comp_stratifiers = c(col_strat_variable, 'agerange', "sex_age") #row_strat_variables
 
 ############################################################
 ## GENERATE INDICATOR RESULTS FOR ALL SECTIONS
