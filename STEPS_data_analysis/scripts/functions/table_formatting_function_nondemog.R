@@ -68,7 +68,7 @@ if(column_strat =='all')
   {
     # Identify rows for horizontal line formatting
     #no_lines = 4:(length(names(table(data[,"agerange"])))+2)
-    no_lines = 4:(nrow(pre_sub_edited_table)-2)
+    #no_lines = 4:(nrow(pre_sub_edited_table)-2)
     
     #
     sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
@@ -79,7 +79,7 @@ if(column_strat =='all')
       merge_h(i = 1:2) %>%
       padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
       align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")%>%
-      hline(i=no_lines, border = white_border)
+      hline(i=final_hlines, border = white_border)
     
   }else{
     
