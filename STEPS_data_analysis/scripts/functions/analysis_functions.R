@@ -759,6 +759,7 @@ flextab_function = function(index =1, table_label ='Men')
 
   ###########
   extracted_table = extract_table[[index]]
+  colnames(extracted_table)[1] = row_strat_variable_titles[1]
   #
   # if(i!='Demographics')
   #{
@@ -876,12 +877,12 @@ flextab_function = function(index =1, table_label ='Men')
     ## Alternative approach to determining lines to colour white
     #Positions of row stratifier titles
     strat_positions = match(c(row_strat_variable_titles,unique('Total',other_language[5,language])), 
-                            pre_edited_table[,1])
+                            pre_sub_edited_table[,1])
     lines_above = c(1:strat_positions[1], strat_positions[-1]-1)
     #
-    final_hlines = setdiff(1:nrow(pre_edited_table), 
+    final_hlines = setdiff(1:nrow(pre_sub_edited_table), 
                            c(strat_positions,lines_above, 
-                             nrow(pre_edited_table)))
+                             nrow(pre_sub_edited_table)))
     
     #
     ##
