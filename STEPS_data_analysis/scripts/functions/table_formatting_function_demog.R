@@ -16,7 +16,36 @@ extracted_integers = unique(as.integer(unlist(str_extract_all(column_strat, "\\d
 # Reconstruct the expected column stratification label (e.g., collevel1_2)
 # based on the extracted integer values.
 collevel = paste0('collevel',paste0(extracted_integers, collapse = '_'))
-pos_total_row = grep('Total', pre_edited_table[,1])
+pos_total_row = total_pos+3
+
+## Alternative approach to determining lines to colour white
+#Positions of row stratifier titles
+strat_positions = match(c(row_strat_variable_titles,unique('Total',other_language[5,language])), 
+                        pre_edited_table[,1])
+lines_above = c(1:strat_positions[1], strat_positions[-1]-1)
+#
+final_hlines = setdiff(1:nrow(pre_edited_table), 
+                       c(strat_positions,lines_above, 
+                         nrow(pre_edited_table)))
+
+#
+##
+range_levels = if (row_strat_variables[1] == "agerange") {
+  data %>%
+    summarise(n = n_distinct(.data[[unique(sub_formatrix$agevar)]], na.rm = TRUE)) %>%
+    pull(n)
+} else {
+  analysis_data %>%
+    summarise(n = n_distinct(.data[[row_strat_variables[1]]], na.rm = TRUE)) %>%
+    pull(n)
+}
+
+#
+if(range_levels==1){
+  final_hlines = setdiff(1:nrow(pre_edited_table),
+                         c(strat_positions[-1],lines_above,
+                           nrow(pre_edited_table)))
+}
 
 ############################################################
 ## CHECK IF FULL STRATIFICATION IS REQUESTED
