@@ -136,7 +136,7 @@ if(nrow(comparative_fact_sheet_matrix)>0)
       'outputs/',
       country_ISO,'-',
       survey_year,
-      '_Comparative_Fact_Sheet_',
+      '_Comparative_Factsheet_',
       format(Sys.time(), "%d-%b-%y_%H-%M-%S"),
       '.docx'
     )
@@ -148,7 +148,7 @@ if(nrow(comparative_fact_sheet_matrix)>0)
       'outputs/',
       country_ISO,'-',
       survey_year,
-      '_Comparative_Fact_Sheet_by_sex_',
+      '_Sex_Comparative_Factsheet_',
       format(Sys.time(), "%d-%b-%y_%H-%M-%S"),
       '.docx'
     )
