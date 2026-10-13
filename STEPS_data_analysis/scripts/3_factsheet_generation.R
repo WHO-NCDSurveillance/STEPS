@@ -52,13 +52,13 @@ if(language =='arabic'){j_cols = 1:3} else{j_cols = 2:4}
 flex_fact_sheet = factsheet_table%>% 
                   flextable() %>% autofit() %>%
   flextable::style(pr_t=fp_text(font.size=10,font.family='Source Sans Pro'), part = 'all')%>%
-  bold(i = c(1,extract_rows))%>%
+  flextable::bold(i = c(1,extract_rows))%>%
   bg(bg="white",i=1,part="header")%>%  
   theme_box()%>% 
-  align(align = "center", j = j_cols, part = "all") %>%
+  flextable::align(align = "center", j = j_cols, part = "all") %>%
   fontsize(size = 9 ,part = "all")%>%
   merge_h_range(i=extract_rows, j1=1,j2=4)%>%
-  width(j = j_cols, 4.3, unit = "in")%>% 
+  flextable::width(j = j_cols, 4.3, unit = "in")%>% 
   bg(bg="#339966",i=1,part="header")%>%
   bg(bg="#C9DDF3",i=extract_rows,part="body")%>%
   color(color = "white", part = 'header')%>%
@@ -81,7 +81,7 @@ doc <- doc %>%
 
 # Insert table at bookmark location
 doc=doc %>% cursor_bookmark(id  = "bmk1") %>%
-  body_add_flextable(width(flex_fact_sheet, width = dim(flex_fact_sheet)$widths*7.25/(flextable_dim(flex_fact_sheet)$widths)), pos = "on", align = 'left')
+  body_add_flextable(flextable::width(flex_fact_sheet, width = dim(flex_fact_sheet)$widths*7.25/(flextable_dim(flex_fact_sheet)$widths)), pos = "on", align = 'left')
 
 # Save Word document
 print(doc, target = paste0('outputs/', country_ISO, '-', survey_year, '_Fact_Sheet_', format(Sys.time(), "%d-%b-%y_%H-%M-%S"), '.docx'))

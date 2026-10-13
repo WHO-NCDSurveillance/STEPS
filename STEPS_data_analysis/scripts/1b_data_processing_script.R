@@ -548,12 +548,12 @@ data_processing_report = cbind(Item = c('Completeness of grouped variables','Var
 
 flex_processing_report = data_processing_report %>% as.data.frame() %>% flextable()%>%
   flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-  bold(part = 'header')%>%
+  flextable::bold(part = 'header')%>%
   fontsize(size = 9 ,part = "all")%>%
-  align(j = 2, align = 'center', part = 'header') %>% theme_vanilla() 
+  flextable::align(j = 2, align = 'center', part = 'header') %>% theme_vanilla() 
 
 flex_processing_report <- set_table_properties(flex_processing_report, layout="fixed")
-flex_processing_report <- width(flex_processing_report, 1:2, c(6.5*0.3, 6.5*0.7))
+flex_processing_report <- flextable::width(flex_processing_report, 1:2, c(6.5*0.3, 6.5*0.7))
 
 
 ## Printing of data processing report
@@ -561,7 +561,7 @@ doc = officer::read_docx(paste0(getwd(),'/templates/data_processing_template.doc
 #
 doc = headers_replace_text_at_bkm(doc,"country",paste0(toupper(country),' ',survey_year))
 doc=doc %>% cursor_bookmark(id  = "table1") %>%
-  body_add_flextable(width(flex_processing_report, width = dim(flex_processing_report)$widths*6.5/(flextable_dim(flex_processing_report)$widths)), pos = "on", align = 'left')
+  body_add_flextable(flextable::width(flex_processing_report, width = dim(flex_processing_report)$widths*6.5/(flextable_dim(flex_processing_report)$widths)), pos = "on", align = 'left')
 
 print(doc,target=paste0(getwd(),'/outputs/Data processing report.docx'))
 

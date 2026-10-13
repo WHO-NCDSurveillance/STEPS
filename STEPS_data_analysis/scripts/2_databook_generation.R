@@ -509,10 +509,10 @@ for (i in unique(indicator_matrix$section))
         flextable() %>% autofit() %>% 
         delete_part(part = "header")%>%# remove default header
         merge_at(j=2)%>% # merge definition column
-        valign(j = 2,valign = 'top')%>% # align text vertically
-        width(j = 1, 10, unit = "in") %>%# control column width
+        flextable::valign(j = 2,valign = 'top')%>% # align text vertically
+        flextable::width(j = 1, 10, unit = "in") %>%# control column width
         flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-        bold(j = 2) %>% 
+        flextable::bold(j = 2) %>% 
         fontsize(size = 9 ,part = "all") %>% 
         border_remove()
       
@@ -527,10 +527,10 @@ for (i in unique(indicator_matrix$section))
         flextable() %>% autofit() %>% 
         delete_part(part = "header")%>%
         merge_at(j=1)%>% # merge indicator column
-        valign(j = 1,valign = 'top')%>%
-        width(j = 2, 10, unit = "in") %>%
+        flextable::valign(j = 1,valign = 'top')%>%
+        flextable::width(j = 2, 10, unit = "in") %>%
         flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-        bold(j = 1) %>% 
+        flextable::bold(j = 1) %>% 
         fontsize(size = 9 ,part = "all") %>% 
         border_remove()
     }
@@ -557,7 +557,7 @@ for (i in unique(indicator_matrix$section))
     if(any(!(indicator_short_desc %in% prev_short_desc) | indicator_position==1))
     {
       doc = doc %>% 
-        body_add_flextable(width(def_indicator, 
+        body_add_flextable(flextable::width(def_indicator, 
                                  width = dim(def_indicator)$widths*6.4/(flextable_dim(def_indicator)$widths)))%>%
         body_add('\n', style = "Normal")
     }else{}
@@ -696,13 +696,13 @@ for (i in unique(indicator_matrix$section))
         if(indicator_short_desc %in% next_short_desc)
         {
           doc = doc %>% 
-            body_add_flextable(width(edited_table, 
+            body_add_flextable(flextable::width(edited_table, 
                                      width = dim(edited_table)$widths*6.5/(flextable_dim(edited_table)$widths)))%>%
             body_add('\n', style = "Normal")
         }else{
           # Add a page break if it's the last indicator in this group
           doc = doc %>% 
-            body_add_flextable(width(edited_table, 
+            body_add_flextable(flextable::width(edited_table, 
                                      width = dim(edited_table)$widths*6.5/(flextable_dim(edited_table)$widths))) %>% 
             body_add_break()}
         
@@ -768,12 +768,12 @@ for (i in unique(indicator_matrix$section))
         # Add subtables to Word document sequentially
         if(indicator_short_desc %in% next_short_desc)
         {
-          eval(parse(text=paste0('doc = doc %>% body_add_flextable(width(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']],
+          eval(parse(text=paste0('doc = doc %>% body_add_flextable(flextable::width(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']],
           width = dim(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']])$widths*6.5/(flextable_dim(filtered_sub_framelist',
                                  '[[',1:length(filtered_sub_framelist),']])$widths)))%>%
           body_add("\n", style = "Normal")', sep='\n')))
         } else{
-          eval(parse(text=paste0('doc = doc %>% body_add_flextable(width(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']],
+          eval(parse(text=paste0('doc = doc %>% body_add_flextable(flextable::width(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']],
           width = dim(filtered_sub_framelist[[',1:length(filtered_sub_framelist),']])$widths*6.5/(flextable_dim(filtered_sub_framelist',
                                  '[[',1:length(filtered_sub_framelist),']])$widths)))%>%
           body_add("\n", style = "Normal")', sep='\n')))
@@ -892,7 +892,7 @@ for (i in unique(indicator_matrix$section))
           subnote = NULL
           for(subnote in 1:sub_out_levels)
           {
-            eval(parse(text=paste0('doc = doc %>% body_add_flextable(width(flex_output',out_levels,'[[',subnote,']],
+            eval(parse(text=paste0('doc = doc %>% body_add_flextable(flextable::width(flex_output',out_levels,'[[',subnote,']],
           width = dim(flex_output',out_levels,'[[',subnote,']])$widths*6.5/(flextable_dim(flex_output',
                                    out_levels,'[[',subnote,']])$widths)))%>%
           body_add("\n", style = "Normal")', sep='\n')))
@@ -918,7 +918,7 @@ for (i in unique(indicator_matrix$section))
           subnote = NULL
           for(subnote in 1:sub_out_levels)
           {
-            eval(parse(text=paste0('doc = doc %>% body_add_flextable(width(flex_output',out_levels,'[[',subnote,']],
+            eval(parse(text=paste0('doc = doc %>% body_add_flextable(flextable::width(flex_output',out_levels,'[[',subnote,']],
           width = dim(flex_output',out_levels,'[[',subnote,']])$widths*6.5/(flextable_dim(flex_output',
                                    out_levels,'[[',subnote,']])$widths)))%>%
           body_add("\n", style = "Normal")', sep='\n')))
