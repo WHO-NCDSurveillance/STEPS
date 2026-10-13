@@ -70,12 +70,12 @@ if(column_strat =='all')
 {
   sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
     flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-    bold(i = c(1:2,total_pos+3))%>% 
+    flextable::bold(i = c(1:2,total_pos+3))%>% 
     fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
     theme_vanilla() %>% 
     merge_h(i = 1:2) %>%
     padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
-    align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  %>% 
+    flextable::align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  %>% 
     vline(j=vline_num, border = std_border)%>%
     hline(i=final_hlines, border = white_border)
   
@@ -99,12 +99,12 @@ if(column_strat =='all')
     #
     sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
       flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-      bold(i = c(1:2,total_pos+3))%>% 
+      flextable::bold(i = c(1:2,total_pos+3))%>% 
       fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
       theme_vanilla() %>% 
       merge_h(i = 1:2) %>%
       padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
-      align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")%>%
+      flextable::align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")%>%
       hline(i=final_hlines, border = white_border) #no_lines
     
   }else{
@@ -114,12 +114,12 @@ if(column_strat =='all')
     
     sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
       flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-      bold(i = c(1:2,4))%>% 
+      flextable::bold(i = c(1:2,4))%>% 
       fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
       theme_vanilla() %>% 
       merge_h(i = 1:2) %>%
       padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
-      align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")
+      flextable::align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")
     
   }
   
@@ -134,12 +134,12 @@ if(column_strat =='all')
   # Apply formatting
   sub_edited_table = pre_sub_edited_table%>%flextable() %>% autofit() %>% delete_part(part = "header") %>%
     flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-    bold(i = c(1:2,total_pos+3))%>% 
+    flextable::bold(i = c(1:2,total_pos+3))%>% 
     fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
     theme_vanilla() %>% 
     merge_h(i = 1:2) %>%
     padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
-    align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  %>% 
+    flextable::align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  %>% 
     hline(i=final_hlines, border = white_border)
   
   # -----------------------------------------------------------
@@ -153,12 +153,12 @@ if(column_strat =='all')
   # Apply formatting
   sub_edited_table = pre_sub_edited_table%>%flextable() %>% autofit() %>% delete_part(part = "header") %>%
     flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-    bold(i = c(1:2,4))%>% 
+    flextable::bold(i = c(1:2,4))%>% 
     fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
     theme_vanilla() %>% 
     merge_h(i = 1:2) %>%
     padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
-    align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body") 
+    flextable::align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body") 
   
   # -----------------------------------------------------------
   # CASE 5: Total overall summary
@@ -187,12 +187,12 @@ if(column_strat =='all')
   # Apply formatting
   sub_edited_table = pre_sub_edited_table%>%flextable() %>% autofit() %>% delete_part(part = "header") %>%
     flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-    bold(i = c(1:2,4))%>% 
+    flextable::bold(i = c(1:2,4))%>% 
     fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
     theme_vanilla() %>% 
     merge_h(i = 1:2) %>%
     padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
-    align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  
+    flextable::align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  
   
   # -----------------------------------------------------------
   # DEFAULT CASE
@@ -202,12 +202,12 @@ if(column_strat =='all')
   
   sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
     flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-    bold(i = c(1:2,total_pos+3))%>% 
+    flextable::bold(i = c(1:2,total_pos+3))%>% 
     fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
     theme_vanilla() %>% 
     merge_h(i = 1:2) %>%
     padding(padding = 0, part = "all")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
-    align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  %>% 
+    flextable::align(align = "center", j=1:ncol(pre_sub_edited_table), part = "body")  %>% 
     vline(j=vline_num, border = std_border)%>%
     hline(i=final_hlines, border = white_border)
 }

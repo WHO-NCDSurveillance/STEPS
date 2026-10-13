@@ -906,11 +906,11 @@ flextab_function = function(index =1, table_label ='Men')
     ####
     sub_edited_table = pre_sub_edited_table %>% flextable() %>% autofit() %>% delete_part(part = "header") %>%
       flextable::style(pr_t=fp_text(font.family='Source Sans Pro'), part = 'all')%>%
-      bold(i = c(1:2,total_pos))%>%
+      flextable::bold(i = c(1:2,total_pos))%>%
       fontsize(size = 8.5 ,part = "all") %>% border_remove() %>%
       theme_vanilla() %>%
       merge_h(i=1:row_merge) %>%padding(padding = 0, part = "all")%>%
-      align(align = "center", j=1:ncol(split_tab), part = "body")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
+      flextable::align(align = "center", j=1:ncol(split_tab), part = "body")%>%paginate(init = TRUE, hdr_ftr = TRUE)%>%
       hline(i=final_hlines, border = white_border)
     #####
     split_tables [[lt]] = sub_edited_table
@@ -1342,6 +1342,8 @@ slope_females_chdmi = risk_ref_data %>%
 # API key
 api_key = Sys.getenv("API_KEY")
 
+if(api_key == "INSERT API KEY HERE"){}else{
+
 resp = GET(
   "https://api.groq.com/openai/v1/models",
   add_headers(
@@ -1590,6 +1592,7 @@ rev_compute_pvalue = function(ind_level, indicator, svy_datum, strat_col = NULL)
   }, error = function(e) NA_real_)
 
   round(p, 4)
+}
 }
 
 # -------------------------------
@@ -2156,9 +2159,9 @@ add_grey_header = function(text, doc_width_in_inches = 7.3, min_row_height = NUL
     delete_part(part = "header") %>%
     set_table_properties(layout = "fixed", width = 1) %>%
     width(j = 1, width = doc_width_in_inches) %>%
-    align(i = 1, j = 1, align = "left", part = "body") %>%
+    flextable::align(i = 1, j = 1, align = "left", part = "body") %>%
     bg(i = 1, j = 1, bg = "#D9D9D9") %>%
-    bold(i = 1, j = 1) %>%
+    flextable::bold(i = 1, j = 1) %>%
     fontsize(i = 1, j = 1, size = 12) %>%
     padding(i = 1, j = 1, padding.top = 2, padding.bottom = 2) %>%
     border_remove()  # REMOVE ALL BORDERS
@@ -2825,12 +2828,12 @@ comp_factsheet_formatting = function(fct_table = factsheet_table, fact_label = o
     ) %>%
     
     # Bold section headers
-    bold(i = c(1,extract_rows)) %>%
+    flextable::bold(i = c(1,extract_rows)) %>%
     # Header styling
     bg(bg="white",i=1,part="header") %>%
     theme_box() %>%
     # Center numeric columns
-    align(align = "center", j = j_cols, part = "all") %>%
+    flextable::align(align = "center", j = j_cols, part = "all") %>%
     # Reduce font size slightly for compact layout
     fontsize(size = 9 ,part = "all") %>%
     # Merge section header rows across all columns
