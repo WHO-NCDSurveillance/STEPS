@@ -79,8 +79,13 @@ colnames(indicator_results)=c("ind_level","var_strat_level","value")
 
 # Match computed results with existing template rows
 updated = existing %>% 
-  left_join(indicator_results, by = c("ind_level", "var_strat_level"), 
-            suffix = c("", "_new")) %>%
+  left_join(
+    indicator_results %>% 
+      distinct(ind_level, var_strat_level, .keep_all = TRUE),
+    by = c("ind_level", "var_strat_level"), suffix = c("", "_new")) %>% 
+  
+  # left_join(indicator_results, by = c("ind_level", "var_strat_level"), 
+  #           suffix = c("", "_new")) %>%
   
   # Replace existing values with newly computed values when available
   mutate(value = ifelse(!is.na(value_new), value_new, value)) %>% 
@@ -115,8 +120,8 @@ writeData(wb, sheet = "data", x = transl_lang,
 saveWorkbook(wb, save_file, overwrite = TRUE)
 
 file.copy(
-  from = "templates/infographic charts v2.xlsx",
-  to   = paste0('outputs/', country_ISO, '-', survey_year, '-infographic charts v2.xlsx'),
+  from = "templates/infographic charts.xlsx",
+  to   = paste0('outputs/', country_ISO, '-', survey_year, '-infographic charts.xlsx'),
   overwrite = TRUE
 )
 
@@ -125,7 +130,6 @@ file.copy(
   to   = "outputs/data_fromR.xlsx",
   overwrite = TRUE
 )
-
 
 
 

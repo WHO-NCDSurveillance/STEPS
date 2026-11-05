@@ -78,10 +78,12 @@ for(i in unique(reporting_matrix$section_title))
   ##---------------------------------------------------------
   
   adj_background_text = llm_wrapper_connect(
-    paste0("Adjust the following text, adding critical statistics in the background for ",
+    paste0("Adjust the following text, adding critical mortality-related statistics in the background for ",
            country, ": ", bacground_text,
-           ". Just provide the output without any notes, explanations, introductions, or extra words. Insert 
-           academic style references within the text, but do not list them."))
+           ". Mortality-rated statistics should preferably derive from WHO. 
+           Do not include any prevalence statistics since these are presented later in the text. 
+           Just provide the output without any notes, explanations, introductions, or extra words. 
+           Insert academic style references within the text, but do not list them."))
   #
   all_background_texts = c(all_background_texts,adj_background_text)
 
